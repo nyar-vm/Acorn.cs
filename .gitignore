@@ -1,0 +1,22 @@
+# OS
+.DS_Store/
+thumbs.db
+time-travel.*
+
+# IDE
+.vscode/
+.idea/
+.trae/
+.vs/
+*.iml
+
+# Rust
+target/
+Cargo.lock
+
+# C# 
+bin/
+obj/
+
+# Node
+node_modules/
