@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Acorn</RootNamespace>
+    <AssemblyName>Nyar.Vendor.Acorn</AssemblyName>
+    <PackageId>Nyar.Vendor.Acorn</PackageId>
+    <Version>0.0.0</Version>
+    <Authors>Nyar Team</Authors>
+    <Copyright>Copyright (c) Nyar Team</Copyright>
+    <Description>Complete Acorn Binary Format Processing Package - Provides the full collection of all Acorn codecs</Description>
+    <PackageProjectUrl>https://github.com/nyar-vm/Acorn.cs</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/nyar-vm/Acorn.cs</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>acorn;binary;format;serializer;deserializer;gltf;spine;live2d;psd;spirv;onnx;safetensors;wasm;office;elf;pe;macho;coff;dwarf;llvm;protobuf;redis;zeromq;zip;mysql;postgresql</PackageTags>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <IncludeSymbols>false</IncludeSymbols>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    
+    <NuspecFile>Nyar.Vendor.Acorn.nuspec</NuspecFile>
+    <NuspecProperties>version=$(Version);configuration=$(Configuration);targetFramework=$(TargetFramework)</NuspecProperties>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\projects\Acorn\Acorn.csproj" />
+    <ProjectReference Include="..\..\projects\Generator.Acorn\Generator.Acorn.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Gltf\Acorn.Gltf.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Spine\Acorn.Spine.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Live2D\Acorn.Live2D.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Psd\Acorn.Psd.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Spirv\SpirV.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Elf\ELF.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Pe\Acorn.PE.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.MachO\Acorn.MachO.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.COFF\Acorn.COFF.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.DWARF\DWARF.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.LLVM\LLVM.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Wasm\Acorn.Wasm.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Onnx\Acorn.Onnx.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.SafeTensors\Acorn.SafeTensors.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.MySql\MySQL.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.PostgreSql\PostgreSQL.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Protobuf\Acorn.Protobuf.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Redis\Acorn.Redis.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.ZeroMQ\Acorn.ZeroMQ.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Office\Acorn.Office.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Zip\Acorn.Zip.csproj" />
+  </ItemGroup>
+
+</Project>

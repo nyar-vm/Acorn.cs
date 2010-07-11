@@ -1,0 +1,41 @@
+name: C# Build and Test
+
+on:
+  push:
+    branches: [master, dev]
+  pull_request:
+    branches: [master, dev]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Restore
+        run: dotnet restore Acorn.slnx
+
+      - name: Build
+        run: dotnet build Acorn.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Acorn.slnx --no-build --configuration Release --verbosity normal
+
+      - name: Pack
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: dotnet pack Acorn.slnx --no-build --configuration Release --output ./packages
+
+      - name: Upload Packages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./packages/*.nupkg

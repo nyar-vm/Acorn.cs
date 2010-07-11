@@ -1,0 +1,27 @@
+<Solution>
+    <Project Path="projects\Acorn\Acorn.csproj" />
+    <Project Path="projects\Acorn.Coff\Acorn.COFF.csproj" />
+    <Project Path="projects\Acorn.Dwarf\DWARF.csproj" />
+    <Project Path="projects\Acorn.Elf\ELF.csproj" />
+    <Project Path="projects\Acorn.Gltf\Acorn.Gltf.csproj" />
+    <Project Path="projects\Acorn.Live2D\Acorn.Live2D.csproj" />
+    <Project Path="projects\Acorn.Llvm\LLVM.csproj" />
+    <Project Path="projects\Acorn.MachO\Acorn.MachO.csproj" />
+    <Project Path="projects\Acorn.MySQL\MySQL.csproj" />
+    <Project Path="projects\Acorn.Office\Acorn.Office.csproj" />
+    <Project Path="projects\Acorn.Onnx\Acorn.Onnx.csproj" />
+    <Project Path="projects\Acorn.Pe\Acorn.PE.csproj" />
+    <Project Path="projects\Acorn.PostgreSQL\PostgreSQL.csproj" />
+    <Project Path="projects\Acorn.Protobuf\Acorn.Protobuf.csproj" />
+    <Project Path="projects\Acorn.Psd\Acorn.Psd.csproj" />
+    <Project Path="projects\Acorn.Redis\Acorn.Redis.csproj" />
+    <Project Path="projects\Acorn.SafeTensors\Acorn.SafeTensors.csproj" />
+    <Project Path="projects\Acorn.Spine\Acorn.Spine.csproj" />
+    <Project Path="projects\Acorn.SpirV\SpirV.csproj" />
+    <Project Path="projects\Acorn.Wasm\Acorn.Wasm.csproj" />
+    <Project Path="projects\Acorn.ZeroMQ\Acorn.ZeroMQ.csproj" />
+    <Project Path="projects\Acorn.Zip\Acorn.Zip.csproj" />
+    <Project Path="projects\Generator.Acorn\Generator.Acorn.csproj" />
+
+    <Project Path="vendors\Nyar.Vendor.Acorn\Nyar.Vendor.Acorn.csproj" />
+</Solution>

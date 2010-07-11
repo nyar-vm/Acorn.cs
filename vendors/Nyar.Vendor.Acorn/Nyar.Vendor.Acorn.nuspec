@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>Nyar.Vendor.Acorn</id>
+    <version>$version$</version>
+    <title>Acorn Binary Format Processing Package</title>
+    <authors>Nyar Team</authors>
+    <owners>Nyar Team</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/nyar-vm/Acorn.cs</projectUrl>
+    <description>Complete Acorn Binary Format Processing Package - Provides the full collection of all Acorn codecs</description>
+    <copyright>Copyright (c) Nyar Team</copyright>
+    <tags>acorn binary format serializer deserializer gltf spine live2d psd spirv onnx safetensors wasm office elf pe macho coff dwarf llvm protobuf redis zeromq zip mysql postgresql</tags>
+    <repository type="git" url="https://github.com/nyar-vm/Acorn.cs" />
+    <readme>readme.md</readme>
+    <dependencies>
+      <group targetFramework="net11.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\net11.0\Nyar.Vendor.Acorn.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Gltf.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Spine.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Live2D.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Psd.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Spirv.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.ELF.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Pe.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.MachO.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Coff.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.DWARF.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.LLVM.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Wasm.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Onnx.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.SafeTensors.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.MySql.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.PostgreSql.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Protobuf.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Redis.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.ZeroMQ.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Office.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Zip.dll" target="lib\net11.0\" />
+    <file src="bin\Release\net11.0\Acorn.Generators.dll" target="lib\net11.0\" />
+    <file src="readme.md" target="" />
+  </files>
+</package>
