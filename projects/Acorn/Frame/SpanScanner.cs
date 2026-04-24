@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace Acorn.Frame;
@@ -88,6 +89,7 @@ public ref struct SpanScanner
     /// </remarks>
     public ref ByteBuffer Buffer
     {
+        [UnscopedRef]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref _buffer;
     }

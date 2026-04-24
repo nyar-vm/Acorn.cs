@@ -6,7 +6,7 @@ using Acorn.Live2D.Data;
 namespace Acorn.Live2D.Scanner;
 
 /// <summary>
-///     Live2D Cubism 模型扫描器，基于 <see cref="ByteBuffer" /> 提供对模型 JSON / moc3 二进制文件的快速元信息扫描。
+///     Live2D Cubism 模型扫描器，基于 <see cref="SpanScanner" /> 提供对模型 JSON / moc3 二进制文件的快速元信息扫描。
 /// </summary>
 /// <remarks>
 ///     扫描器通过流式 JSON 解析或二进制头读取快速提取版本、文件引用、参数数量等元信息，
@@ -15,49 +15,17 @@ namespace Acorn.Live2D.Scanner;
 /// </remarks>
 public ref struct Live2DScanner : ILive2DScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     public Live2DScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    public int Length => _buffer.Length;
-
-    public bool IsEndOfData => _buffer.IsEnd;
-
-    public ReadOnlySpan<byte> Remaining => _buffer.RemainingSpan;
-
-    public void Advance(int count)
-    {
-        _buffer.Advance(count);
-    }
-
-    public ReadOnlySpan<byte> Peek(int count)
-    {
-        return _buffer.Peek(count);
-    }
-
-    public ReadOnlySpan<byte> Read(int count)
-    {
-        return _buffer.ReadBytes(count);
-    }
-
-    public bool MatchMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.MatchMagic(magic);
-    }
-
-    public bool ConsumeMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.ConsumeMagic(magic);
-    }
+    /// <summary>
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
+    /// </summary>
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 model3.json 文件，提取文件引用列表。
@@ -65,7 +33,7 @@ public ref struct Live2DScanner : ILive2DScanner
     public List<string> ScanFileReferences()
     {
         var references = new List<string>();
-        var content = Encoding.UTF8.GetString(_buffer.Data);
+        var content = Encoding.UTF8.GetString(_scanner.Data);
 
         using var document = JsonDocument.Parse(content);
         var root = document.RootElement;
@@ -124,20 +92,20 @@ public ref struct Live2DScanner : ILive2DScanner
     /// </remarks>
     public (int Version, bool IsBigEndian, int Revision) ScanMoc3Header()
     {
-        if (_buffer.Length < 8)
+        if (_scanner.Length < 8)
         {
             throw new InvalidDataException("moc3 文件数据过短，无法读取文件头");
         }
 
-        if (!_buffer.MatchMagic(Live2DConstants.Moc3MagicNumber))
+        if (!_scanner.MatchMagic(Live2DConstants.Moc3MagicNumber))
         {
             throw new InvalidDataException("moc3 文件魔数不匹配");
         }
 
-        _buffer.ConsumeMagic(Live2DConstants.Moc3MagicNumber);
-        var version = _buffer.ReadU8();
-        var isBigEndian = _buffer.ReadU8() != 0;
-        var revision = _buffer.ReadI16LE();
+        _scanner.ConsumeMagic(Live2DConstants.Moc3MagicNumber);
+        var version = _scanner.Buffer.ReadU8();
+        var isBigEndian = _scanner.Buffer.ReadU8() != 0;
+        var revision = _scanner.Buffer.ReadI16LE();
 
         return (version, isBigEndian, revision);
     }
@@ -147,22 +115,22 @@ public ref struct Live2DScanner : ILive2DScanner
     /// </summary>
     public int ScanMoc3ParameterCount()
     {
-        if (_buffer.Length < 12)
+        if (_scanner.Length < 12)
         {
             return 0;
         }
 
         var (_, isBigEndian, _) = ScanMoc3Header();
-        var version = _buffer.ReadU8At(4);
+        var version = _scanner.Buffer.ReadU8At(4);
 
         var parameterCountOffset = GetCountInfoOffset(version) + 4;
 
-        if (parameterCountOffset + 4 > _buffer.Length)
+        if (parameterCountOffset + 4 > _scanner.Length)
         {
             return 0;
         }
 
-        return _buffer.ReadI32At(parameterCountOffset, isBigEndian);
+        return _scanner.Buffer.ReadI32At(parameterCountOffset, isBigEndian);
     }
 
     /// <summary>
@@ -170,22 +138,22 @@ public ref struct Live2DScanner : ILive2DScanner
     /// </summary>
     public int ScanMoc3PartCount()
     {
-        if (_buffer.Length < 16)
+        if (_scanner.Length < 16)
         {
             return 0;
         }
 
         var (_, isBigEndian, _) = ScanMoc3Header();
-        var version = _buffer.ReadU8At(4);
+        var version = _scanner.Buffer.ReadU8At(4);
 
         var partCountOffset = GetCountInfoOffset(version) + 8;
 
-        if (partCountOffset + 4 > _buffer.Length)
+        if (partCountOffset + 4 > _scanner.Length)
         {
             return 0;
         }
 
-        return _buffer.ReadI32At(partCountOffset, isBigEndian);
+        return _scanner.Buffer.ReadI32At(partCountOffset, isBigEndian);
     }
 
     /// <summary>
@@ -193,22 +161,22 @@ public ref struct Live2DScanner : ILive2DScanner
     /// </summary>
     public int ScanMoc3DrawableCount()
     {
-        if (_buffer.Length < 20)
+        if (_scanner.Length < 20)
         {
             return 0;
         }
 
         var (_, isBigEndian, _) = ScanMoc3Header();
-        var version = _buffer.ReadU8At(4);
+        var version = _scanner.Buffer.ReadU8At(4);
 
         var drawableCountOffset = GetCountInfoOffset(version) + 12;
 
-        if (drawableCountOffset + 4 > _buffer.Length)
+        if (drawableCountOffset + 4 > _scanner.Length)
         {
             return 0;
         }
 
-        return _buffer.ReadI32At(drawableCountOffset, isBigEndian);
+        return _scanner.Buffer.ReadI32At(drawableCountOffset, isBigEndian);
     }
 
     private static int GetCountInfoOffset(int version)

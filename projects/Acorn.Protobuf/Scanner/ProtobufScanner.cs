@@ -4,7 +4,7 @@ using Acorn.Frame;
 namespace Acorn.Protobuf.Scanner;
 
 /// <summary>
-///     Protobuf 格式扫描器，基于 <see cref="ByteBuffer" /> 提供零分配的快速 Protobuf 消息结构探查。
+///     Protobuf 格式扫描器，基于 <see cref="SpanScanner" /> 提供零分配的快速 Protobuf 消息结构探查。
 /// </summary>
 /// <remarks>
 ///     Protobuf 使用变长编码（Varint）和标签-值对（Tag-Length-Value）格式组织数据。
@@ -12,49 +12,17 @@ namespace Acorn.Protobuf.Scanner;
 /// </remarks>
 public ref struct ProtobufScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     public ProtobufScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    public int Length => _buffer.Length;
-
-    public bool IsEndOfData => _buffer.IsEnd;
-
-    public ReadOnlySpan<byte> Remaining => _buffer.RemainingSpan;
-
-    public void Advance(int count)
-    {
-        _buffer.Advance(count);
-    }
-
-    public ReadOnlySpan<byte> Peek(int count)
-    {
-        return _buffer.Peek(count);
-    }
-
-    public ReadOnlySpan<byte> Read(int count)
-    {
-        return _buffer.ReadBytes(count);
-    }
-
-    public bool MatchMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.MatchMagic(magic);
-    }
-
-    public bool ConsumeMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.ConsumeMagic(magic);
-    }
+    /// <summary>
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
+    /// </summary>
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 Protobuf 消息，提取所有顶层字段信息。
@@ -64,7 +32,7 @@ public ref struct ProtobufScanner
     {
         var fields = new List<ProtobufFieldInfo>();
 
-        while (!_buffer.IsEnd)
+        while (!_scanner.IsEnd)
         {
             if (!TryReadTag(out var fieldNumber, out var wireType))
             {
@@ -88,20 +56,20 @@ public ref struct ProtobufScanner
                 case 1:
                     field = field with
                     {
-                        ValueType = ProtobufValueType.Fixed64, Fixed64Value = _buffer.ReadU64LE()
+                        ValueType = ProtobufValueType.Fixed64, Fixed64Value = _scanner.Buffer.ReadU64LE()
                     };
                     break;
                 case 2:
                     field = field with
                     {
                         ValueType = ProtobufValueType.LengthDelimited,
-                        LengthDelimitedValue = _buffer.ReadBytes((int)ReadVarint()).ToArray()
+                        LengthDelimitedValue = _scanner.Buffer.ReadBytes((int)ReadVarint()).ToArray()
                     };
                     break;
                 case 5:
                     field = field with
                     {
-                        ValueType = ProtobufValueType.Fixed32, Fixed32Value = _buffer.ReadU32LE()
+                        ValueType = ProtobufValueType.Fixed32, Fixed32Value = _scanner.Buffer.ReadU32LE()
                     };
                     break;
                 default:
@@ -159,7 +127,7 @@ public ref struct ProtobufScanner
         wireType = 0;
         fieldNumber = 0;
 
-        if (_buffer.IsEnd)
+        if (_scanner.IsEnd)
         {
             return false;
         }
@@ -178,7 +146,7 @@ public ref struct ProtobufScanner
 
     private ulong ReadVarint()
     {
-        return _buffer.ReadLeb128U64();
+        return _scanner.Buffer.ReadLeb128U64();
     }
 
     private static bool TryDecodeString(byte[] bytes, out string value)

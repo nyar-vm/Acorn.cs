@@ -6,7 +6,7 @@ using Acorn.SafeTensors.Data;
 namespace Acorn.SafeTensors.Scanner;
 
 /// <summary>
-///     SafeTensors 格式扫描器，基于 <see cref="ByteBuffer" /> 提供零分配的快速 SafeTensors 文件探查。
+///     SafeTensors 格式扫描器，基于 <see cref="SpanScanner" /> 提供零分配的快速 SafeTensors 文件探查。
 /// </summary>
 /// <remarks>
 ///     SafeTensors 格式：8 字节头长度（小端序 uint64）+ JSON 头 + 二进制张量数据。
@@ -14,49 +14,17 @@ namespace Acorn.SafeTensors.Scanner;
 /// </remarks>
 public ref struct SafeTensorsScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     public SafeTensorsScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    public int Length => _buffer.Length;
-
-    public bool IsEndOfData => _buffer.IsEnd;
-
-    public ReadOnlySpan<byte> Remaining => _buffer.RemainingSpan;
-
-    public void Advance(int count)
-    {
-        _buffer.Advance(count);
-    }
-
-    public ReadOnlySpan<byte> Peek(int count)
-    {
-        return _buffer.Peek(count);
-    }
-
-    public ReadOnlySpan<byte> Read(int count)
-    {
-        return _buffer.ReadBytes(count);
-    }
-
-    public bool MatchMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.MatchMagic(magic);
-    }
-
-    public bool ConsumeMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.ConsumeMagic(magic);
-    }
+    /// <summary>
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
+    /// </summary>
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 SafeTensors 文件头，提取统计信息。
@@ -64,19 +32,19 @@ public ref struct SafeTensorsScanner
     /// <returns>SafeTensors 统计信息。</returns>
     public SafeTensorsStatistics ScanStatistics()
     {
-        if (_buffer.Length < 8)
+        if (_scanner.Length < 8)
         {
             throw new InvalidDataException("SafeTensors 文件数据过短，无法读取头长度");
         }
 
-        var headerLength = _buffer.ReadU64LE();
+        var headerLength = _scanner.Buffer.ReadU64LE();
 
-        if (8 + (long)headerLength > _buffer.Length)
+        if (8 + (long)headerLength > _scanner.Length)
         {
             throw new InvalidDataException("SafeTensors 文件头超出数据范围");
         }
 
-        var headerJson = _buffer.ReadString((int)headerLength);
+        var headerJson = _scanner.Buffer.ReadString((int)headerLength);
 
         var tensorCount = 0;
         var totalParameters = 0L;
@@ -116,7 +84,7 @@ public ref struct SafeTensorsScanner
         return new SafeTensorsStatistics
         {
             HeaderSize = headerLength,
-            DataSize = (ulong)_buffer.Length - 8 - headerLength,
+            DataSize = (ulong)_scanner.Length - 8 - headerLength,
             TensorCount = tensorCount,
             TotalParameters = totalParameters,
             TensorNames = tensorNames,
@@ -130,13 +98,13 @@ public ref struct SafeTensorsScanner
     /// <returns>张量名称列表。</returns>
     public List<string> ScanTensorNames()
     {
-        if (_buffer.Length < 8)
+        if (_scanner.Length < 8)
         {
             throw new InvalidDataException("SafeTensors 文件数据过短");
         }
 
-        var headerLength = _buffer.ReadU64LE();
-        var headerJson = _buffer.ReadString((int)headerLength);
+        var headerLength = _scanner.Buffer.ReadU64LE();
+        var headerJson = _scanner.Buffer.ReadString((int)headerLength);
 
         var names = new List<string>();
 

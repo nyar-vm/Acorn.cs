@@ -4,11 +4,11 @@ using Acorn.Ttf.Data;
 namespace Acorn.Ttf.Scanner;
 
 /// <summary>
-///     TTF 文件扫描器，基于 <see cref="ByteBuffer" /> 提供对 TrueType/OpenType 字体文件的快速元信息扫描。
+///     TTF 文件扫描器，基于 <see cref="SpanScanner" /> 提供对 TrueType/OpenType 字体文件的快速元信息扫描。
 /// </summary>
 public ref struct TtfScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="TtfScanner" /> 结构的新实例。
@@ -16,34 +16,25 @@ public ref struct TtfScanner
     /// <param name="data">要扫描的 TTF 字节数据。</param>
     public TtfScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
-    ///     当前扫描位置。
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
     /// </summary>
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    /// <summary>
-    ///     数据总长度。
-    /// </summary>
-    public int Length => _buffer.Length;
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 TTF 文件头，提取基本字体信息。
     /// </summary>
     public TtfScanHeader ScanHeader()
     {
-        if (_buffer.Length < TtfConstants.OffsetTableSize)
+        if (_scanner.Length < TtfConstants.OffsetTableSize)
         {
             throw new InvalidDataException("TTF 文件数据过短，无法读取偏移表");
         }
 
-        var sfVersion = _buffer.ReadU32BE();
+        var sfVersion = _scanner.Buffer.ReadU32BE();
         var fontType = sfVersion switch
         {
             TtfConstants.TrueTypeMagic => TtfFontType.TrueType,
@@ -52,7 +43,7 @@ public ref struct TtfScanner
             _ => TtfFontType.Unknown
         };
 
-        var tableCount = _buffer.ReadU16BE();
+        var tableCount = _scanner.Buffer.ReadU16BE();
 
         return new TtfScanHeader
         {
@@ -66,13 +57,13 @@ public ref struct TtfScanner
     /// </summary>
     public bool IsFont()
     {
-        if (_buffer.Length < 4)
+        if (_scanner.Length < 4)
         {
             return false;
         }
 
-        var sfVersion = _buffer.ReadU32BE();
-        _buffer.Position = 0;
+        var sfVersion = _scanner.Buffer.ReadU32BE();
+        _scanner.Position = 0;
 
         return sfVersion is TtfConstants.TrueTypeMagic or 0x4F54544F or 0x74746366;
     }

@@ -4,7 +4,7 @@ using Acorn.Wav.Data;
 namespace Acorn.Wav.Scanner;
 
 /// <summary>
-///     WAV 文件扫描器，基于 <see cref="ByteBuffer" /> 提供对 WAV 音频文件的快速元信息扫描。
+///     WAV 文件扫描器，基于 <see cref="SpanScanner" /> 提供对 WAV 音频文件的快速元信息扫描。
 /// </summary>
 /// <remarks>
 ///     WAV 文件格式基于 RIFF 容器，由 RIFF 头、fmt 块和 data 块组成。
@@ -12,7 +12,7 @@ namespace Acorn.Wav.Scanner;
 /// </remarks>
 public ref struct WavScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="WavScanner" /> 结构的新实例。
@@ -20,27 +20,13 @@ public ref struct WavScanner
     /// <param name="data">要扫描的 WAV 字节数据。</param>
     public WavScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
-    ///     当前扫描位置。
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
     /// </summary>
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    /// <summary>
-    ///     数据总长度。
-    /// </summary>
-    public int Length => _buffer.Length;
-
-    /// <summary>
-    ///     是否已到达数据末尾。
-    /// </summary>
-    public bool IsEndOfData => _buffer.IsEnd;
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 WAV 文件头，提取基本音频信息。
@@ -48,40 +34,40 @@ public ref struct WavScanner
     /// <returns>WAV 文件头信息。</returns>
     public WavScanHeader ScanHeader()
     {
-        if (_buffer.Length < 12)
+        if (_scanner.Length < 12)
         {
             throw new InvalidDataException("WAV 文件数据过短，无法读取 RIFF 头");
         }
 
-        if (!_buffer.MatchMagic(WavConstants.RiffMagic))
+        if (!_scanner.MatchMagic(WavConstants.RiffMagic))
         {
             throw new InvalidDataException("WAV 文件魔数不匹配");
         }
 
-        _buffer.ConsumeMagic(WavConstants.RiffMagic);
-        var fileSize = _buffer.ReadU32LE();
+        _scanner.ConsumeMagic(WavConstants.RiffMagic);
+        var fileSize = _scanner.Buffer.ReadU32LE();
 
-        if (!_buffer.MatchMagic(WavConstants.WaveMagic))
+        if (!_scanner.MatchMagic(WavConstants.WaveMagic))
         {
             throw new InvalidDataException("WAV 格式标识不匹配");
         }
 
-        _buffer.ConsumeMagic(WavConstants.WaveMagic);
+        _scanner.ConsumeMagic(WavConstants.WaveMagic);
 
-        while (!_buffer.IsEnd)
+        while (!_scanner.IsEnd)
         {
-            var chunkId = _buffer.ReadString(4);
-            var chunkSize = _buffer.ReadU32LE();
-            var chunkEnd = _buffer.Position + (int)chunkSize;
+            var chunkId = _scanner.Buffer.ReadString(4);
+            var chunkSize = _scanner.Buffer.ReadU32LE();
+            var chunkEnd = _scanner.Position + (int)chunkSize;
 
             if (chunkId == "fmt ")
             {
-                var formatTag = (WavFormatTag)_buffer.ReadU16LE();
-                var channels = _buffer.ReadU16LE();
-                var sampleRate = _buffer.ReadU32LE();
-                var byteRate = _buffer.ReadU32LE();
-                var blockAlign = _buffer.ReadU16LE();
-                var bitsPerSample = _buffer.ReadU16LE();
+                var formatTag = (WavFormatTag)_scanner.Buffer.ReadU16LE();
+                var channels = _scanner.Buffer.ReadU16LE();
+                var sampleRate = _scanner.Buffer.ReadU32LE();
+                var byteRate = _scanner.Buffer.ReadU32LE();
+                var blockAlign = _scanner.Buffer.ReadU16LE();
+                var bitsPerSample = _scanner.Buffer.ReadU16LE();
 
                 return new WavScanHeader
                 {
@@ -94,11 +80,11 @@ public ref struct WavScanner
                 };
             }
 
-            _buffer.Position = chunkEnd;
+            _scanner.Position = chunkEnd;
 
             if (chunkSize % 2 != 0)
             {
-                _buffer.Advance(1);
+                _scanner.Advance(1);
             }
         }
 
@@ -110,12 +96,12 @@ public ref struct WavScanner
     /// </summary>
     public bool IsWav()
     {
-        if (_buffer.Length < 12)
+        if (_scanner.Length < 12)
         {
             return false;
         }
 
-        return _buffer.MatchMagic(WavConstants.RiffMagic);
+        return _scanner.MatchMagic(WavConstants.RiffMagic);
     }
 }
 

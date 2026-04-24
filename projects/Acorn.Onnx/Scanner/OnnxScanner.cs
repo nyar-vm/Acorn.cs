@@ -5,53 +5,21 @@ using Acorn.Onnx.Data;
 namespace Acorn.Onnx.Scanner;
 
 /// <summary>
-///     ONNX 格式扫描器，基于 <see cref="ByteBuffer" /> 提供零分配的快速 ONNX 模型数据探查。
+///     ONNX 格式扫描器，基于 <see cref="SpanScanner" /> 提供零分配的快速 ONNX 模型数据探查。
 /// </summary>
 public ref struct OnnxScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     public OnnxScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    public int Length => _buffer.Length;
-
-    public bool IsEndOfData => _buffer.IsEnd;
-
-    public ReadOnlySpan<byte> Remaining => _buffer.RemainingSpan;
-
-    public void Advance(int count)
-    {
-        _buffer.Advance(count);
-    }
-
-    public ReadOnlySpan<byte> Peek(int count)
-    {
-        return _buffer.Peek(count);
-    }
-
-    public ReadOnlySpan<byte> Read(int count)
-    {
-        return _buffer.ReadBytes(count);
-    }
-
-    public bool MatchMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.MatchMagic(magic);
-    }
-
-    public bool ConsumeMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.ConsumeMagic(magic);
-    }
+    /// <summary>
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
+    /// </summary>
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 ONNX 模型统计信息。
@@ -62,7 +30,7 @@ public ref struct OnnxScanner
         var stats = new OnnxStatistics();
         var pos = 0;
 
-        while (pos < _buffer.Length)
+        while (pos < _scanner.Length)
         {
             var tagResult = ReadTagAt(pos, out var tagBytes);
             pos += tagBytes;
@@ -120,9 +88,9 @@ public ref struct OnnxScanner
         ulong value = 0;
         var shift = 0;
 
-        while (pos + bytesRead < _buffer.Length)
+        while (pos + bytesRead < _scanner.Length)
         {
-            var b = _buffer.ReadU8At(pos + bytesRead);
+            var b = _scanner.Buffer.ReadU8At(pos + bytesRead);
             bytesRead++;
             value |= (ulong)(b & 0x7F) << shift;
             shift += 7;
@@ -142,9 +110,9 @@ public ref struct OnnxScanner
         ulong value = 0;
         var shift = 0;
 
-        while (pos + bytesRead < _buffer.Length)
+        while (pos + bytesRead < _scanner.Length)
         {
-            var b = _buffer.ReadU8At(pos + bytesRead);
+            var b = _scanner.Buffer.ReadU8At(pos + bytesRead);
             bytesRead++;
             value |= (ulong)(b & 0x7F) << shift;
             shift += 7;
@@ -163,12 +131,12 @@ public ref struct OnnxScanner
         var length = (int)ReadVarintAt(pos, out var lenBytes);
         var totalBytes = lenBytes + length;
 
-        if (pos + totalBytes > _buffer.Length)
+        if (pos + totalBytes > _scanner.Length)
         {
             return (string.Empty, totalBytes);
         }
 
-        var strBytes = _buffer.Data.Slice(pos + lenBytes, length);
+        var strBytes = _scanner.Data.Slice(pos + lenBytes, length);
         return (Encoding.UTF8.GetString(strBytes), totalBytes);
     }
 

@@ -4,7 +4,7 @@ using Acorn.Ogg.Data;
 namespace Acorn.Ogg.Scanner;
 
 /// <summary>
-///     OGG 文件扫描器，基于 <see cref="ByteBuffer" /> 提供对 OGG 音频文件的快速元信息扫描。
+///     OGG 文件扫描器，基于 <see cref="SpanScanner" /> 提供对 OGG 音频文件的快速元信息扫描。
 /// </summary>
 /// <remarks>
 ///     OGG 文件格式由一系列页面组成，每个页面以 "OggS" 捕获模式开头。
@@ -12,7 +12,7 @@ namespace Acorn.Ogg.Scanner;
 /// </remarks>
 public ref struct OggScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="OggScanner" /> 结构的新实例。
@@ -20,27 +20,13 @@ public ref struct OggScanner
     /// <param name="data">要扫描的 OGG 字节数据。</param>
     public OggScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
-    ///     当前扫描位置。
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
     /// </summary>
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    /// <summary>
-    ///     数据总长度。
-    /// </summary>
-    public int Length => _buffer.Length;
-
-    /// <summary>
-    ///     是否已到达数据末尾。
-    /// </summary>
-    public bool IsEndOfData => _buffer.IsEnd;
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 OGG 文件头，提取基本音频信息。
@@ -48,41 +34,41 @@ public ref struct OggScanner
     /// <returns>OGG 文件头信息。</returns>
     public OggScanHeader ScanHeader()
     {
-        if (_buffer.Length < OggConstants.PageHeaderSize)
+        if (_scanner.Length < OggConstants.PageHeaderSize)
         {
             throw new InvalidDataException("OGG 文件数据过短，无法读取页面头");
         }
 
-        if (!_buffer.MatchMagic(OggConstants.CapturePattern))
+        if (!_scanner.MatchMagic(OggConstants.CapturePattern))
         {
             throw new InvalidDataException("OGG 文件捕获模式不匹配");
         }
 
-        _buffer.ConsumeMagic(OggConstants.CapturePattern);
+        _scanner.ConsumeMagic(OggConstants.CapturePattern);
 
-        var version = _buffer.ReadU8();
+        var version = _scanner.Buffer.ReadU8();
 
         if (version != OggConstants.Version)
         {
             throw new InvalidDataException($"OGG 版本号无效，期望 0，实际 {version}");
         }
 
-        var flags = (OggPageFlags)_buffer.ReadU8();
-        _buffer.Advance(8);
-        var serialNumber = _buffer.ReadU32LE();
-        _buffer.Advance(8);
-        var segmentCount = _buffer.ReadU8();
+        var flags = (OggPageFlags)_scanner.Buffer.ReadU8();
+        _scanner.Advance(8);
+        var serialNumber = _scanner.Buffer.ReadU32LE();
+        _scanner.Advance(8);
+        var segmentCount = _scanner.Buffer.ReadU8();
 
         var segmentSizes = new int[segmentCount];
         var totalDataSize = 0;
 
         for (var i = 0; i < segmentCount; i++)
         {
-            segmentSizes[i] = _buffer.ReadU8();
+            segmentSizes[i] = _scanner.Buffer.ReadU8();
             totalDataSize += segmentSizes[i];
         }
 
-        if (_buffer.Remaining < totalDataSize)
+        if (_scanner.Buffer.Remaining < totalDataSize)
         {
             throw new InvalidDataException("OGG 页面数据不完整");
         }
@@ -99,7 +85,7 @@ public ref struct OggScanner
             }
         }
 
-        var headerData = _buffer.ReadBytes(firstPacketSize).ToArray();
+        var headerData = _scanner.Buffer.ReadBytes(firstPacketSize).ToArray();
 
         var (codecType, channels, sampleRate, nominalBitrate) = ParseIdHeader(headerData);
 
@@ -119,12 +105,12 @@ public ref struct OggScanner
     /// </summary>
     public bool IsOgg()
     {
-        if (_buffer.Length < 4)
+        if (_scanner.Length < 4)
         {
             return false;
         }
 
-        return _buffer.MatchMagic(OggConstants.CapturePattern);
+        return _scanner.MatchMagic(OggConstants.CapturePattern);
     }
 
     private static (OggCodecType, int, int, int) ParseIdHeader(byte[] header)

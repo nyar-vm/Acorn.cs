@@ -4,45 +4,37 @@ using Acorn.MessagePack.Data;
 namespace Acorn.MessagePack.Scanner;
 
 /// <summary>
-///     MessagePack 扫描器。
+///     MessagePack 扫描器，基于 <see cref="SpanScanner" /> 提供对 MessagePack 数据的快速探查。
 /// </summary>
 public ref struct MsgPackScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="MsgPackScanner" /> 结构的新实例。
     /// </summary>
+    /// <param name="data">要扫描的 MessagePack 字节数据。</param>
     public MsgPackScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
-    ///     当前位置。
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
     /// </summary>
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    /// <summary>
-    ///     数据总长度。
-    /// </summary>
-    public int Length => _buffer.Length;
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 MessagePack 数据头。
     /// </summary>
     public MsgPackScanHeader ScanHeader()
     {
-        if (_buffer.IsEnd)
+        if (_scanner.IsEnd)
         {
             return new MsgPackScanHeader { RootType = MsgPackType.Nil };
         }
 
-        var b = _buffer.Peek();
+        var b = _scanner.Peek(1)[0];
         var type = ClassifyType(b);
 
         return new MsgPackScanHeader { RootType = type, FirstByte = b };
@@ -53,8 +45,8 @@ public ref struct MsgPackScanner
     /// </summary>
     public bool IsPossibleMsgPack()
     {
-        if (_buffer.IsEnd) return false;
-        var b = _buffer.Peek();
+        if (_scanner.IsEnd) return false;
+        var b = _scanner.Peek(1)[0];
         return b <= MsgPackConstants.PositiveFixIntMax
                || b >= MsgPackConstants.NegativeFixIntMin
                || b is MsgPackConstants.Nil or MsgPackConstants.False or MsgPackConstants.True

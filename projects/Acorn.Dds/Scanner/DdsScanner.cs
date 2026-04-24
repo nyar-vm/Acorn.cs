@@ -4,7 +4,7 @@ using Acorn.Dds.Data;
 namespace Acorn.Dds.Scanner;
 
 /// <summary>
-///     DDS 文件扫描器，基于 <see cref="ByteBuffer" /> 提供对 DirectDraw Surface 纹理文件的快速元信息扫描。
+///     DDS 文件扫描器，基于 <see cref="SpanScanner" /> 提供对 DirectDraw Surface 纹理文件的快速元信息扫描。
 /// </summary>
 /// <remarks>
 ///     DDS 文件格式由魔数、文件头、可选 DX10 扩展头和纹理数据组成。
@@ -12,7 +12,7 @@ namespace Acorn.Dds.Scanner;
 /// </remarks>
 public ref struct DdsScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="DdsScanner" /> 结构的新实例。
@@ -20,27 +20,13 @@ public ref struct DdsScanner
     /// <param name="data">要扫描的 DDS 字节数据。</param>
     public DdsScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
-    ///     当前扫描位置。
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
     /// </summary>
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    /// <summary>
-    ///     数据总长度。
-    /// </summary>
-    public int Length => _buffer.Length;
-
-    /// <summary>
-    ///     是否已到达数据末尾。
-    /// </summary>
-    public bool IsEndOfData => _buffer.IsEnd;
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 DDS 文件头，提取基本纹理信息。
@@ -48,38 +34,38 @@ public ref struct DdsScanner
     /// <returns>DDS 文件头信息。</returns>
     public DdsScanHeader ScanHeader()
     {
-        if (_buffer.Length < DdsConstants.FullHeaderSize)
+        if (_scanner.Length < DdsConstants.FullHeaderSize)
         {
             throw new InvalidDataException("DDS 文件数据过短，无法读取文件头");
         }
 
-        if (!_buffer.MatchMagic(DdsConstants.MagicNumber))
+        if (!_scanner.MatchMagic(DdsConstants.MagicNumber))
         {
             throw new InvalidDataException("DDS 文件魔数不匹配");
         }
 
-        _buffer.ConsumeMagic(DdsConstants.MagicNumber);
+        _scanner.ConsumeMagic(DdsConstants.MagicNumber);
 
-        var headerSize = _buffer.ReadU32LE();
+        var headerSize = _scanner.Buffer.ReadU32LE();
 
         if (headerSize != DdsConstants.HeaderSize)
         {
             throw new InvalidDataException($"DDS 头部大小无效，期望 {DdsConstants.HeaderSize}，实际 {headerSize}");
         }
 
-        var flags = _buffer.ReadU32LE();
-        var height = _buffer.ReadU32LE();
-        var width = _buffer.ReadU32LE();
-        var pitchOrLinearSize = _buffer.ReadU32LE();
-        var depth = _buffer.ReadU32LE();
-        var mipMapCount = _buffer.ReadU32LE();
+        var flags = _scanner.Buffer.ReadU32LE();
+        var height = _scanner.Buffer.ReadU32LE();
+        var width = _scanner.Buffer.ReadU32LE();
+        var pitchOrLinearSize = _scanner.Buffer.ReadU32LE();
+        var depth = _scanner.Buffer.ReadU32LE();
+        var mipMapCount = _scanner.Buffer.ReadU32LE();
 
-        _buffer.Advance(44);
+        _scanner.Advance(44);
 
-        var pfSize = _buffer.ReadU32LE();
-        var pfFlags = _buffer.ReadU32LE();
-        var fourCC = _buffer.ReadU32LE();
-        var rgbBitCount = _buffer.ReadU32LE();
+        var pfSize = _scanner.Buffer.ReadU32LE();
+        var pfFlags = _scanner.Buffer.ReadU32LE();
+        var fourCC = _scanner.Buffer.ReadU32LE();
+        var rgbBitCount = _scanner.Buffer.ReadU32LE();
 
         return new DdsScanHeader
         {
@@ -99,12 +85,12 @@ public ref struct DdsScanner
     /// <returns>是否为 DDS 格式。</returns>
     public bool IsDds()
     {
-        if (_buffer.Length < 4)
+        if (_scanner.Length < 4)
         {
             return false;
         }
 
-        return _buffer.MatchMagic(DdsConstants.MagicNumber);
+        return _scanner.MatchMagic(DdsConstants.MagicNumber);
     }
 }
 

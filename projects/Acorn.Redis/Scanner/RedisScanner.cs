@@ -5,7 +5,7 @@ using Acorn.Redis.Data;
 namespace Acorn.Redis.Scanner;
 
 /// <summary>
-///     Redis RESP 协议扫描器，基于 <see cref="ByteBuffer" /> 提供对 Redis RESP 协议消息的快速扫描。
+///     Redis RESP 协议扫描器，基于 <see cref="SpanScanner" /> 提供对 Redis RESP 协议消息的快速扫描。
 /// </summary>
 /// <remarks>
 ///     Redis 使用 RESP（REdis Serialization Protocol）文本协议。
@@ -14,22 +14,21 @@ namespace Acorn.Redis.Scanner;
 /// </remarks>
 public ref struct RedisScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
+    /// <summary>
+    ///     初始化 <see cref="RedisScanner" /> 结构的新实例。
+    /// </summary>
+    /// <param name="data">要扫描的 Redis 字节数据。</param>
     public RedisScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    public int Length => _buffer.Length;
-
-    public bool IsEndOfData => _buffer.IsEnd;
+    /// <summary>
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
+    /// </summary>
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     扫描 Redis RESP 消息，提取统计信息。
@@ -39,7 +38,7 @@ public ref struct RedisScanner
         var stats = new RedisScanStatistics();
         var typeCounts = new Dictionary<char, int>();
 
-        while (!_buffer.IsEnd)
+        while (!_scanner.IsEnd)
         {
             var lineEnd = FindLineEnd();
 
@@ -48,8 +47,8 @@ public ref struct RedisScanner
                 break;
             }
 
-            var lineLength = lineEnd - _buffer.Position;
-            var prefix = (char)_buffer.ReadU8();
+            var lineLength = lineEnd - _scanner.Position;
+            var prefix = (char)_scanner.Buffer.ReadU8();
 
             if (!typeCounts.ContainsKey(prefix))
             {
@@ -77,7 +76,7 @@ public ref struct RedisScanner
                     break;
             }
 
-            _buffer.Position = lineEnd + 2;
+            _scanner.Position = lineEnd + 2;
         }
 
         stats.TypeCounts = typeCounts;
@@ -91,7 +90,7 @@ public ref struct RedisScanner
     {
         var messages = new List<(char Type, string Content)>();
 
-        while (!_buffer.IsEnd)
+        while (!_scanner.IsEnd)
         {
             var lineEnd = FindLineEnd();
 
@@ -100,12 +99,12 @@ public ref struct RedisScanner
                 break;
             }
 
-            var prefix = (char)_buffer.ReadU8();
-            var contentLength = lineEnd - _buffer.Position;
-            var content = contentLength > 0 ? _buffer.ReadString(contentLength) : string.Empty;
+            var prefix = (char)_scanner.Buffer.ReadU8();
+            var contentLength = lineEnd - _scanner.Position;
+            var content = contentLength > 0 ? _scanner.Buffer.ReadString(contentLength) : string.Empty;
 
             messages.Add((prefix, content));
-            _buffer.Position = lineEnd + 2;
+            _scanner.Position = lineEnd + 2;
         }
 
         return messages;
@@ -113,11 +112,11 @@ public ref struct RedisScanner
 
     private int FindLineEnd()
     {
-        var pos = _buffer.Position;
+        var pos = _scanner.Position;
 
-        while (pos + 1 < _buffer.Length)
+        while (pos + 1 < _scanner.Length)
         {
-            if (_buffer.ReadU8At(pos) == '\r' && _buffer.ReadU8At(pos + 1) == '\n')
+            if (_scanner.Buffer.ReadU8At(pos) == '\r' && _scanner.Buffer.ReadU8At(pos + 1) == '\n')
             {
                 return pos;
             }

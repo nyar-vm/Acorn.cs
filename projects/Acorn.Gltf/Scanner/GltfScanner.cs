@@ -6,7 +6,7 @@ using Acorn.Gltf.Data;
 namespace Acorn.Gltf.Scanner;
 
 /// <summary>
-///     GLTF / GLB 模型扫描器，基于 <see cref="ByteBuffer" /> 提供对 GLTF JSON 和 GLB 二进制文件的快速元信息扫描。
+///     GLTF / GLB 模型扫描器，基于 <see cref="SpanScanner" /> 提供对 GLTF JSON 和 GLB 二进制文件的快速元信息扫描。
 /// </summary>
 /// <remarks>
 ///     GLTF 使用 JSON 格式描述场景，GLB 是 GLTF 的二进制容器格式。
@@ -16,7 +16,7 @@ public ref struct GltfScanner
 {
     private static ReadOnlySpan<byte> GlbMagic => GltfConstants.GlbMagicNumber;
 
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="GltfScanner" /> 结构的新实例。
@@ -24,27 +24,13 @@ public ref struct GltfScanner
     /// <param name="data">要扫描的 GLTF/GLB 字节数据。</param>
     public GltfScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
-    ///     当前扫描位置。
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
     /// </summary>
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    /// <summary>
-    ///     数据总长度。
-    /// </summary>
-    public int Length => _buffer.Length;
-
-    /// <summary>
-    ///     是否已到达数据末尾。
-    /// </summary>
-    public bool IsEndOfData => _buffer.IsEnd;
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     判断数据是否为 GLB 二进制格式。
@@ -52,7 +38,7 @@ public ref struct GltfScanner
     /// <returns>如果是 GLB 格式则返回 true。</returns>
     public bool IsGlbFormat()
     {
-        return _buffer.MatchMagic(GlbMagic);
+        return _scanner.MatchMagic(GlbMagic);
     }
 
     /// <summary>
@@ -66,11 +52,11 @@ public ref struct GltfScanner
             throw new InvalidDataException("数据不是有效的 GLB 格式");
         }
 
-        _buffer.ConsumeMagic(GlbMagic);
-        var version = _buffer.ReadU32LE();
-        var totalLength = _buffer.ReadU32LE();
-        var jsonChunkLength = _buffer.ReadU32LE();
-        var jsonChunkType = _buffer.ReadU32LE();
+        _scanner.ConsumeMagic(GlbMagic);
+        var version = _scanner.Buffer.ReadU32LE();
+        var totalLength = _scanner.Buffer.ReadU32LE();
+        var jsonChunkLength = _scanner.Buffer.ReadU32LE();
+        var jsonChunkType = _scanner.Buffer.ReadU32LE();
 
         return (version, totalLength, jsonChunkLength, jsonChunkType);
     }
@@ -86,12 +72,12 @@ public ref struct GltfScanner
         if (IsGlbFormat())
         {
             var (_, _, jsonChunkLength, _) = ScanGlbHeader();
-            var jsonBytes = _buffer.ReadBytes((int)jsonChunkLength);
+            var jsonBytes = _scanner.Buffer.ReadBytes((int)jsonChunkLength);
             jsonContent = Encoding.UTF8.GetString(jsonBytes);
         }
         else
         {
-            jsonContent = Encoding.UTF8.GetString(_buffer.Data);
+            jsonContent = Encoding.UTF8.GetString(_scanner.Data);
         }
 
         using var document = JsonDocument.Parse(jsonContent);
@@ -127,7 +113,7 @@ public ref struct GltfScanner
         if (IsGlbFormat())
         {
             var (_, _, jsonChunkLength, _) = ScanGlbHeader();
-            hasBinaryChunk = _buffer.Length > 20 + (int)jsonChunkLength;
+            hasBinaryChunk = _scanner.Length > 20 + (int)jsonChunkLength;
         }
 
         return new GltfStatistics
@@ -158,12 +144,12 @@ public ref struct GltfScanner
         if (IsGlbFormat())
         {
             var (_, _, jsonChunkLength, _) = ScanGlbHeader();
-            var jsonBytes = _buffer.ReadBytes((int)jsonChunkLength);
+            var jsonBytes = _scanner.Buffer.ReadBytes((int)jsonChunkLength);
             jsonContent = Encoding.UTF8.GetString(jsonBytes);
         }
         else
         {
-            jsonContent = Encoding.UTF8.GetString(_buffer.Data);
+            jsonContent = Encoding.UTF8.GetString(_scanner.Data);
         }
 
         using var document = JsonDocument.Parse(jsonContent);
