@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Acorn.Flac</RootNamespace>
+    <AssemblyName>Acorn.Flac</AssemblyName>
+    <Version>0.0.0</Version>
+    <Authors>nyar-vm</Authors>
+    <Description>Acorn Acorn.Flac 格式库，提供 FLAC 无损音频格式的扫描和解码功能</Description>
+    <PackageProjectUrl>https://github.com/nyar-vm/Acorn.cs</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/nyar-vm/Acorn.cs</RepositoryUrl>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Acorn\Acorn.csproj" />
+    <ProjectReference Include="..\Generator.Acorn\Generator.Acorn.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Readme.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

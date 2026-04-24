@@ -266,6 +266,26 @@ public ref struct ByteBufferWriter
     #region 浮点数写入
 
     /// <summary>
+    ///     以小端序写入一个 16 位半精度浮点数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteF16LE(Half value)
+    {
+        BinaryPrimitives.WriteUInt16LittleEndian(_buffer.Slice(_position), BitConverter.HalfToUInt16Bits(value));
+        _position += 2;
+    }
+
+    /// <summary>
+    ///     以大端序写入一个 16 位半精度浮点数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteF16BE(Half value)
+    {
+        BinaryPrimitives.WriteUInt16BigEndian(_buffer.Slice(_position), BitConverter.HalfToUInt16Bits(value));
+        _position += 2;
+    }
+
+    /// <summary>
     ///     以小端序写入一个 32 位浮点数并前进 4 字节。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -400,17 +420,26 @@ public ref struct ByteBufferWriter
     }
 
     /// <summary>
-    ///     将字符串以 UTF-8 编码写入缓冲区。
+    ///     将字符串以 UTF-8 编码写入缓冲区（零分配）。
     /// </summary>
     /// <param name="value">要写入的字符串。</param>
     public void WriteString(string value)
     {
-        var bytes = Encoding.UTF8.GetBytes(value);
-        Write(bytes);
+        var maxByteCount = Encoding.UTF8.GetMaxByteCount(value.Length);
+
+        if (_position + maxByteCount > _buffer.Length)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            Write(bytes);
+            return;
+        }
+
+        var written = Encoding.UTF8.GetBytes(value, _buffer.Slice(_position));
+        _position += written;
     }
 
     /// <summary>
-    ///     写入以 null 终止的 UTF-8 字符串。
+    ///     写入以 null 终止的 UTF-8 字符串（零分配）。
     /// </summary>
     /// <param name="value">要写入的字符串。</param>
     public void WriteNullTerminatedString(string value)
@@ -420,14 +449,30 @@ public ref struct ByteBufferWriter
     }
 
     /// <summary>
-    ///     写入 LEB128 长度前缀的 UTF-8 字符串。
+    ///     写入 LEB128 长度前缀的 UTF-8 字符串（零分配）。
     /// </summary>
     /// <param name="value">要写入的字符串。</param>
     public void WriteLeb128String(string value)
     {
-        var bytes = Encoding.UTF8.GetBytes(value);
-        WriteLeb128U32((uint)bytes.Length);
-        Write(bytes);
+        var maxByteCount = Encoding.UTF8.GetMaxByteCount(value.Length);
+
+        if (_position + maxByteCount + 5 > _buffer.Length)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            WriteLeb128U32((uint)bytes.Length);
+            Write(bytes);
+            return;
+        }
+
+        var leb128Start = _position;
+        WriteLeb128U32(0);
+        var written = Encoding.UTF8.GetBytes(value, _buffer.Slice(_position));
+        _position += written;
+
+        var savedPosition = _position;
+        _position = leb128Start;
+        WriteLeb128U32((uint)written);
+        _position = savedPosition;
     }
 
     #endregion

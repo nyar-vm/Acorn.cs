@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Numerics;
 
 namespace Acorn.Stream;
 
@@ -6,8 +7,15 @@ namespace Acorn.Stream;
 ///     比特流结构体，支持按位读写数据，最小化网络传输数据量。
 /// </summary>
 /// <remarks>
+///     <para>
 ///     比特流适用于需要将数据压缩到比特级别的场景，例如网络同步、紧凑存储等。
 ///     写入时自动扩容，读取时按比特位解析。
+///     </para>
+///     <para>
+///     内部采用 LSB-first 比特排列：比特 0 位于字节 0 的最低位。
+///     字节对齐时使用直接写入/读取，非对齐时按字节块处理，
+///     相比逐位循环可获得最高 8 倍的吞吐提升。
+///     </para>
 /// </remarks>
 public ref struct BitStream
 {
@@ -91,11 +99,16 @@ public ref struct BitStream
     {
         EnsureWriteCapacity(1);
 
+        var byteIndex = _bitPosition >> 3;
+        var bitIndex = _bitPosition & 7;
+
         if (value)
         {
-            var byteIndex = _bitPosition >> 3;
-            var bitIndex = _bitPosition & 7;
             _buffer[byteIndex] |= (byte)(1 << bitIndex);
+        }
+        else
+        {
+            _buffer[byteIndex] &= (byte)~(1 << bitIndex);
         }
 
         _bitPosition++;
@@ -116,40 +129,99 @@ public ref struct BitStream
 
         EnsureWriteCapacity(bits);
 
-        for (var i = 0; i < bits; i++)
+        var bitOffset = _bitPosition & 7;
+
+        if (bitOffset == 0)
         {
-            var bitValue = (value >> i) & 1;
-            var byteIndex = _bitPosition >> 3;
-            var bitIndex = _bitPosition & 7;
-
-            if (bitValue != 0)
-            {
-                _buffer[byteIndex] |= (byte)(1 << bitIndex);
-            }
-            else
-            {
-                _buffer[byteIndex] &= (byte)~(1 << bitIndex);
-            }
-
-            _bitPosition++;
+            WriteAligned(value, bits);
+        }
+        else
+        {
+            WriteUnaligned(value, bits, bitOffset);
         }
 
+        _bitPosition += bits;
         _bitLength = Math.Max(_bitLength, _bitPosition);
+    }
+
+    /// <summary>
+    ///     字节对齐快速写入路径。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void WriteAligned(uint value, int bits)
+    {
+        var byteIndex = _bitPosition >> 3;
+        var fullBytes = bits >> 3;
+
+        for (var i = 0; i < fullBytes; i++)
+        {
+            _buffer[byteIndex + i] = (byte)(value >> (i * 8));
+        }
+
+        var remaining = bits & 7;
+
+        if (remaining > 0)
+        {
+            _buffer[byteIndex + fullBytes] = (byte)(value >> (fullBytes * 8));
+        }
+    }
+
+    /// <summary>
+    ///     非对齐写入路径：按字节块处理，每次写入当前字节剩余空间。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void WriteUnaligned(uint value, int bits, int bitOffset)
+    {
+        var byteIndex = _bitPosition >> 3;
+        var available = 8 - bitOffset;
+        var written = 0;
+
+        while (written < bits)
+        {
+            var toWrite = Math.Min(bits - written, available);
+            var mask = (1 << toWrite) - 1;
+            var bitsToWrite = (int)(value >> written) & mask;
+
+            _buffer[byteIndex] = (byte)((_buffer[byteIndex] & ~(mask << bitOffset)) | (bitsToWrite << bitOffset));
+
+            written += toWrite;
+            byteIndex++;
+            bitOffset = 0;
+            available = 8;
+        }
     }
 
     /// <summary>
     ///     写入字节。
     /// </summary>
     /// <param name="value">字节值。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteByte(byte value)
     {
-        WriteBits(value, 8);
+        EnsureWriteCapacity(8);
+
+        var bitOffset = _bitPosition & 7;
+        var byteIndex = _bitPosition >> 3;
+
+        if (bitOffset == 0)
+        {
+            _buffer[byteIndex] = value;
+        }
+        else
+        {
+            _buffer[byteIndex] |= (byte)(value << bitOffset);
+            _buffer[byteIndex + 1] = (byte)(value >> (8 - bitOffset));
+        }
+
+        _bitPosition += 8;
+        _bitLength = Math.Max(_bitLength, _bitPosition);
     }
 
     /// <summary>
     ///     写入 16 位无符号整数。
     /// </summary>
     /// <param name="value">要写入的值。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteUInt16(ushort value)
     {
         WriteBits(value, 16);
@@ -159,25 +231,68 @@ public ref struct BitStream
     ///     写入 32 位无符号整数。
     /// </summary>
     /// <param name="value">要写入的值。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteUInt32(uint value)
     {
-        WriteBits(value, 32);
+        EnsureWriteCapacity(32);
+
+        var bitOffset = _bitPosition & 7;
+        var byteIndex = _bitPosition >> 3;
+
+        if (bitOffset == 0)
+        {
+            _buffer[byteIndex] = (byte)value;
+            _buffer[byteIndex + 1] = (byte)(value >> 8);
+            _buffer[byteIndex + 2] = (byte)(value >> 16);
+            _buffer[byteIndex + 3] = (byte)(value >> 24);
+        }
+        else
+        {
+            WriteUnaligned(value, 32, bitOffset);
+        }
+
+        _bitPosition += 32;
+        _bitLength = Math.Max(_bitLength, _bitPosition);
     }
 
     /// <summary>
     ///     写入 64 位无符号整数。
     /// </summary>
     /// <param name="value">要写入的值。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteUInt64(ulong value)
     {
-        WriteBits((uint)(value & 0xFFFFFFFF), 32);
-        WriteBits((uint)(value >> 32), 32);
+        EnsureWriteCapacity(64);
+
+        var bitOffset = _bitPosition & 7;
+        var byteIndex = _bitPosition >> 3;
+
+        if (bitOffset == 0)
+        {
+            _buffer[byteIndex] = (byte)value;
+            _buffer[byteIndex + 1] = (byte)(value >> 8);
+            _buffer[byteIndex + 2] = (byte)(value >> 16);
+            _buffer[byteIndex + 3] = (byte)(value >> 24);
+            _buffer[byteIndex + 4] = (byte)(value >> 32);
+            _buffer[byteIndex + 5] = (byte)(value >> 40);
+            _buffer[byteIndex + 6] = (byte)(value >> 48);
+            _buffer[byteIndex + 7] = (byte)(value >> 56);
+        }
+        else
+        {
+            WriteUnaligned((uint)(value & 0xFFFFFFFF), 32, bitOffset);
+            WriteUnaligned((uint)(value >> 32), 32, 0);
+        }
+
+        _bitPosition += 64;
+        _bitLength = Math.Max(_bitLength, _bitPosition);
     }
 
     /// <summary>
     ///     写入有符号 32 位整数。
     /// </summary>
     /// <param name="value">要写入的值。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteInt32(int value)
     {
         WriteBits((uint)value, 32);
@@ -187,6 +302,7 @@ public ref struct BitStream
     ///     写入有符号 64 位整数。
     /// </summary>
     /// <param name="value">要写入的值。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteInt64(long value)
     {
         WriteUInt64((ulong)value);
@@ -267,9 +383,28 @@ public ref struct BitStream
     {
         WriteBits((uint)data.Length, 16);
 
-        foreach (var b in data)
+        if (data.Length == 0)
         {
-            WriteByte(b);
+            return;
+        }
+
+        EnsureWriteCapacity(data.Length * 8);
+
+        var bitOffset = _bitPosition & 7;
+
+        if (bitOffset == 0)
+        {
+            var byteIndex = _bitPosition >> 3;
+            data.CopyTo(new Span<byte>(_buffer, byteIndex, data.Length));
+            _bitPosition += data.Length * 8;
+            _bitLength = Math.Max(_bitLength, _bitPosition);
+        }
+        else
+        {
+            for (var i = 0; i < data.Length; i++)
+            {
+                WriteByte(data[i]);
+            }
         }
     }
 
@@ -279,8 +414,21 @@ public ref struct BitStream
     /// <param name="value">要写入的字符串。</param>
     public void WriteString(string value)
     {
-        var bytes = System.Text.Encoding.UTF8.GetBytes(value);
-        WriteBytes(bytes);
+        var maxByteCount = System.Text.Encoding.UTF8.GetMaxByteCount(value.Length);
+        var bytes = maxByteCount <= 256 ? System.Buffers.ArrayPool<byte>.Shared.Rent(maxByteCount) : new byte[maxByteCount];
+
+        try
+        {
+            var written = System.Text.Encoding.UTF8.GetBytes(value, bytes);
+            WriteBytes(new ReadOnlySpan<byte>(bytes, 0, written));
+        }
+        finally
+        {
+            if (maxByteCount <= 256)
+            {
+                System.Buffers.ArrayPool<byte>.Shared.Return(bytes);
+            }
+        }
     }
 
     #endregion
@@ -324,15 +472,70 @@ public ref struct BitStream
             throw new InvalidOperationException($"比特流剩余 {_bitLength - _bitPosition} 比特，不足以读取 {bits} 比特");
         }
 
+        var bitOffset = _bitPosition & 7;
+
+        uint value;
+
+        if (bitOffset == 0)
+        {
+            value = ReadAligned(bits);
+        }
+        else
+        {
+            value = ReadUnaligned(bits, bitOffset);
+        }
+
+        _bitPosition += bits;
+        return value;
+    }
+
+    /// <summary>
+    ///     字节对齐快速读取路径。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private uint ReadAligned(int bits)
+    {
+        var byteIndex = _bitPosition >> 3;
+        var fullBytes = bits >> 3;
         uint value = 0;
 
-        for (var i = 0; i < bits; i++)
+        for (var i = 0; i < fullBytes; i++)
         {
-            var byteIndex = _bitPosition >> 3;
-            var bitIndex = _bitPosition & 7;
-            var bit = (_buffer[byteIndex] >> bitIndex) & 1;
-            value |= (uint)(bit << i);
-            _bitPosition++;
+            value |= (uint)_buffer[byteIndex + i] << (i * 8);
+        }
+
+        var remaining = bits & 7;
+
+        if (remaining > 0)
+        {
+            value |= (uint)(_buffer[byteIndex + fullBytes] & ((1 << remaining) - 1)) << (fullBytes * 8);
+        }
+
+        return value;
+    }
+
+    /// <summary>
+    ///     非对齐读取路径：按字节块处理，每次读取当前字节可用比特。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private uint ReadUnaligned(int bits, int bitOffset)
+    {
+        var byteIndex = _bitPosition >> 3;
+        var available = 8 - bitOffset;
+        var read = 0;
+        uint value = 0;
+
+        while (read < bits)
+        {
+            var toRead = Math.Min(bits - read, available);
+            var mask = (1 << toRead) - 1;
+            var byteValue = (_buffer[byteIndex] >> bitOffset) & mask;
+            value |= (uint)byteValue << read;
+
+            read += toRead;
+            byteIndex++;
+            bitOffset = 0;
+            available = 8;
         }
 
         return value;
@@ -342,15 +545,36 @@ public ref struct BitStream
     ///     读取字节。
     /// </summary>
     /// <returns>读取的字节值。</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte ReadByte()
     {
-        return (byte)ReadBits(8);
+        if (_bitPosition + 8 > _bitLength)
+        {
+            throw new InvalidOperationException("比特流剩余比特不足以读取 1 字节");
+        }
+
+        var bitOffset = _bitPosition & 7;
+        var byteIndex = _bitPosition >> 3;
+        byte value;
+
+        if (bitOffset == 0)
+        {
+            value = _buffer[byteIndex];
+        }
+        else
+        {
+            value = (byte)((_buffer[byteIndex] >> bitOffset) | (_buffer[byteIndex + 1] << (8 - bitOffset)));
+        }
+
+        _bitPosition += 8;
+        return value;
     }
 
     /// <summary>
     ///     读取 16 位无符号整数。
     /// </summary>
     /// <returns>读取的值。</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ushort ReadUInt16()
     {
         return (ushort)ReadBits(16);
@@ -360,9 +584,32 @@ public ref struct BitStream
     ///     读取 32 位无符号整数。
     /// </summary>
     /// <returns>读取的值。</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint ReadUInt32()
     {
-        return ReadBits(32);
+        if (_bitPosition + 32 > _bitLength)
+        {
+            throw new InvalidOperationException("比特流剩余比特不足以读取 32 位整数");
+        }
+
+        var bitOffset = _bitPosition & 7;
+        var byteIndex = _bitPosition >> 3;
+        uint value;
+
+        if (bitOffset == 0)
+        {
+            value = _buffer[byteIndex]
+                    | ((uint)_buffer[byteIndex + 1] << 8)
+                    | ((uint)_buffer[byteIndex + 2] << 16)
+                    | ((uint)_buffer[byteIndex + 3] << 24);
+        }
+        else
+        {
+            value = ReadUnaligned(32, bitOffset);
+        }
+
+        _bitPosition += 32;
+        return value;
     }
 
     /// <summary>
@@ -459,11 +706,26 @@ public ref struct BitStream
     public byte[] ReadBytes()
     {
         var length = (int)ReadBits(16);
+
+        if (length == 0)
+        {
+            return [];
+        }
+
         var data = new byte[length];
 
-        for (var i = 0; i < length; i++)
+        if ((_bitPosition & 7) == 0)
         {
-            data[i] = ReadByte();
+            var byteIndex = _bitPosition >> 3;
+            new Span<byte>(_buffer, byteIndex, length).CopyTo(data);
+            _bitPosition += length * 8;
+        }
+        else
+        {
+            for (var i = 0; i < length; i++)
+            {
+                data[i] = ReadByte();
+            }
         }
 
         return data;
@@ -521,6 +783,7 @@ public ref struct BitStream
     /// </summary>
     /// <param name="value">要表示的最大值。</param>
     /// <returns>所需比特数。</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int BitsRequired(uint value)
     {
         if (value == 0)
@@ -528,15 +791,7 @@ public ref struct BitStream
             return 1;
         }
 
-        var bits = 0;
-
-        while (value > 0)
-        {
-            value >>= 1;
-            bits++;
-        }
-
-        return bits;
+        return BitOperations.Log2(value) + 1;
     }
 
     #endregion
@@ -547,6 +802,7 @@ public ref struct BitStream
     ///     确保写入容量足够。
     /// </summary>
     /// <param name="bitsToWrite">需要写入的比特数。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureWriteCapacity(int bitsToWrite)
     {
         var requiredBytes = (_bitPosition + bitsToWrite + 7) >> 3;

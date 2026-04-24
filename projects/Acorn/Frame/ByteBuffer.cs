@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using Acorn.Codec;
 
@@ -374,6 +375,28 @@ public ref struct ByteBuffer
     #endregion
 
     #region 浮点数
+
+    /// <summary>
+    ///     以小端序读取一个 16 位半精度浮点数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half ReadF16LE()
+    {
+        var bits = BinaryPrimitives.ReadUInt16LittleEndian(_data.Slice(_position));
+        _position += 2;
+        return BitConverter.UInt16BitsToHalf(bits);
+    }
+
+    /// <summary>
+    ///     以大端序读取一个 16 位半精度浮点数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half ReadF16BE()
+    {
+        var bits = BinaryPrimitives.ReadUInt16BigEndian(_data.Slice(_position));
+        _position += 2;
+        return BitConverter.UInt16BitsToHalf(bits);
+    }
 
     /// <summary>
     ///     以小端序读取一个 32 位浮点数并前进 4 字节。
@@ -782,6 +805,208 @@ public ref struct ByteBuffer
             _position += size;
         }
         return value;
+    }
+
+    #endregion
+
+    #region Unsafe 快速读取路径
+
+    /// <summary>
+    ///     不检查边界地读取一个无符号 8 位整数并前进 1 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte UnsafeReadU8()
+    {
+        return _data[_position++];
+    }
+
+    /// <summary>
+    ///     不检查边界地以小端序读取一个无符号 16 位整数并前进 2 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort UnsafeReadU16LE()
+    {
+        var value = Unsafe.ReadUnaligned<ushort>(ref MemoryMarshal.GetReference(_data.Slice(_position)));
+        _position += 2;
+
+        if (BitConverter.IsLittleEndian)
+        {
+            return value;
+        }
+
+        return BinaryPrimitives.ReverseEndianness(value);
+    }
+
+    /// <summary>
+    ///     不检查边界地以大端序读取一个无符号 16 位整数并前进 2 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort UnsafeReadU16BE()
+    {
+        var value = Unsafe.ReadUnaligned<ushort>(ref MemoryMarshal.GetReference(_data.Slice(_position)));
+        _position += 2;
+
+        if (!BitConverter.IsLittleEndian)
+        {
+            return value;
+        }
+
+        return BinaryPrimitives.ReverseEndianness(value);
+    }
+
+    /// <summary>
+    ///     不检查边界地以小端序读取一个无符号 32 位整数并前进 4 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint UnsafeReadU32LE()
+    {
+        var value = Unsafe.ReadUnaligned<uint>(ref MemoryMarshal.GetReference(_data.Slice(_position)));
+        _position += 4;
+
+        if (BitConverter.IsLittleEndian)
+        {
+            return value;
+        }
+
+        return BinaryPrimitives.ReverseEndianness(value);
+    }
+
+    /// <summary>
+    ///     不检查边界地以大端序读取一个无符号 32 位整数并前进 4 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint UnsafeReadU32BE()
+    {
+        var value = Unsafe.ReadUnaligned<uint>(ref MemoryMarshal.GetReference(_data.Slice(_position)));
+        _position += 4;
+
+        if (!BitConverter.IsLittleEndian)
+        {
+            return value;
+        }
+
+        return BinaryPrimitives.ReverseEndianness(value);
+    }
+
+    /// <summary>
+    ///     不检查边界地以小端序读取一个无符号 64 位整数并前进 8 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong UnsafeReadU64LE()
+    {
+        var value = Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(_data.Slice(_position)));
+        _position += 8;
+
+        if (BitConverter.IsLittleEndian)
+        {
+            return value;
+        }
+
+        return BinaryPrimitives.ReverseEndianness(value);
+    }
+
+    /// <summary>
+    ///     不检查边界地以大端序读取一个无符号 64 位整数并前进 8 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong UnsafeReadU64BE()
+    {
+        var value = Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(_data.Slice(_position)));
+        _position += 8;
+
+        if (!BitConverter.IsLittleEndian)
+        {
+            return value;
+        }
+
+        return BinaryPrimitives.ReverseEndianness(value);
+    }
+
+    /// <summary>
+    ///     不检查边界地以小端序读取一个有符号 32 位整数并前进 4 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int UnsafeReadI32LE()
+    {
+        return (int)UnsafeReadU32LE();
+    }
+
+    /// <summary>
+    ///     不检查边界地以大端序读取一个有符号 32 位整数并前进 4 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int UnsafeReadI32BE()
+    {
+        return (int)UnsafeReadU32BE();
+    }
+
+    /// <summary>
+    ///     不检查边界地以小端序读取一个有符号 64 位整数并前进 8 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long UnsafeReadI64LE()
+    {
+        return (long)UnsafeReadU64LE();
+    }
+
+    /// <summary>
+    ///     不检查边界地以大端序读取一个有符号 64 位整数并前进 8 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long UnsafeReadI64BE()
+    {
+        return (long)UnsafeReadU64BE();
+    }
+
+    /// <summary>
+    ///     不检查边界地以小端序读取一个 32 位浮点数并前进 4 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float UnsafeReadF32LE()
+    {
+        return BitConverter.UInt32BitsToSingle(UnsafeReadU32LE());
+    }
+
+    /// <summary>
+    ///     不检查边界地以大端序读取一个 32 位浮点数并前进 4 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float UnsafeReadF32BE()
+    {
+        return BitConverter.UInt32BitsToSingle(UnsafeReadU32BE());
+    }
+
+    /// <summary>
+    ///     不检查边界地以小端序读取一个 64 位浮点数并前进 8 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double UnsafeReadF64LE()
+    {
+        return BitConverter.UInt64BitsToDouble(UnsafeReadU64LE());
+    }
+
+    /// <summary>
+    ///     不检查边界地以大端序读取一个 64 位浮点数并前进 8 字节。
+    ///     调用方必须保证缓冲区有足够数据。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double UnsafeReadF64BE()
+    {
+        return BitConverter.UInt64BitsToDouble(UnsafeReadU64BE());
     }
 
     #endregion
