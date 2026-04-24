@@ -1,75 +1,66 @@
-# Acorn.DWARF
+# 📦 Acorn.DWARF
 
-Acorn DWARF 格式库，提供调试信息（.debug）的扫描和解码功能。
+DWARF 调试信息格式编解码器。
 
-## 功能特性
+## 📐 格式布局
 
-- **DWARF 文件解码**：解析调试信息格式
-- **DWARF 文件扫描**：快速扫描 DWARF 文件结构
-- **支持 DWARF 2/3/4/5**：兼容多个 DWARF 版本
-- **编译单元解析**：提取编译单元信息
-- **行号表解析**：提取源码行号映射
-- **轻量级实现**：不依赖第三方库，纯 C# 实现
-- **与 Acorn 核心集成**：使用 Acorn 核心的编解码接口
+DWARF 是一种用于可执行文件的调试信息格式，包含编译单元、调试行、调试帧等信息。
 
-## 安装
+### 编译单元头（Compilation Unit Header）
 
-```bash
-dotnet add package Acorn.DWARF
-```
+| 字段 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| UnitLength | 0x00 | 4/12 | 单元长度（不含自身），4字节或12字节（64位DWARF） | `DWARFCompilationUnitData.UnitLength` |
+| Version | 0x04 | 2 | DWARF 版本（2/3/4/5） | `DWARFCompilationUnitData.Version` |
+| DebugInfoOffset | 0x06 | 4/8 | 缩略码表偏移（DWARF 4+） | `DWARFCompilationUnitData.DebugInfoOffset` |
+| AddressSize | 0x0A | 1 | 地址大小（4/8） | `DWARFCompilationUnitData.AddressSize` |
+| SegmentSelectorSize | 0x0B | 1 | 段选择子大小 | `DWARFCompilationUnitData.SegmentSelectorSize` |
 
-## 使用示例
+### 调试信息条目（DIE - Debugging Information Entry）
 
-### 解码 DWARF 文件
+| 字段 | 大小 | 说明 | 对应类 |
+|---|---|---|---|
+| AbbreviationCode | LEB128 | 缩略码（0 表示兄弟链结束） | `DWARFEntryData.AbbreviationCode` |
+| Tag | 隐含 | 标签类型（由缩略码定义） | `DWARFEntryData.Tag` |
+| HasChildren | 1 | 是否有子条目 | `DWARFEntryData.HasChildren` |
+| Attributes | 变长 | 属性列表 | `DWARFEntryData.Attributes` |
 
-```csharp
-using Acorn.DWARF.Decode;
+### 属性（Attribute）
 
-var data = File.ReadAllBytes("example.debug");
+| 字段 | 大小 | 说明 | 对应类 |
+|---|---|---|---|
+| Name | 隐含 | 属性名称（由缩略码定义） | `DWARFAttributeData.Name` |
+| Form | 隐含 | 属性形式（编码方式） | `DWARFAttributeData.Form` |
+| Value | 变长 | 属性值（根据 Form 编码） | `DWARFAttributeData.Value` |
 
-var decoder = new DWARFDecoder();
-var dwarfFile = decoder.Decode(data);
+### 常见属性形式（Form）
 
-Console.WriteLine($"Compilation units: {dwarfFile.CompilationUnits.Count}");
-foreach (var unit in dwarfFile.CompilationUnits)
-{
-    Console.WriteLine($"- DWARF {unit.Version}: {unit.Entries.Count} entries");
-}
-```
+| Form | 说明 | 编码 |
+|---|---|---|
+| DW_FORM_addr | 地址 | 按 AddressSize |
+| DW_FORM_block | 数据块 | ULEB128 长度 + 数据 |
+| DW_FORM_block1/2/4 | 固定长度数据块 | 1/2/4 字节长度 + 数据 |
+| DW_FORM_data1/2/4/8 | 无符号整数 | 1/2/4/8 字节 |
+| DW_FORM_sdata | 有符号整数 | SLEB128 |
+| DW_FORM_udata | 无符号整数 | ULEB128 |
+| DW_FORM_string | 字符串 | 以 null 结尾 |
+| DW_FORM_strp | 字符串指针 | 节区偏移 |
+| DW_FORM_ref1/2/4/8 | 引用 | 1/2/4/8 字节偏移 |
+| DW_FORM_flag | 布尔值 | 1 字节 |
+| DW_FORM_exprloc | 表达式位置 | ULEB128 长度 + 数据 |
 
-### 扫描 DWARF 文件
+## 🏗️ 核心类
 
-```csharp
-using Acorn.DWARF.Scanner;
+| 类 | 说明 | 文件 |
+|---|---|---|
+| `DWARFCompilationUnitData` | DWARF 编译单元 | [Data/DWARFData.cs](Data/DWARFData.cs) |
+| `DWARFEntryData` | 调试信息条目 | [Data/DWARFData.cs](Data/DWARFData.cs) |
+| `DWARFAttributeData` | 属性数据 | [Data/DWARFData.cs](Data/DWARFData.cs) |
+| `DWARFDecoder` | DWARF 解码器 | [Decode/DWARFDecoder.cs](Decode/DWARFDecoder.cs) |
+| `DWARFScanner` | DWARF 扫描器 | [Scanner/DWARFScanner.cs](Scanner/DWARFScanner.cs) |
 
-var data = File.ReadAllBytes("example.debug");
+## 📚 格式规范参考
 
-var scanResult = DWARFScanner.Scan(data);
-Console.WriteLine(scanResult);
-```
-
-## 项目结构
-
-- `Acorn.DWARF/`
-  - `Data/` - 数据结构
-    - `DWARFData.cs` - DWARF 文件数据结构
-  - `Decode/` - 解码器
-    - `DWARFDecoder.cs` - DWARF 文件解码器
-  - `Scanner/` - 扫描器
-    - `DWARFScanner.cs` - DWARF 文件扫描器
-
-## 支持的格式
-
-- **DWARF 2**：调试信息格式版本 2
-- **DWARF 3**：调试信息格式版本 3
-- **DWARF 4**：调试信息格式版本 4
-- **DWARF 5**：调试信息格式版本 5
-
-## 依赖
-
-- .NET 11.0+
-- Acorn.Core
-
-## 许可证
-
-MPL-2.0
+- [DWARF 调试信息格式标准](https://dwarfstd.org/)
+- [DWARF 5 规范 PDF](https://dwarfstd.org/doc/DWARF5.pdf)
+- [DWARF Tutorial](https://wiki.dwarfstd.org/)
