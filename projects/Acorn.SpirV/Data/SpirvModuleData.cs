@@ -1,5 +1,6 @@
 using Acorn;
 using Acorn.Attributes;
+using Acorn.Codec;
 
 namespace Acorn.Spirv.Data;
 

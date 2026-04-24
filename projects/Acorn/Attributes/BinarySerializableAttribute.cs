@@ -1,4 +1,5 @@
 using Acorn;
+using Acorn.Codec;
 
 namespace Acorn.Attributes;
 

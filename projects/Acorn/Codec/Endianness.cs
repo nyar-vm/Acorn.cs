@@ -1,4 +1,4 @@
-namespace Acorn;
+namespace Acorn.Codec;
 
 /// <summary>
 ///     字节序枚举，定义二进制数据在内存中的存储顺序。
