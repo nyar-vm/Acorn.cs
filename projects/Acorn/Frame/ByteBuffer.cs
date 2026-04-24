@@ -499,10 +499,28 @@ public ref struct ByteBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int ReadLeb128I32()
     {
-        var raw = ReadLeb128U32();
-        var isNegative = (raw & 1) != 0;
-        var result = (int)(raw >> 1);
-        return isNegative ? -result - 1 : result;
+        int result = 0;
+        var shift = 0;
+        byte b;
+
+        do
+        {
+            if (_position >= _data.Length)
+            {
+                throw new InvalidOperationException("已到达数据末尾，LEB128 编码不完整");
+            }
+
+            b = _data[_position++];
+            result |= (b & 0x7F) << shift;
+            shift += 7;
+        } while ((b & 0x80) != 0);
+
+        if (shift < 32 && (b & 0x40) != 0)
+        {
+            result |= ~0 << shift;
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -536,24 +554,27 @@ public ref struct ByteBuffer
     {
         value = 0;
         consumed = 0;
-        uint raw = 0;
+        int result = 0;
         var shift = 0;
+        byte b;
 
         while (consumed < data.Length)
         {
-            var b = data[consumed];
+            b = data[consumed];
             consumed++;
-            raw |= (uint)(b & 0x7F) << shift;
+            result |= (b & 0x7F) << shift;
+            shift += 7;
 
             if ((b & 0x80) == 0)
             {
-                var isNegative = (raw & 1) != 0;
-                var result = (int)(raw >> 1);
-                value = isNegative ? -result - 1 : result;
+                if (shift < 32 && (b & 0x40) != 0)
+                {
+                    result |= ~0 << shift;
+                }
+
+                value = result;
                 return true;
             }
-
-            shift += 7;
 
             if (shift >= 32)
             {

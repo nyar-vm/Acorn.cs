@@ -347,14 +347,22 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128I32(int value)
     {
-        var uvalue = (uint)(value < 0 ? (~(uint)(-value) << 1) | 1 : (uint)value << 1);
-        while (true)
+        var more = true;
+        while (more)
         {
-            var b = (byte)(uvalue & 0x7F);
-            uvalue >>= 7;
-            if (uvalue != 0) b |= 0x80;
+            var b = (byte)(value & 0x7F);
+            value >>= 7;
+
+            if ((value == 0 && (b & 0x40) == 0) || (value == -1 && (b & 0x40) != 0))
+            {
+                more = false;
+            }
+            else
+            {
+                b |= 0x80;
+            }
+
             _buffer[_position++] = b;
-            if (uvalue == 0) break;
         }
     }
 

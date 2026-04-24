@@ -3,19 +3,18 @@
         <TargetFramework>net11.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
         <RootNamespace>Acorn.Tests</RootNamespace>
-        <PackageId>nyar-vm.Acorn.Tests</PackageId>
-        <Version>0.0.0</Version>
-        <Authors>nyar-vm</Authors>
-        <Description>Acorn 二进制解析测试工具包</Description>
-        <PackageTags>test;utils;acorn</PackageTags>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="xunit" Version="2.9.3" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.*">
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-          <PrivateAssets>all</PrivateAssets>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+        <PackageReference Include="xunit" Version="2.9.*" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.*">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\projects\Acorn\Acorn.csproj" />
     </ItemGroup>
 </Project>
