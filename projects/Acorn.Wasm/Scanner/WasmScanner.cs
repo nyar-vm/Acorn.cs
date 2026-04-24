@@ -5,204 +5,175 @@ using Acorn.Wasm.Data;
 namespace Acorn.Wasm.Scanner;
 
 /// <summary>
-///     WebAssembly 二进制扫描器，基于 <see cref="ByteBuffer" /> 提供零分配的快速元信息扫描。
+///     WebAssembly 二进制格式扫描器，基于 <see cref="SpanScanner" /> 提供对 WASM 模块的快速元信息扫描。
 /// </summary>
-/// <remarks>
-///     扫描器解析 Wasm 模块的结构，提取版本、段数量、函数数量等元信息，
-///     不做完整的指令解码，以实现零分配高性能扫描。
-/// </remarks>
-public ref struct WasmScanner
+public ref struct WasmScanner : IWasmScanner
 {
-    private static ReadOnlySpan<byte> WasmMagic => WasmConstants.MagicNumber;
-
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="WasmScanner" /> 结构的新实例。
     /// </summary>
-    /// <param name="data">要扫描的 Wasm 字节数据。</param>
+    /// <param name="data">要扫描的 WASM 字节数据。</param>
     public WasmScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
-    ///     当前扫描位置。
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
     /// </summary>
-    public int Position
+    public SpanScanner Scanner => _scanner;
+
+    /// <inheritdoc />
+    public uint ReadVersion()
     {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
+        return _scanner.Buffer.ReadU32LE();
+    }
+
+    /// <inheritdoc />
+    public string ReadName()
+    {
+        var length = (int)_scanner.Buffer.ReadLeb128U32();
+        return _scanner.Buffer.ReadString(length);
+    }
+
+    /// <inheritdoc />
+    public uint ReadLeb128UInt32()
+    {
+        return _scanner.Buffer.ReadLeb128U32();
     }
 
     /// <summary>
-    ///     数据总长度。
+    ///     扫描 WASM 文件头，提取版本信息。
     /// </summary>
-    public int Length => _buffer.Length;
-
-    /// <summary>
-    ///     是否已到达数据末尾。
-    /// </summary>
-    public bool IsEndOfData => _buffer.IsEnd;
-
-    /// <summary>
-    ///     扫描 Wasm 模块头，验证魔数并提取版本信息。
-    /// </summary>
-    /// <returns>Wasm 版本号。</returns>
-    public uint ScanHeader()
+    public WasmScanHeader ScanHeader()
     {
-        if (_buffer.Length < 8)
+        if (_scanner.Length < 8)
         {
-            throw new InvalidDataException("Wasm 文件数据过短，无法读取头信息");
+            throw new InvalidDataException("WASM 文件数据过短，无法读取文件头");
         }
 
-        if (!_buffer.ConsumeMagic(WasmMagic))
+        if (!_scanner.MatchMagic(WasmConstants.MagicNumber))
         {
-            throw new InvalidDataException("无效的 Wasm 魔数");
+            throw new InvalidDataException("WASM 文件魔数不匹配");
         }
 
-        return _buffer.ReadU32LE();
-    }
+        _scanner.ConsumeMagic(WasmConstants.MagicNumber);
+        var version = ReadVersion();
 
-    /// <summary>
-    ///     扫描 Wasm 模块，提取完整的统计信息。
-    /// </summary>
-    /// <returns>Wasm 模块统计信息。</returns>
-    public WasmStatistics ScanStatistics()
-    {
-        var version = ScanHeader();
-        var sectionCounts = new Dictionary<WasmSectionId, int>();
-        var typeCount = 0u;
-        var functionCount = 0u;
-        var importCount = 0u;
-        var exportCount = 0u;
-        var tableCount = 0u;
-        var memoryCount = 0u;
-        var globalCount = 0u;
-        var elementCount = 0u;
-        var codeCount = 0u;
-        var dataCount = 0u;
-        var customSectionNames = new List<string>();
-
-        while (!_buffer.IsEnd)
+        return new WasmScanHeader
         {
-            var sectionId = _buffer.ReadU8();
-            var sectionSize = _buffer.ReadLeb128U32();
-            var sectionEnd = _buffer.Position + (int)sectionSize;
-
-            var wasmSectionId = (WasmSectionId)sectionId;
-            if (!sectionCounts.ContainsKey(wasmSectionId))
-            {
-                sectionCounts[wasmSectionId] = 0;
-            }
-
-            sectionCounts[wasmSectionId]++;
-
-            switch (wasmSectionId)
-            {
-                case WasmSectionId.Type:
-                    typeCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Function:
-                    functionCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Import:
-                    importCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Export:
-                    exportCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Table:
-                    tableCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Memory:
-                    memoryCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Global:
-                    globalCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Element:
-                    elementCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Code:
-                    codeCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Data:
-                    dataCount = _buffer.ReadLeb128U32();
-                    break;
-
-                case WasmSectionId.Custom:
-                    var nameLength = _buffer.ReadLeb128U32();
-                    var name = _buffer.ReadString((int)nameLength);
-                    customSectionNames.Add(name);
-                    break;
-            }
-
-            _buffer.Position = sectionEnd;
-        }
-
-        return new WasmStatistics
-        {
-            Version = version,
-            SectionCounts = sectionCounts,
-            TypeCount = typeCount,
-            FunctionCount = functionCount,
-            ImportCount = importCount,
-            ExportCount = exportCount,
-            TableCount = tableCount,
-            MemoryCount = memoryCount,
-            GlobalCount = globalCount,
-            ElementCount = elementCount,
-            CodeCount = codeCount,
-            DataCount = dataCount,
-            CustomSectionNames = customSectionNames
+            Version = version
         };
     }
 
     /// <summary>
-    ///     扫描 Wasm 模块，提取所有导出项的名称和类型。
+    ///     扫描 WASM 模块，提取统计信息。
     /// </summary>
-    /// <returns>导出项列表。</returns>
-    public List<WasmExportInfo> ScanExports()
+    public WasmStatistics ScanStatistics()
     {
-        ScanHeader();
-        var exports = new List<WasmExportInfo>();
+        var header = ScanHeader();
 
-        while (!_buffer.IsEnd)
+        var stats = new WasmStatistics
         {
-            var sectionId = _buffer.ReadU8();
-            var sectionSize = _buffer.ReadLeb128U32();
-            var sectionEnd = _buffer.Position + (int)sectionSize;
+            Version = header.Version
+        };
+
+        while (!_scanner.IsEnd)
+        {
+            var sectionId = _scanner.Buffer.ReadU8();
+
+            if (sectionId > 12)
+            {
+                break;
+            }
+
+            var sectionSize = (int)_scanner.Buffer.ReadLeb128U32();
+            var sectionEnd = _scanner.Position + sectionSize;
+
+            switch ((WasmSectionId)sectionId)
+            {
+                case WasmSectionId.Type:
+                    stats.TypeSectionSize = sectionSize;
+                    break;
+                case WasmSectionId.Import:
+                    stats.ImportCount = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+                case WasmSectionId.Function:
+                    stats.FunctionCount = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+                case WasmSectionId.Table:
+                    stats.TableCount = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+                case WasmSectionId.Memory:
+                    stats.MemoryCount = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+                case WasmSectionId.Global:
+                    stats.GlobalCount = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+                case WasmSectionId.Export:
+                    stats.ExportCount = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+                case WasmSectionId.Start:
+                    stats.HasStartFunction = true;
+                    break;
+                case WasmSectionId.Element:
+                    stats.ElementCount = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+                case WasmSectionId.Code:
+                    stats.CodeCount = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+                case WasmSectionId.Data:
+                    stats.DataCount = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+                case WasmSectionId.DataCount:
+                    stats.DataCountSection = (int)_scanner.Buffer.ReadLeb128U32();
+                    break;
+            }
+
+            _scanner.Position = sectionEnd;
+        }
+
+        return stats;
+    }
+
+    /// <summary>
+    ///     扫描 WASM 模块，提取导出名称列表。
+    /// </summary>
+    public List<(WasmExportKind Kind, string Name)> ScanExports()
+    {
+        var exports = new List<(WasmExportKind, string)>();
+        var header = ScanHeader();
+
+        while (!_scanner.IsEnd)
+        {
+            var sectionId = _scanner.Buffer.ReadU8();
+
+            if (sectionId > 12)
+            {
+                break;
+            }
+
+            var sectionSize = (int)_scanner.Buffer.ReadLeb128U32();
+            var sectionEnd = _scanner.Position + sectionSize;
 
             if ((WasmSectionId)sectionId == WasmSectionId.Export)
             {
-                var exportCount = _buffer.ReadLeb128U32();
-                for (var i = 0; i < exportCount; i++)
-                {
-                    var nameLength = _buffer.ReadLeb128U32();
-                    var name = _buffer.ReadString((int)nameLength);
-                    var kind = _buffer.ReadU8();
-                    var index = _buffer.ReadLeb128U32();
+                var count = (int)_scanner.Buffer.ReadLeb128U32();
 
-                    exports.Add(new WasmExportInfo
-                    {
-                        Name = name,
-                        Kind = (WasmExternalKind)kind,
-                        Index = index
-                    });
+                for (var i = 0; i < count; i++)
+                {
+                    var name = ReadName();
+                    var kind = (WasmExportKind)_scanner.Buffer.ReadU8();
+                    _scanner.Buffer.ReadLeb128U32();
+                    exports.Add((kind, name));
                 }
+
+                break;
             }
 
-            _buffer.Position = sectionEnd;
+            _scanner.Position = sectionEnd;
         }
 
         return exports;
@@ -210,93 +181,22 @@ public ref struct WasmScanner
 }
 
 /// <summary>
-///     Wasm 模块统计信息。
+///     WASM 扫描头部信息。
 /// </summary>
-public sealed class WasmStatistics
+public sealed class WasmScanHeader
 {
     /// <summary>
-    ///     Wasm 版本号。
+    ///     WASM 版本号。
     /// </summary>
     public uint Version { get; init; }
 
     /// <summary>
-    ///     各段的数量统计。
+    ///     版本名称。
     /// </summary>
-    public Dictionary<WasmSectionId, int> SectionCounts { get; init; } = new();
-
-    /// <summary>
-    ///     类型数量。
-    /// </summary>
-    public uint TypeCount { get; init; }
-
-    /// <summary>
-    ///     函数数量。
-    /// </summary>
-    public uint FunctionCount { get; init; }
-
-    /// <summary>
-    ///     导入数量。
-    /// </summary>
-    public uint ImportCount { get; init; }
-
-    /// <summary>
-    ///     导出数量。
-    /// </summary>
-    public uint ExportCount { get; init; }
-
-    /// <summary>
-    ///     表数量。
-    /// </summary>
-    public uint TableCount { get; init; }
-
-    /// <summary>
-    ///     内存数量。
-    /// </summary>
-    public uint MemoryCount { get; init; }
-
-    /// <summary>
-    ///     全局变量数量。
-    /// </summary>
-    public uint GlobalCount { get; init; }
-
-    /// <summary>
-    ///     元素段数量。
-    /// </summary>
-    public uint ElementCount { get; init; }
-
-    /// <summary>
-    ///     代码段数量。
-    /// </summary>
-    public uint CodeCount { get; init; }
-
-    /// <summary>
-    ///     数据段数量。
-    /// </summary>
-    public uint DataCount { get; init; }
-
-    /// <summary>
-    ///     自定义段名称列表。
-    /// </summary>
-    public List<string> CustomSectionNames { get; init; } = new();
-}
-
-/// <summary>
-///     Wasm 导出项信息。
-/// </summary>
-public sealed class WasmExportInfo
-{
-    /// <summary>
-    ///     导出名称。
-    /// </summary>
-    public string Name { get; init; } = string.Empty;
-
-    /// <summary>
-    ///     导出种类。
-    /// </summary>
-    public WasmExternalKind Kind { get; init; }
-
-    /// <summary>
-    ///     导出项索引。
-    /// </summary>
-    public uint Index { get; init; }
+    public string VersionName => Version switch
+    {
+        1 => "MVP",
+        2 => "Feature Test",
+        _ => $"0x{Version:X8}"
+    };
 }

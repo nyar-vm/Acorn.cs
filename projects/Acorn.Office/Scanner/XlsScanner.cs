@@ -1,4 +1,3 @@
-using System.Buffers.Binary;
 using System.Text;
 using Acorn.Frame;
 using Acorn.Office.Data;
@@ -6,97 +5,77 @@ using Acorn.Office.Data;
 namespace Acorn.Office.Scanner;
 
 /// <summary>
-///     XLS 文件扫描器，基于 <see cref="ByteBuffer" /> 提供对 Excel 97-2003 (.xls) 文件的快速结构扫描。
+///     XLS 文件扫描器，基于 <see cref="SpanScanner" /> 提供对 Excel 二进制格式（BIFF）文件的快速元信息扫描。
 /// </summary>
 public ref struct XlsScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
+    /// <summary>
+    ///     初始化 <see cref="XlsScanner" /> 结构的新实例。
+    /// </summary>
+    /// <param name="data">要扫描的 XLS 字节数据。</param>
     public XlsScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    public int Length => _buffer.Length;
-
-    public bool IsEndOfData => _buffer.IsEnd;
+    /// <summary>
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
+    /// </summary>
+    public SpanScanner Scanner => _scanner;
 
     /// <summary>
     ///     验证 XLS 文件头。
     /// </summary>
     public bool ValidateHeader()
     {
-        return _buffer.MatchMagic(OfficeConstants.Ole2MagicNumber);
+        if (_scanner.Length < XlsConstants.HeaderSize)
+        {
+            return false;
+        }
+
+        return _scanner.MatchMagic(XlsConstants.MagicNumber);
     }
 
     /// <summary>
-    ///     扫描 XLS 文件，提取 BIFF 记录统计信息。
+    ///     扫描 XLS 文件，提取统计信息。
     /// </summary>
-    public XlsStatistics ScanStatistics()
+    public XlsScanStatistics ScanStatistics()
     {
-        var stats = new XlsStatistics();
+        var stats = new XlsScanStatistics();
 
         if (!ValidateHeader())
         {
             return stats;
         }
 
-        _buffer.Position = 512;
+        _scanner.ConsumeMagic(XlsConstants.MagicNumber);
 
-        while (_buffer.Position + 4 <= _buffer.Length)
+        while (!_scanner.IsEnd && _scanner.Position + 4 <= _scanner.Length)
         {
-            var recordType = _buffer.ReadU16LE();
-            var recordLength = _buffer.ReadU16LE();
-
-            if (_buffer.Position + recordLength > _buffer.Length)
-            {
-                break;
-            }
+            var recordType = _scanner.Buffer.ReadU16LE();
+            var recordSize = _scanner.Buffer.ReadU16LE();
 
             switch (recordType)
             {
-                case 0x0009:
-                    stats.SheetCount++;
-                    break;
-                case 0x0018:
-                    if (recordLength > 0)
+                case XlsRecordType.BOF:
+                    if (recordSize >= 2)
                     {
-                        var nameLen = _buffer.ReadU8();
-                        if (nameLen > 0 && nameLen < recordLength)
-                        {
-                            stats.SheetNames.Add(_buffer.ReadString(nameLen));
-                        }
-
-                        _buffer.Advance(recordLength - 1 - (nameLen > 0 && nameLen < recordLength ? nameLen : 0));
+                        var biffVersion = _scanner.Buffer.ReadU16LE();
+                        stats.BiffVersion = biffVersion;
                     }
 
+                    _scanner.Advance(recordSize - (recordSize >= 2 ? 2 : 0));
                     break;
-                case 0x0208:
-                    stats.RowCount++;
-                    _buffer.Advance(recordLength);
+                case XlsRecordType.SheetName:
+                    stats.SheetCount++;
+                    _scanner.Advance(recordSize);
                     break;
-                case 0x0203:
-                case 0x027E:
-                    stats.NumericCellCount++;
-                    _buffer.Advance(recordLength);
-                    break;
-                case 0x0006:
-                    stats.FormulaCount++;
-                    _buffer.Advance(recordLength);
-                    break;
-                case 0x00FD:
-                case 0x0204:
-                    stats.StringCellCount++;
-                    _buffer.Advance(recordLength);
-                    break;
+                case XlsRecordType.EOF:
+                    return stats;
                 default:
-                    _buffer.Advance(recordLength);
+                    _scanner.Advance(recordSize);
                     break;
             }
         }
@@ -106,14 +85,30 @@ public ref struct XlsScanner
 }
 
 /// <summary>
-///     XLS 文件统计信息。
+///     XLS 扫描统计信息。
 /// </summary>
-public sealed class XlsStatistics
+public sealed class XlsScanStatistics
 {
+    /// <summary>
+    ///     BIFF 版本号。
+    /// </summary>
+    public ushort BiffVersion { get; set; }
+
+    /// <summary>
+    ///     工作表数量。
+    /// </summary>
     public int SheetCount { get; set; }
-    public int RowCount { get; set; }
-    public int NumericCellCount { get; set; }
-    public int StringCellCount { get; set; }
-    public int FormulaCount { get; set; }
-    public List<string> SheetNames { get; set; } = new();
+
+    /// <summary>
+    ///     BIFF 版本名称。
+    /// </summary>
+    public string BiffVersionName => BiffVersion switch
+    {
+        0x0600 => "BIFF8 (Excel 97-2003)",
+        0x0500 => "BIFF5 (Excel 5.0/95)",
+        0x0400 => "BIFF4 (Excel 4.0)",
+        0x0300 => "BIFF3 (Excel 3.0)",
+        0x0200 => "BIFF2 (Excel 2.0)",
+        _ => $"0x{BiffVersion:X4}"
+    };
 }
