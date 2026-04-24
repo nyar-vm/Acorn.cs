@@ -1,81 +1,60 @@
-# Acorn.Spirv
+# 📦 Acorn.SpirV
 
-Khronos SPIR-V 着色器二进制中间语言的扫描、编码和解码库。
+SPIR-V（Standard Portable Intermediate Representation）着色器中间表示编解码器。
 
-## 格式规范参考
+## 📐 格式布局
 
-- [SPIR-V Specification](https://www.khronos.org/registry/SPIR-V/specs/unified1/SPIRV.html)
-- [SPIR-V Registry](https://www.khronos.org/registry/spir-v/)
-- [SPIR-V Opcode Reference](https://www.khronos.org/registry/SPIR-V/specs/unified1/SPIRV.html#_a_id_instructions_a_instructions)
-- [GLSL.std.450 Extended Instruction Set](https://www.khronos.org/registry/spir-v/specs/unified1/GLSL.std.450.html)
-- [SPIR-V Header File](https://github.com/KhronosGroup/SPIRV-Headers/blob/main/include/spirv/unified1/spirv.h)
+### SPIR-V 文件头（20 字节）
 
-## 二进制格式结构
+| 字段 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| MagicNumber | 0x00 | 4 | `0x07230203`（小端序） | `SpirvFileHeader.MagicNumber` |
+| Version | 0x04 | 4 | 版本号（如 0x00010300 = 1.3） | `SpirvFileHeader.Version` |
+| GeneratorMagic | 0x08 | 4 | 生成器工具标识 | `SpirvFileHeader.GeneratorMagic` |
+| Bound | 0x0C | 4 | ID 绑定值（所有 ID < Bound） | `SpirvFileHeader.Bound` |
+| Schema | 0x10 | 4 | 保留字（通常为0） | `SpirvFileHeader.Schema` |
 
-SPIR-V 整个流由 32 位字组成，使用小端序：
+### SPIR-V 指令格式
 
-```
-┌──────────────────────────────────────┐
-│ Header (5 words = 20 bytes)          │
-│   MagicNumber: 0x07230203            │
-│   Version: uint32 (e.g. 0x00010300)  │
-│   GeneratorMagic: uint32             │
-│   Bound: uint32 (max ID + 1)         │
-│   Schema: uint32 (reserved, 0)       │
-├──────────────────────────────────────┤
-│ Instruction Stream                   │
-│   ┌────────────────────────────┐     │
-│   │ Word 0: (WordCount<<16)   │     │
-│   │          | Opcode          │     │
-│   │ Word 1..N: Operands       │     │
-│   └────────────────────────────┘     │
-│   ...                                │
-└──────────────────────────────────────┘
-```
+每个指令由 32 位字组成：
 
-### 指令编码
-
-每条指令的第一个字：
-- **低 16 位**：操作码 (Opcode)
-- **高 16 位**：字数 (WordCount，包含操作码字本身)
-
-### 字符串编码
-
-字符串以 null 终止，填充到 4 字节对齐的 32 位字序列。
-
-### 常量定义
-
-Acorn.Spirv.Data 中提供了完整的常量定义：
-
-| 类 | 说明 |
+| 字 | 说明 |
 |---|---|
-| `SpirvConstants.MagicNumber` | 魔数 0x07230203 |
-| `SpirvConstants.Capability` | 能力声明（Shader、RayTracingKHR 等） |
-| `SpirvConstants.ExecutionModel` | 执行模型（Vertex、Fragment 等） |
-| `SpirvConstants.StorageClass` | 存储类（Uniform、Input、Output 等） |
-| `SpirvConstants.Decoration` | 装饰（Block、Binding、Location 等） |
-| `SpirvConstants.BuiltIn` | 内建变量（Position、FragCoord 等） |
-| `SpirvConstants.GLSLstd450` | GLSL.std.450 扩展指令 |
-| `SpirvOpCode` | 操作码常量（OpTypeVoid、OpEntryPoint 等） |
+| Word 0 | 低 16 位：指令长度（字）；高 16 位：操作码 |
+| Word 1..N | 操作数 |
 
-## API
+### 常见操作码类别
 
-```csharp
-using Acorn.Spirv.Decode;
-using Acorn.Spirv.Encode;
-using Acorn.Spirv.Scanner;
+| 类别 | 说明 |
+|---|---|
+| OpNop ~ OpSourceContinued | 调试和注释 |
+| OpName ~ OpMemberDecorate | 注解和装饰 |
+| OpExtension ~ OpMemoryModel | 模式和设置 |
+| OpEntryPoint ~ OpExecutionMode | 执行声明 |
+| OpTypeVoid ~ OpTypeForwardPointer | 类型声明 |
+| OpConstantTrue ~ OpSpecConstantOp | 常量 |
+| OpFunction ~ OpFunctionEnd | 函数 |
+| OpLabel ~ OpUnreachable | 控制流 |
+| OpVariable | 变量 |
+| OpLoad ~ OpStore | 内存操作 |
+| OpAccessChain | 访问链 |
+| OpVectorShuffle | 向量操作 |
+| OpImageSampleImplicitLod ~ OpImageWrite | 图像操作 |
 
-// 解码
-var decoder = new SpirvDecoder();
-var module = decoder.Decode(File.ReadAllBytes("shader.spv"));
-var entryPoints = decoder.DecodeEntryPoints(File.ReadAllBytes("shader.spv"));
+## 🏗️ 核心类
 
-// 编码
-var encoder = new SpirvEncoder();
-var bytes = encoder.Encode(module);
+| 类 | 说明 | 文件 |
+|---|---|---|
+| `SpirvFileHeader` | SPIR-V 文件头 | [Data/SpirvModuleData.cs](Data/SpirvModuleData.cs) |
+| `SpirvModuleData` | SPIR-V 模块完整数据 | [Data/SpirvModuleData.cs](Data/SpirvModuleData.cs) |
+| `SpirvConstants` | SPIR-V 常量 | [Data/SpirvConstants.cs](Data/SpirvConstants.cs) |
+| `SpirvInstruction` | SPIR-V 指令 | [Data/SpirvModuleData.cs](Data/SpirvModuleData.cs) |
+| `SpirvDecoder` | SPIR-V 解码器 | [Decode/SpirvDecoder.cs](Decode/SpirvDecoder.cs) |
+| `SpirvEncoder` | SPIR-V 编码器 | [Encode/SpirvEncoder.cs](Encode/SpirvEncoder.cs) |
+| `SpirvScanner` | SPIR-V 扫描器 | [Scanner/SpirvScanner.cs](Scanner/SpirvScanner.cs) |
 
-// 扫描
-var scanner = new SpirvScanner(File.ReadAllBytes("shader.spv"));
-var header = scanner.ScanHeader();
-var stats = scanner.ScanStatistics();
-```
+## 📚 格式规范参考
+
+- [SPIR-V Specification](https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html)
+- [SPIR-V Instruction Set](https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.pdf)
+- [Khronos SPIR-V GitHub](https://github.com/KhronosGroup/SPIRV-Tools)

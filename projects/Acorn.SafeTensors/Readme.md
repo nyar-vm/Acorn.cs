@@ -1,82 +1,71 @@
-# Acorn.SafeTensors
+# 📦 Acorn.SafeTensors
 
-HuggingFace SafeTensors 模型权重格式的扫描、编码和解码库。
+HuggingFace SafeTensors 安全张量格式编解码器。
 
-## 格式规范参考
+## 📐 格式布局
 
-- [SafeTensors Specification](https://huggingface.co/docs/safetensors/index)
-- [SafeTensors GitHub](https://github.com/huggingface/safetensors)
-- [SafeTensors Format Design](https://huggingface.co/docs/safetensors/safe_tensors)
+SafeTensors 格式将模型权重存储为 JSON 头 + 二进制张量数据，避免 pickle 的安全风险。
 
-## 二进制格式结构
+### 文件结构
 
-SafeTensors 是一种极简、安全、零拷贝的张量存储格式：
+| 部分 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| HeaderLength | 0x00 | 8 | JSON 头长度（小端序 uint64，最大 8MB） | `SafeTensorsFileData`（内部解析） |
+| HeaderJSON | 0x08 | N | UTF-8 JSON 头 | `SafeTensorsFileData.Tensors` |
+| TensorData | 对齐后 | N | 二进制张量数据 | `SafeTensorsFileData.Data` |
 
-```
-┌──────────────────────────────────────────┐
-│ Header Length (8 bytes, LE uint64)        │
-│   N = JSON 头的字节长度                    │
-├──────────────────────────────────────────┤
-│ JSON Header (N bytes, UTF-8)              │
-│   {                                       │
-│     "tensor_name": {                      │
-│       "dtype": "F32",                     │
-│       "shape": [768, 768],               │
-│       "data_offsets": [0, 2359296]        │
-│     },                                    │
-│     "__metadata__": {                     │
-│       "format": "pt"                      │
-│     }                                     │
-│   }                                       │
-├──────────────────────────────────────────┤
-│ Tensor Data (variable length)             │
-│   tensor_0_bytes | tensor_1_bytes | ...   │
-└──────────────────────────────────────────┘
+### JSON 头结构
+
+```json
+{
+  "tensor_name": {
+    "dtype": "float32",
+    "shape": [512, 768],
+    "data_offsets": [0, 1572864]
+  },
+  "__metadata__": {
+    "format": "pt"
+  }
+}
 ```
 
-### 数据类型 (dtype)
+### 张量元数据字段
 
-| dtype | 字节数/元素 | 说明 |
+| 字段 | 类型 | 说明 | 对应类 |
+|---|---|---|---|
+| dtype | string | 数据类型 | `SafeTensorMeta.DType` |
+| shape | int[] | 张量形状 | `SafeTensorMeta.Shape` |
+| data_offsets | int[2] | 数据在文件中的起始和结束偏移 | `SafeTensorMeta.DataOffset` / `DataLength` |
+
+### 数据类型（DType）
+
+| 名称 | 说明 | 大小 |
 |---|---|---|
-| `BOOL` | 1 | 布尔 |
-| `U8` | 1 | 无符号 8 位整数 |
-| `I8` | 1 | 有符号 8 位整数 |
-| `I16` | 2 | 有符号 16 位整数 |
-| `I32` | 4 | 有符号 32 位整数 |
-| `I64` | 8 | 有符号 64 位整数 |
-| `F16` | 2 | IEEE 754 半精度浮点 |
-| `F32` | 4 | IEEE 754 单精度浮点 |
-| `F64` | 8 | IEEE 754 双精度浮点 |
-| `BF16` | 2 | BFloat16 半精度浮点 |
+| BOOL | 布尔 | 1 |
+| UINT8 | 无符号 8 位整数 | 1 |
+| INT8 | 有符号 8 位整数 | 1 |
+| INT16 | 有符号 16 位整数 | 2 |
+| INT32 | 有符号 32 位整数 | 4 |
+| INT64 | 有符号 64 位整数 | 8 |
+| FLOAT16 | 16 位浮点数 | 2 |
+| FLOAT32 | 32 位浮点数 | 4 |
+| FLOAT64 | 64 位浮点数 | 8 |
+| BFLOAT16 | 脑浮点 16 位 | 2 |
 
-### 设计特点
+## 🏗️ 核心类
 
-- **零拷贝**：张量数据可以直接 mmap 映射，无需反序列化
-- **安全**：无 Protobuf/ pickle 反序列化漏洞
-- **懒加载**：只需读取 JSON 头即可获取所有元信息
-- **确定性**：相同数据编码结果一致
+| 类 | 说明 | 文件 |
+|---|---|---|
+| `SafeTensorsFileData` | SafeTensors 文件完整数据 | [Data/SafeTensorsFileData.cs](Data/SafeTensorsFileData.cs) |
+| `SafeTensorMeta` | 张量元数据 | [Data/SafeTensorsFileData.cs](Data/SafeTensorsFileData.cs) |
+| `SafeTensorData` | 张量数据（含实际值） | [Data/SafeTensorsFileData.cs](Data/SafeTensorsFileData.cs) |
+| `SafeTensorDType` | 数据类型枚举 | [Data/SafeTensorsFileData.cs](Data/SafeTensorsFileData.cs) |
+| `SafeTensorsDecoder` | SafeTensors 解码器 | [Decode/SafeTensorsDecoder.cs](Decode/SafeTensorsDecoder.cs) |
+| `SafeTensorsEncoder` | SafeTensors 编码器 | [Encode/SafeTensorsEncoder.cs](Encode/SafeTensorsEncoder.cs) |
+| `SafeTensorsScanner` | SafeTensors 扫描器 | [Scanner/SafeTensorsScanner.cs](Scanner/SafeTensorsScanner.cs) |
 
-## API
+## 📚 格式规范参考
 
-```csharp
-using Acorn.SafeTensors.Decode;
-using Acorn.SafeTensors.Encode;
-using Acorn.SafeTensors.Scanner;
-
-// 解码
-var decoder = new SafeTensorsDecoder();
-var file = decoder.Decode(File.ReadAllBytes("model.safetensors"));
-
-// 提取单个张量
-var tensor = decoder.DecodeTensor(File.ReadAllBytes("model.safetensors"), "encoder.weight");
-
-// 编码
-var encoder = new SafeTensorsEncoder();
-var tensors = new List<SafeTensorData> { /* ... */ };
-var bytes = encoder.Encode(tensors);
-
-// 扫描（仅读取 JSON 头，不加载张量数据）
-var scanner = new SafeTensorsScanner(File.ReadAllBytes("model.safetensors"));
-var stats = scanner.ScanStatistics();
-// stats.TensorCount, stats.TotalParameters, stats.TensorNames, stats.DTypes
-```
+- [HuggingFace SafeTensors Specification](https://huggingface.co/docs/safetensors/index)
+- [SafeTensors GitHub](https://github.com/huggingface/safetensors)
+- [SafeTensors Format](https://huggingface.co/docs/safetensors/format)

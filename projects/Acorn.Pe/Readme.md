@@ -1,79 +1,88 @@
-# Acorn.Pe
+# 📦 Acorn.PE
 
-Acorn PE 格式库，提供 Windows 可执行文件（.exe, .dll）的扫描和解码功能。
+PE（Portable Executable）Windows 可执行文件格式编解码器。
 
-## 功能特性
+## 📐 格式布局
 
-- **PE 文件解码**：解析 Windows 可执行文件格式
-- **PE 文件扫描**：快速扫描 PE 文件结构
-- **支持多种架构**：x86, x64, ARM, ARM64, IA64
-- **轻量级实现**：不依赖第三方库，纯 C# 实现
-- **与 Acorn 核心集成**：使用 Acorn 核心的编解码接口
-- **与 Acorn.Coff 集成**：复用 COFF 目标文件解析能力
+### DOS 头（DOS Header）
 
-## 安装
+| 字段 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| e_magic | 0x00 | 2 | DOS 魔数 `"MZ"`（0x5A4D） | `PeHeaderData.DosMagic` |
+| ... | 0x02 | 58 | DOS 存根和填充 | - |
+| e_lfanew | 0x3C | 4 | PE 头偏移 | `PeHeaderData.PeHeaderOffset` |
 
-```bash
-dotnet add package Acorn.Pe
-```
+### PE 签名（PE Signature）
 
-## 使用示例
+| 字段 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| PE Signature | 0x00 | 4 | `"PE\0\0"`（0x50450000） | `PeHeaderData.PeMagic` |
 
-### 解码 PE 文件
+### COFF 文件头（File Header）
 
-```csharp
-using Acorn.Pe.Decode;
+| 字段 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| Machine | 0x00 | 2 | 机器类型 | `PeHeaderData.Machine` |
+| NumberOfSections | 0x02 | 2 | 节区数量 | `PeHeaderData.NumberOfSections` |
+| TimeDateStamp | 0x04 | 4 | 时间戳 | `PeHeaderData.TimeDateStamp` |
+| PointerToSymbolTable | 0x08 | 4 | 符号表偏移 | `PeHeaderData.PointerToSymbolTable` |
+| NumberOfSymbols | 0x0C | 4 | 符号数量 | `PeHeaderData.NumberOfSymbols` |
+| SizeOfOptionalHeader | 0x10 | 2 | 可选头大小 | `PeHeaderData.SizeOfOptionalHeader` |
+| Characteristics | 0x12 | 2 | 特征标志 | `PeHeaderData.Characteristics` |
 
-var data = File.ReadAllBytes("example.exe");
+### 可选头（Optional Header）
 
-var decoder = new PeDecoder();
-var peFile = decoder.Decode(data);
+| 字段 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| Magic | 0x00 | 2 | 0x10B=PE32, 0x20B=PE32+ | `PeOptionalHeaderData.Magic` |
+| MajorLinkerVersion | 0x02 | 1 | 链接器主版本 | `PeOptionalHeaderData.MajorLinkerVersion` |
+| MinorLinkerVersion | 0x03 | 1 | 链接器次版本 | `PeOptionalHeaderData.MinorLinkerVersion` |
+| SizeOfCode | 0x04 | 4 | 代码节大小 | `PeOptionalHeaderData.SizeOfCode` |
+| SizeOfInitializedData | 0x08 | 4 | 已初始化数据大小 | `PeOptionalHeaderData.SizeOfInitializedData` |
+| SizeOfUninitializedData | 0x0C | 4 | 未初始化数据大小 | `PeOptionalHeaderData.SizeOfUninitializedData` |
+| AddressOfEntryPoint | 0x10 | 4 | 入口点 RVA | `PeOptionalHeaderData.AddressOfEntryPoint` |
+| BaseOfCode | 0x14 | 4 | 代码基址 RVA | `PeOptionalHeaderData.BaseOfCode` |
+| ImageBase | 0x18/0x1C | 4/8 | 镜像基址 | `PeOptionalHeaderData.ImageBase` |
+| SectionAlignment | 0x1C/0x20 | 4 | 节区对齐 | `PeOptionalHeaderData.SectionAlignment` |
+| FileAlignment | 0x20/0x24 | 4 | 文件对齐 | `PeOptionalHeaderData.FileAlignment` |
+| MajorOSVersion | 0x24/0x28 | 2 | 所需 OS 主版本 | `PeOptionalHeaderData.MajorOSVersion` |
+| SizeOfImage | 0x38/0x40 | 4 | 镜像大小 | `PeOptionalHeaderData.SizeOfImage` |
+| SizeOfHeaders | 0x3C/0x44 | 4 | 头大小 | `PeOptionalHeaderData.SizeOfHeaders` |
+| DataDirectory | 0x60/0x70 | 128/144 | 数据目录表 | `PeOptionalHeaderData.DataDirectory` |
 
-Console.WriteLine($"File type: {(peFile.IsDll ? "DLL" : "EXE")}");
-Console.WriteLine($"Architecture: {(peFile.Is64Bit ? "x64" : "x86")}");
-Console.WriteLine($"Sections: {peFile.Header.NumberOfSections}");
-Console.WriteLine($"Entry point: 0x{peFile.OptionalHeader.AddressOfEntryPoint:X8}");
+### 数据目录（Data Directory）
 
-foreach (var section in peFile.Sections)
-{
-    Console.WriteLine($"- {section.Name}: {section.SizeOfRawData} bytes");
-}
-```
+| 索引 | 名称 | 说明 |
+|---|---|---|
+| 0 | EXPORT | 导出表 |
+| 1 | IMPORT | 导入表 |
+| 2 | RESOURCE | 资源表 |
+| 3 | EXCEPTION | 异常表 |
+| 4 | CERTIFICATE | 证书表 |
+| 5 | BASE_RELOCATION | 基址重定位表 |
+| 6 | DEBUG | 调试信息 |
+| 7 | ARCHITECTURE | 架构特定数据 |
+| 8 | GLOBAL_PTR | 全局指针 |
+| 9 | TLS | 线程本地存储 |
+| 10 | LOAD_CONFIG | 加载配置 |
+| 11 | BOUND_IMPORT | 绑定导入 |
+| 12 | IAT | 导入地址表 |
+| 13 | DELAY_IMPORT | 延迟导入描述符 |
+| 14 | COM_DESCRIPTOR | CLR 运行时头 |
 
-### 扫描 PE 文件
+## 🏗️ 核心类
 
-```csharp
-using Acorn.Pe.Scanner;
+| 类 | 说明 | 文件 |
+|---|---|---|
+| `PeHeaderData` | PE 文件头 | [Data/PEFileData.cs](Data/PEFileData.cs) |
+| `PeOptionalHeaderData` | PE 可选头 | [Data/PEFileData.cs](Data/PEFileData.cs) |
+| `PeSectionHeaderData` | 节区头 | [Data/PEFileData.cs](Data/PEFileData.cs) |
+| `PeDataDirectory` | 数据目录项 | [Data/PEFileData.cs](Data/PEFileData.cs) |
+| `PeFileData` | PE 文件完整数据 | [Data/PEFileData.cs](Data/PEFileData.cs) |
+| `PEDecoder` | PE 解码器 | [Decode/PEDecoder.cs](Decode/PEDecoder.cs) |
+| `PEScanner` | PE 扫描器 | [Scanner/PEScanner.cs](Scanner/PEScanner.cs) |
 
-var data = File.ReadAllBytes("example.exe");
+## 📚 格式规范参考
 
-var scanResult = PeScanner.Scan(data);
-Console.WriteLine(scanResult);
-```
-
-## 项目结构
-
-- `Acorn.Pe/`
-  - `Data/` - 数据结构
-    - `PeFileData.cs` - PE 文件数据结构
-  - `Decode/` - 解码器
-    - `PeDecoder.cs` - PE 文件解码器
-  - `Scanner/` - 扫描器
-    - `PeScanner.cs` - PE 文件扫描器
-
-## 支持的格式
-
-- **PE32**：32 位 Windows 可执行文件
-- **PE32+**：64 位 Windows 可执行文件
-- **DLL**：动态链接库
-- **EXE**：可执行文件
-
-## 依赖
-
-- .NET 11.0+
-- Acorn.Core
-- Acorn.Coff
-
-## 许可证
-
-MPL-2.0
+- [Microsoft PE/COFF 规范](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)
+- [PE Format Deep Dive](https://0xrick.github.io/win-internals/pe1/)

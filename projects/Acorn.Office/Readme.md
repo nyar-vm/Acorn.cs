@@ -1,196 +1,88 @@
-# Acorn.Office
+# 📦 Acorn.Office
 
-Acorn Office 格式库，提供 Office 97-2003 格式（.xls, .doc, .ppt）的扫描、编码和解码功能。
+Microsoft Office 97-2003 和 Office Open XML 格式编解码器。
 
-## 功能特性
+## 📐 格式布局
 
-- **XLS 文件解码**：支持解析 Excel 97-2003 (.xls) 格式
-- **XLS 文件编码**：支持生成 Excel 97-2003 (.xls) 格式
-- **DOC 文件解码**：支持解析 Word 97-2003 (.doc) 格式
-- **PPT 文件解码**：支持解析 PowerPoint 97-2003 (.ppt) 格式
-- **Open XML 文件解码**：支持解析 Office Open XML (.xlsx, .docx, .pptx) 格式
-- **XLS 文件扫描**：快速扫描 .xls 文件结构
-- **轻量级实现**：不依赖第三方库，纯 C# 实现
-- **与 Acorn 核心集成**：使用 Acorn 核心的编解码接口
-- **借助 Acorn.Zip**：Open XML 格式通过 Acorn.Zip 解析 ZIP 结构
+### OLE2 复合文档格式（.xls/.doc/.ppt）
 
-## 安装
+Office 97-2003 文件基于 OLE2 复合文档格式。
 
-```bash
-dotnet add package Acorn.Office
-```
+| 字段 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| Magic | 0x00 | 8 | `0xD0 0xCF 0x11 0xE0 0xA1 0xB1 0x1A 0xE1` | `OfficeConstants.Ole2MagicNumber` |
+| MinorVersion | 0x18 | 2 | 次版本号 | - |
+| MajorVersion | 0x1A | 2 | 主版本号（3=512扇区, 4=4096扇区） | - |
+| ByteOrder | 0x1C | 2 | 字节序（0xFFFE=小端序） | - |
+| SectorSize | 0x1E | 2 | 扇区大小（9=512, 12=4096） | - |
+| MiniSectorSize | 0x20 | 2 | 迷你扇区大小（6=64） | - |
+| TotalSectors | 0x2C | 4 | 扇区总数 | - |
+| FATSectorCount | 0x2C | 4 | FAT 扇区数量 | - |
+| FirstDirectorySectorSID | 0x30 | 4 | 第一个目录扇区 SID | - |
+| TransactionSignature | 0x34 | 4 | 事务签名 | - |
+| MiniStreamCutoffSize | 0x38 | 4 | 迷你流截断大小（4096） | - |
+| FirstMiniFATSectorSID | 0x3C | 4 | 第一个迷你 FAT 扇区 SID | - |
+| MiniFATSectorCount | 0x40 | 4 | 迷你 FAT 扇区数量 | - |
+| FirstDIFATSectorSID | 0x44 | 4 | 第一个 DIFAT 扇区 SID | - |
+| DIFATSectorCount | 0x48 | 4 | DIFAT 扇区数量 | - |
 
-## 使用示例
+### BIFF 记录（Excel .xls）
 
-### 解码 XLS 文件
+| 字段 | 大小 | 说明 |
+|---|---|---|
+| RecordType | 2 | 记录类型 |
+| RecordLength | 2 | 记录数据长度 |
+| RecordData | N | 记录数据 |
 
-```csharp
-using Acorn.Office.Decode;
+### 常见 BIFF 记录类型
 
-var data = File.ReadAllBytes("example.xls");
+| 值 | 名称 | 说明 |
+|---|---|---|
+| 0x0009 | BOF | 文件开始 |
+| 0x000A | EOF | 文件结束 |
+| 0x0006 | Formula | 公式 |
+| 0x0018 | Label | 标签 |
+| 0x0203 | Number | 数字 |
+| 0x00FD | LabelSst | 共享字符串表标签 |
+| 0x0208 | Row | 行 |
+| 0x027E | RK | RK 值（紧凑数字） |
 
-var decoder = new XlsDecoder();
-var workbook = decoder.Decode(data);
+### Office Open XML（.xlsx/.docx/.pptx）
 
-Console.WriteLine($"Workbook contains {workbook.Sheets.Count} sheets:");
-foreach (var sheet in workbook.Sheets)
-{
-    Console.WriteLine($"- {sheet.Name}: {sheet.RowCount} rows, {sheet.ColumnCount} columns");
-}
-```
+基于 ZIP 压缩包，包含 XML 文件。
 
-### 编码 XLS 文件
+| 文件 | 说明 |
+|---|---|
+| `[Content_Types].xml` | 内容类型定义 |
+| `_rels/.rels` | 包关系 |
+| `xl/workbook.xml` | Excel 工作簿 |
+| `xl/worksheets/sheet1.xml` | Excel 工作表 |
+| `xl/sharedStrings.xml` | 共享字符串表 |
+| `word/document.xml` | Word 文档 |
+| `ppt/presentation.xml` | PowerPoint 演示文稿 |
 
-```csharp
-using Acorn.Office.Encode;
-using Acorn.Office.Data;
+## 🏗️ 核心类
 
-var workbook = new ExcelWorkbookData
-{
-    Sheets = new List<ExcelSheetData>
-    {
-        new ExcelSheetData
-        {
-            Name = "Sheet1",
-            RowCount = 2,
-            ColumnCount = 2,
-            Rows = new List<ExcelRowData>
-            {
-                new ExcelRowData
-                {
-                    RowIndex = 0,
-                    Cells = new List<ExcelCellData>
-                    {
-                        new ExcelCellData { Column = 0, Row = 0, Value = "Name", CellReference = "A1" },
-                        new ExcelCellData { Column = 1, Row = 0, Value = "Age", CellReference = "B1" }
-                    }
-                },
-                new ExcelRowData
-                {
-                    RowIndex = 1,
-                    Cells = new List<ExcelCellData>
-                    {
-                        new ExcelCellData { Column = 0, Row = 1, Value = "John", CellReference = "A2" },
-                        new ExcelCellData { Column = 1, Row = 1, Value = "30", CellReference = "B2" }
-                    }
-                }
-            }
-        }
-    }
-};
+| 类 | 说明 | 文件 |
+|---|---|---|
+| `ExcelWorkbookData` | Excel 工作簿数据 | [Data/OfficeData.cs](Data/OfficeData.cs) |
+| `ExcelSheetData` | Excel 工作表 | [Data/OfficeData.cs](Data/OfficeData.cs) |
+| `ExcelRowData` | Excel 行 | [Data/OfficeData.cs](Data/OfficeData.cs) |
+| `ExcelCellData` | Excel 单元格 | [Data/OfficeData.cs](Data/OfficeData.cs) |
+| `OfficeConstants` | Office 常量 | [Data/OfficeConstants.cs](Data/OfficeConstants.cs) |
+| `XlsRecordType` | XLS BIFF 记录类型 | [Data/OfficeConstants.cs](Data/OfficeConstants.cs) |
+| `PptRecordType` | PPT 记录类型 | [Data/OfficeConstants.cs](Data/OfficeConstants.cs) |
+| `XlsDecoder` | XLS 解码器 | [Decode/XlsDecoder.cs](Decode/XlsDecoder.cs) |
+| `XlsEncoder` | XLS 编码器 | [Encode/XlsEncoder.cs](Encode/XlsEncoder.cs) |
+| `DocDecoder` | DOC 解码器 | [Decode/DocDecoder.cs](Decode/DocDecoder.cs) |
+| `PptDecoder` | PPT 解码器 | [Decode/PptDecoder.cs](Decode/PptDecoder.cs) |
+| `OpenXmlDecoder` | Open XML 解码器 | [Decode/OpenXmlDecoder.cs](Decode/OpenXmlDecoder.cs) |
+| `XlsScanner` | XLS 扫描器 | [Scanner/XlsScanner.cs](Scanner/XlsScanner.cs) |
 
-var encoder = new XlsEncoder();
-var data = encoder.Encode(workbook);
+## 📚 格式规范参考
 
-File.WriteAllBytes("output.xls", data);
-Console.WriteLine("XLS file created successfully!");
-```
-
-### 解码 DOC 文件
-
-```csharp
-using Acorn.Office.Decode;
-
-var data = File.ReadAllBytes("example.doc");
-
-var decoder = new DocDecoder();
-var document = decoder.Decode(data);
-
-Console.WriteLine($"Document text: {document.Text}");
-Console.WriteLine($"Paragraphs: {document.Paragraphs.Count}");
-```
-
-### 解码 PPT 文件
-
-```csharp
-using Acorn.Office.Decode;
-
-var data = File.ReadAllBytes("example.ppt");
-
-var decoder = new PptDecoder();
-var presentation = decoder.Decode(data);
-
-Console.WriteLine($"Slides: {presentation.SlideCount}");
-foreach (var slide in presentation.Slides)
-{
-    Console.WriteLine($"- {slide}");
-}
-```
-
-### 解码 Open XML 文件（.xlsx, .docx, .pptx）
-
-```csharp
-using Acorn.Office.Decode;
-
-// 解码 .xlsx 文件
-var xlsxData = File.ReadAllBytes("example.xlsx");
-var openXmlDecoder = new OpenXmlDecoder();
-var workbook = openXmlDecoder.DecodeExcel(xlsxData);
-
-Console.WriteLine($"Workbook contains {workbook.Sheets.Count} sheets:");
-foreach (var sheet in workbook.Sheets)
-{
-    Console.WriteLine($"- {sheet.Name}: {sheet.RowCount} rows, {sheet.ColumnCount} columns");
-}
-
-// 解码 .docx 文件
-var docxData = File.ReadAllBytes("example.docx");
-var document = openXmlDecoder.DecodeWord(docxData);
-Console.WriteLine($"Document text: {document.Text}");
-
-// 解码 .pptx 文件
-var pptxData = File.ReadAllBytes("example.pptx");
-var presentation = openXmlDecoder.DecodePowerPoint(pptxData);
-Console.WriteLine($"Slides: {presentation.SlideCount}");
-```
-
-### 扫描 XLS 文件
-
-```csharp
-using Acorn.Office.Scanner;
-
-var data = File.ReadAllBytes("example.xls");
-
-var scanResult = XlsScanner.Scan(data);
-Console.WriteLine(scanResult);
-```
-
-## 项目结构
-
-- `Acorn.Office/`
-  - `Data/` - 数据结构
-    - `OfficeConstants.cs` - Office 格式常量定义
-    - `OfficeData.cs` - Office 数据结构（Excel, Word, PowerPoint）
-  - `Decode/` - 解码器
-    - `XlsDecoder.cs` - Excel 97-2003 文件解码器
-    - `DocDecoder.cs` - Word 97-2003 文件解码器
-    - `PptDecoder.cs` - PowerPoint 97-2003 文件解码器
-    - `OpenXmlDecoder.cs` - Office Open XML 文件解码器（借助 Acorn.Zip）
-  - `Encode/` - 编码器
-    - `XlsEncoder.cs` - Excel 97-2003 文件编码器
-  - `Scanner/` - 扫描器
-    - `XlsScanner.cs` - Excel 文件扫描器
-
-## 支持的格式
-
-- **Excel (.xls)**：Excel 97-2003 格式
-- **Word (.doc)**：Word 97-2003 格式
-- **PowerPoint (.ppt)**：PowerPoint 97-2003 格式
-- **Excel (.xlsx)**：Office Open XML 格式（借助 Acorn.Zip）
-- **Word (.docx)**：Office Open XML 格式（借助 Acorn.Zip）
-- **PowerPoint (.pptx)**：Office Open XML 格式（借助 Acorn.Zip）
-
-## 注意事项
-
-- Office 97-2003 格式（.xls, .doc, .ppt）使用原生二进制解析
-- Office Open XML 格式（.xlsx, .docx, .pptx）借助 Acorn.Zip 解析 ZIP 结构
-- Open XML 格式的 XML 内容处理可结合 Oak.Xml 库使用
-
-## 依赖
-
-- .NET 11.0+
-- Acorn.Core
-
-## 许可证
-
-MPL-2.0
+- [Microsoft Office File Formats Documentation](https://learn.microsoft.com/en-us/openspecs/office_file_formats/)
+- [Office Open XML ECMA-376](https://ecma-international.org/publications-and-standards/standards/ecma-376/)
+- [MS-XLS - Excel Binary File Format](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/cd03cb5f-ec00-4f0e-8818-22e2b7969d6d)
+- [MS-DOC - Word Binary File Format](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/)
+- [MS-PPT - PowerPoint Binary File Format](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-ppt/)

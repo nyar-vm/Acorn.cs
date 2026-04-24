@@ -1,77 +1,70 @@
-# Acorn.MachO
+# 📦 Acorn.MachO
 
-Acorn Mach-O 格式库，提供 macOS/iOS 可执行文件（.macho, .dylib）的扫描和解码功能。
+Mach-O（Mach Object）macOS/iOS 可执行文件格式编解码器。
 
-## 功能特性
+## 📐 格式布局
 
-- **Mach-O 文件解码**：解析 macOS/iOS 可执行文件格式
-- **Mach-O 文件扫描**：快速扫描 Mach-O 文件结构
-- **支持多种架构**：x86, x64, ARM, ARM64, PowerPC
-- **支持多种字节序**：小端和大端
-- **轻量级实现**：不依赖第三方库，纯 C# 实现
-- **与 Acorn 核心集成**：使用 Acorn 核心的编解码接口
+### Mach-O 文件头（Mach Header）
 
-## 安装
+| 字段 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| Magic | 0x00 | 4 | `0xFEEDFACE`(32位) / `0xFEEDFACF`(64位) | `MachOHeaderData.Magic` |
+| CPUType | 0x04 | 4 | CPU 类型（如 X86=7, ARM64=0x0100000C） | `MachOHeaderData.CPUType` |
+| CPUSubtype | 0x08 | 4 | CPU 子类型 | `MachOHeaderData.CPUSubtype` |
+| FileType | 0x0C | 4 | 文件类型（1=对象, 2=可执行, 6=动态库） | `MachOHeaderData.FileType` |
+| NumberOfLoadCommands | 0x10 | 4 | 加载命令数量 | `MachOHeaderData.NumberOfLoadCommands` |
+| SizeOfLoadCommands | 0x14 | 4 | 加载命令总大小 | `MachOHeaderData.SizeOfLoadCommands` |
+| Flags | 0x18 | 4 | 标志 | `MachOHeaderData.Flags` |
+| Reserved | 0x1C | 4 | 保留（64位） | `MachOHeaderData.Reserved` |
 
-```bash
-dotnet add package Acorn.MachO
-```
+### 加载命令（Load Command）
 
-## 使用示例
+| 字段 | 大小 | 说明 | 对应类 |
+|---|---|---|---|
+| Command | 4 | 命令类型 | `MachOLoadCommandData.Command` |
+| Size | 4 | 命令大小 | `MachOLoadCommandData.Size` |
+| Data | 变长 | 命令数据 | `MachOLoadCommandData.Data` |
 
-### 解码 Mach-O 文件
+### 常见加载命令类型
 
-```csharp
-using Acorn.MachO.Decode;
+| 值 | 名称 | 说明 |
+|---|---|---|
+| 0x01 | LC_SEGMENT | 32位段加载 |
+| 0x19 | LC_SEGMENT_64 | 64位段加载 |
+| 0x02 | LC_SYMTAB | 符号表 |
+| 0x0B | LC_DYSYMTAB | 动态符号表 |
+| 0x0C | LC_LOAD_DYLIB | 加载动态库 |
+| 0x22 | LC_LOAD_DYLINKER | 加载动态链接器 |
+| 0x28 | LC_MAIN | 主程序入口 |
 
-var data = File.ReadAllBytes("example.macho");
+### 段（Segment）
 
-var decoder = new MachODecoder();
-var machoFile = decoder.Decode(data);
+| 字段 | 大小 | 说明 | 对应类 |
+|---|---|---|---|
+| SegName | 16 | 段名称 | `MachOSegmentData.SegName` |
+| VMAddr | 4/8 | 虚拟地址 | `MachOSegmentData.VMAddr` |
+| VMSize | 4/8 | 虚拟大小 | `MachOSegmentData.VMSize` |
+| FileOffset | 4/8 | 文件偏移 | `MachOSegmentData.FileOffset` |
+| FileSize | 4/8 | 文件大小 | `MachOSegmentData.FileSize` |
+| MaxProt | 4 | 最大保护 | `MachOSegmentData.MaxProt` |
+| InitProt | 4 | 初始保护 | `MachOSegmentData.InitProt` |
+| NumberOfSections | 4 | 节区数量 | `MachOSegmentData.NumberOfSections` |
+| Flags | 4 | 标志 | `MachOSegmentData.Flags` |
 
-Console.WriteLine($"File type: {(machoFile.Header.IsExecutable ? "Executable" : "Dynamic Library")}");
-Console.WriteLine($"Architecture: {(machoFile.Header.Is64Bit ? "x64" : "x86")}");
-Console.WriteLine($"Sections: {machoFile.Sections.Count}");
+## 🏗️ 核心类
 
-foreach (var section in machoFile.Sections)
-{
-    Console.WriteLine($"- {section.SectionName}: {section.Size} bytes");
-}
-```
+| 类 | 说明 | 文件 |
+|---|---|---|
+| `MachOHeaderData` | Mach-O 文件头 | [Data/MachOFileData.cs](Data/MachOFileData.cs) |
+| `MachOLoadCommandData` | 加载命令 | [Data/MachOFileData.cs](Data/MachOFileData.cs) |
+| `MachOSegmentData` | 段数据 | [Data/MachOFileData.cs](Data/MachOFileData.cs) |
+| `MachOSectionData` | 节区数据 | [Data/MachOFileData.cs](Data/MachOFileData.cs) |
+| `MachOFileData` | Mach-O 文件完整数据 | [Data/MachOFileData.cs](Data/MachOFileData.cs) |
+| `MachODecoder` | Mach-O 解码器 | [Decode/MachODecoder.cs](Decode/MachODecoder.cs) |
+| `MachOScanner` | Mach-O 扫描器 | [Scanner/MachOScanner.cs](Scanner/MachOScanner.cs) |
 
-### 扫描 Mach-O 文件
+## 📚 格式规范参考
 
-```csharp
-using Acorn.MachO.Scanner;
-
-var data = File.ReadAllBytes("example.macho");
-
-var scanResult = MachOScanner.Scan(data);
-Console.WriteLine(scanResult);
-```
-
-## 项目结构
-
-- `Acorn.MachO/`
-  - `Data/` - 数据结构
-    - `MachOFileData.cs` - Mach-O 文件数据结构
-  - `Decode/` - 解码器
-    - `MachODecoder.cs` - Mach-O 文件解码器
-  - `Scanner/` - 扫描器
-    - `MachOScanner.cs` - Mach-O 文件扫描器
-
-## 支持的格式
-
-- **Mach-O 32**：32 位 Mach-O 文件
-- **Mach-O 64**：64 位 Mach-O 文件
-- **Executable**：可执行文件
-- **Dynamic Library**：动态库 (.dylib)
-
-## 依赖
-
-- .NET 11.0+
-- Acorn.Core
-
-## 许可证
-
-MPL-2.0
+- [OS X ABI Mach-O File Format Reference](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/CodeFootprint/Articles/MachOOverview.html)
+- [Mach-O File Format Reference](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/0-Introduction/introduction.html)
+- [OSDev Mach-O Wiki](https://wiki.osdev.org/Mach-O)

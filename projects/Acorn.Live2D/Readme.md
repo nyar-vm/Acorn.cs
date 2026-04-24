@@ -1,60 +1,55 @@
-# Acorn.Live2D
+# 📦 Acorn.Live2D
 
-Live2D Cubism 模型格式的扫描、编码和解码库。
+Live2D Cubism `.moc3` 模型二进制格式编解码器。
 
-## 格式规范参考
+## 📐 格式布局
 
-- [Live2D Cubism SDK](https://www.live2d.com/download/cubism-sdk/download-native/)
-- [Live2D Cubism Model Format (moc3)](https://cubism.live2d.com/sdk-doc/native/structCubismModelSettingJson.html)
-- [CubismMotionJson Reference](https://cubism.live2d.com/sdk-doc/native/)
+### moc3 文件头
 
-## 二进制格式结构
+| 字段 | 偏移 | 大小 | 说明 | 对应类 |
+|---|---|---|---|---|
+| Signature | 0x00 | 4 | `"MOC3"` 签名 | `Live2DConstants.Moc3MagicNumber` |
+| Version | 0x04 | 1 | moc3 版本（3/4/5） | `Live2DModelData.Version` |
+| Flags | 0x05 | 1 | 标志（大端序位等） | `Live2DModelData.IsBigEndian` |
+| Revision | 0x06 | 1 | 版本修订号 | `Live2DModelData.Revision` |
+| Padding | 0x07 | 1 | 填充 | - |
 
-### MOC3 文件布局
+### 计数表（Count Table）
 
-```
-┌──────────────────────────┐
-│ Header                    │
-│   magic: "MOC3"          │
-│   version: uint8[3]       │
-│   isBigEndian: uint8      │
-│   ...                     │
-├──────────────────────────┤
-│ Count Section             │
-│   Canvas Width/Height     │
-│   Part Count              │
-│   Parameter Count         │
-│   ...                     │
-├──────────────────────────┤
-│ Offset Section            │
-│   ...                     │
-├──────────────────────────┤
-│ Data Section              │
-│   ...                     │
-└──────────────────────────┘
-```
+| 字段 | 大小 | 说明 | 对应类 |
+|---|---|---|---|
+| ParameterCount | 4 | 参数数量 | `Live2DModelData.Parameters` |
+| PartCount | 4 | 部件数量 | `Live2DModelData.Parts` |
+| DrawableCount | 4 | 绘制对象数量 | `Live2DModelData.Drawables` |
+| DeformerCount | 4 | 变形器数量 | `Live2DModelData.Deformers` |
+| TextureCount | 4 | 纹理数量 | `Live2DModelData.TextureCount` |
 
-### Model3.json 布局
+### 数据段
 
-Live2D 模型使用 JSON 描述文件关联各资源（moc3、纹理、动作、表情等）。
+| 段 | 说明 | 对应类 |
+|---|---|---|
+| Canvas | 画布信息（宽度、高度、原点） | `Live2DCanvasInfo` |
+| Parameters | 参数定义（ID、最小值、最大值、默认值） | `Live2DParameter` |
+| Parts | 部件定义（ID、父部件索引） | `Live2DPart` |
+| Drawables | 绘制对象（顶点、索引、UV、绑定参数） | `Live2DDrawable` |
+| Deformers | 变形器（类型、位置、绑定参数） | `Live2DDeformer` |
 
-## API
+## 🏗️ 核心类
 
-```csharp
-using Acorn.Live2D.Decode;
-using Acorn.Live2D.Encode;
-using Acorn.Live2D.Scanner;
+| 类 | 说明 | 文件 |
+|---|---|---|
+| `Live2DModelData` | moc3 模型完整数据 | [Data/Live2DModelData.cs](Data/Live2DModelData.cs) |
+| `Live2DCanvasInfo` | 画布信息 | [Data/Live2DModelData.cs](Data/Live2DModelData.cs) |
+| `Live2DParameter` | 参数定义 | [Data/Live2DModelData.cs](Data/Live2DModelData.cs) |
+| `Live2DPart` | 部件定义 | [Data/Live2DModelData.cs](Data/Live2DModelData.cs) |
+| `Live2DDrawable` | 绘制对象 | [Data/Live2DModelData.cs](Data/Live2DModelData.cs) |
+| `Live2DDeformer` | 变形器 | [Data/Live2DModelData.cs](Data/Live2DModelData.cs) |
+| `Live2DConstants` | Live2D 常量 | [Data/Live2DConstants.cs](Data/Live2DConstants.cs) |
+| `Live2DDecoder` | moc3 解码器 | [Decode/Live2DDecoder.cs](Decode/Live2DDecoder.cs) |
+| `Live2DEncoder` | moc3 编码器 | [Encode/Live2DEncoder.cs](Encode/Live2DEncoder.cs) |
+| `Live2DScanner` | moc3 扫描器 | [Scanner/Live2DScanner.cs](Scanner/Live2DScanner.cs) |
 
-// 解码
-var decoder = new Live2DDecoder();
-var model = decoder.Decode(File.ReadAllBytes("model.moc3"));
+## 📚 格式规范参考
 
-// 编码
-var encoder = new Live2DEncoder();
-var bytes = encoder.Encode(model);
-
-// 扫描
-var data = File.ReadAllBytes("model.moc3");
-var scanner = new Live2DScanner(data);
-var header = scanner.ScanHeader();
-```
+- [Live2D Cubism SDK 文档](https://docs.live2d.com/cubism-sdk-manual/)
+- [Live2D 官方 GitHub](https://github.com/Live2D)

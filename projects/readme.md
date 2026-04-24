@@ -13,22 +13,22 @@
 7. [编写文档](#7-编写文档)
 8. [发布到 NuGet](#8-发布到-nuget)
 
----
+***
 
 ## 1. 评估需求
 
 在开始之前，评估你的二进制格式属于哪种类型：
 
-| 类型 | 特征 | 推荐方案 |
-|---|---|---|
-| **固定结构** | 字段顺序固定，长度固定或由长度字段决定 | 纯特性声明 |
-| **条件结构** | 字段存在与否取决于其他字段的值 | 特性 + `ConditionalOn` |
-| **偏移表结构** | 文件头部存储偏移量，指向其他数据块 | 特性 + `OffsetTableAttribute` |
-| **帧流协议** | 数据流由多个帧组成，需要切帧 | 实现 `IFrameProtocol` |
-| **指令流** | 操作码 + 操作数的指令序列 | 实现 `IFrameProtocol` + 代数帧 |
+| 类型        | 特征                   | 推荐方案                        |
+| --------- | -------------------- | --------------------------- |
+| **固定结构**  | 字段顺序固定，长度固定或由长度字段决定  | 纯特性声明                       |
+| **条件结构**  | 字段存在与否取决于其他字段的值      | 特性 + `ConditionalOn`        |
+| **偏移表结构** | 文件头部存储偏移量，指向其他数据块    | 特性 + `OffsetTableAttribute` |
+| **帧流协议**  | 数据流由多个帧组成，需要切帧       | 实现 `IFrameProtocol`         |
+| **指令流**   | 操作码 + 操作数的指令序列       | 实现 `IFrameProtocol` + 代数帧   |
 | **自描述格式** | 字段标签 + 值，类似 Protobuf | 实现 `IFrameProtocol` + 自定义特性 |
 
----
+***
 
 ## 2. 创建项目结构
 
@@ -90,7 +90,7 @@ Acorn.YourFormat/
     └── YourFormatScanner.cs      # 扫描器（可选）
 ```
 
----
+***
 
 ## 3. 实现编解码器
 
@@ -156,7 +156,7 @@ public struct YourCustomCodec : ICodec<YourCustomType>
 }
 ```
 
----
+***
 
 ## 4. 定义数据结构
 
@@ -252,7 +252,7 @@ public partial struct YourFormatContainer
 }
 ```
 
----
+***
 
 ## 5. 实现帧协议（可选）
 
@@ -379,27 +379,60 @@ public ref struct YourFormatScanner
 }
 ```
 
----
+***
 
 ## 6. 编写测试
 
 ### 6.1 创建测试项目
 
+在 `d:\RiderProjects\Acorn.cs\examples` 目录下创建测试项目：
+
 ```bash
-mkdir -p tests/Acorn.YourFormat.Tests
+mkdir -p examples/Acorn.YourFormat.Tests
+```
+
+创建 `examples/Acorn.YourFormat.Tests/Acorn.YourFormat.Tests.csproj`：
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net11.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Acorn.YourFormat.Tests</RootNamespace>
+        <PackageId>nyar-vm.Acorn.YourFormat.Tests</PackageId>
+        <Version>0.0.0</Version>
+        <Authors>nyar-vm</Authors>
+        <Description>YourFormat 二进制解析测试</Description>
+        <PackageTags>test;yourformat;acorn</PackageTags>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../projects/Acorn.YourFormat/Acorn.YourFormat.csproj" />
+        <ProjectReference Include="../Acorn.Tests/Acorn.Tests.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="xunit" Version="2.9.3" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.*">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+</Project>
 ```
 
 ### 6.2 测试示例
 
 ```csharp
-// tests/Acorn.YourFormat.Tests/YourFormatTests.cs
+// examples/Acorn.YourFormat.Tests/YourFormatTests.cs
 using Acorn;
 using Acorn.YourFormat;
+using Acorn.Tests.TestUtils;
 using Xunit;
 
 namespace Acorn.YourFormat.Tests;
 
-public class YourFormatTests
+public class YourFormatTests : DecoderTestBase, EncoderTestBase
 {
     [Fact]
     public void Decode_Encode_RoundTrip()
@@ -457,7 +490,7 @@ public class YourFormatTests
 }
 ```
 
----
+***
 
 ## 7. 编写文档
 
@@ -528,7 +561,7 @@ while (scanner.TryReadNext(out var frame))
 MPL-2.0
 ```
 
----
+***
 
 ## 8. 发布到 NuGet
 
@@ -555,7 +588,7 @@ dotnet nuget push bin/Release/Acorn.YourFormat.0.1.0.nupkg \
   --source https://api.nuget.org/v3/index.json
 ```
 
----
+***
 
 ## 📚 参考文档
 
@@ -564,7 +597,7 @@ dotnet nuget push bin/Release/Acorn.YourFormat.0.1.0.nupkg \
 - [扩展点](../documentation/extensibility.md) - 自定义扩展
 - [典型用例](../documentation/examples.md) - 现有格式实现参考
 
----
+***
 
 ## 🤝 贡献指南
 
@@ -575,7 +608,9 @@ dotnet nuget push bin/Release/Acorn.YourFormat.0.1.0.nupkg \
 5. 创建 Pull Request
 
 请确保：
+
 - ✅ 代码通过所有测试
 - ✅ 遵循项目代码规范
 - ✅ 添加了完整的文档
 - ✅ 更新了 vendor 包引用
+
