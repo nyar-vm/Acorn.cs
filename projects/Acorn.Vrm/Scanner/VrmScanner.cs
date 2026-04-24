@@ -8,14 +8,14 @@ namespace Acorn.Vrm.Scanner;
 /// </summary>
 public ref struct VrmScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="VrmScanner" /> 结构的新实例。
     /// </summary>
     public VrmScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
@@ -23,12 +23,12 @@ public ref struct VrmScanner
     /// </summary>
     public VrmScanHeader ScanHeader()
     {
-        if (_buffer.Length < 4)
+        if (_scanner.Length < 4)
         {
             return new VrmScanHeader();
         }
 
-        var magic = _buffer.ReadString(4);
+        var magic = _scanner.Buffer.ReadString(4);
 
         if (magic != "glTF")
         {
@@ -43,9 +43,9 @@ public ref struct VrmScanner
     /// </summary>
     public bool IsPossibleVrm()
     {
-        if (_buffer.Length < 4) return false;
-        var magic = _buffer.ReadString(4);
-        _buffer.Position = 0;
+        if (_scanner.Length < 4) return false;
+        var magic = _scanner.Buffer.ReadString(4);
+        _scanner.Position = 0;
         return magic == "glTF";
     }
 }

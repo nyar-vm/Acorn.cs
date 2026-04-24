@@ -8,12 +8,20 @@ namespace Acorn.Spirv.Decode;
 ///     SPIR-V 模块解码器，将 Khronus SPIR-V 二进制中间语言格式解码为 C# 数据结构。
 /// </summary>
 /// <remarks>
+///     <para>
 ///     SPIR-V 是 Khronos 定义的着色器二进制中间语言，用于 Vulkan、OpenCL 等图形和计算 API。
 ///     解码器解析完整的 SPIR-V 模块结构，提取文件头、指令流、入口点和装饰信息。
+///     </para>
+///     <para>
+///     调用 <see cref="DecodeAll" /> 可一次解析并缓存所有数据，后续通过属性访问入口点、装饰、名称和类型信息，
+///     避免重复解析。单独调用 <see cref="DecodeEntryPoints" /> 等方法会每次重新解析，适用于仅需部分数据的场景。
+///     </para>
 /// </remarks>
 public ref struct SpirvDecoder
 {
     private ByteBuffer _buffer;
+
+    private SpirvModuleData? _cachedModule;
 
     /// <summary>
     ///     初始化 <see cref="SpirvDecoder" /> 结构的新实例。
@@ -22,6 +30,66 @@ public ref struct SpirvDecoder
     public SpirvDecoder(ReadOnlySpan<byte> data)
     {
         _buffer = new ByteBuffer(data);
+    }
+
+    /// <summary>
+    ///     获取最近一次 <see cref="DecodeAll" /> 调用缓存的模块数据，未调用前为 null。
+    /// </summary>
+    public SpirvModuleData? CachedModule => _cachedModule;
+
+    /// <summary>
+    ///     一次解析 SPIR-V 模块的所有数据并缓存，后续可通过 <see cref="CachedModule" /> 访问。
+    /// </summary>
+    /// <returns>解码后的模块数据。</returns>
+    public SpirvModuleData DecodeAll()
+    {
+        var header = ReadHeader();
+        var instructions = ReadInstructions(header.Bound);
+
+        var entryPoints = new List<SpirvEntryPoint>();
+        var decorations = new List<SpirvDecorationInfo>();
+        var names = new List<SpirvName>();
+        var types = new List<SpirvTypeInfo>();
+
+        foreach (var instruction in instructions)
+        {
+            if (instruction.Opcode == SpirvOpCode.OpEntryPoint)
+            {
+                entryPoints.Add(ParseEntryPoint(instruction));
+            }
+            else if (instruction.Opcode == SpirvOpCode.OpDecorate)
+            {
+                decorations.Add(ParseDecorate(instruction));
+            }
+            else if (instruction.Opcode == SpirvOpCode.OpMemberDecorate)
+            {
+                decorations.Add(ParseMemberDecorate(instruction));
+            }
+            else if (instruction.Opcode == SpirvOpCode.OpName)
+            {
+                names.Add(ParseName(instruction));
+            }
+            else if (IsTypeInstruction(instruction.Opcode))
+            {
+                types.Add(ParseTypeInfo(instruction));
+            }
+        }
+
+        _cachedModule = new SpirvModuleData
+        {
+            MagicNumber = header.MagicNumber,
+            Version = header.Version,
+            GeneratorMagic = header.GeneratorMagic,
+            Bound = header.Bound,
+            Schema = header.Schema,
+            Instructions = instructions,
+            EntryPoints = entryPoints,
+            Decorations = decorations,
+            Names = names,
+            Types = types
+        };
+
+        return _cachedModule;
     }
 
     /// <summary>

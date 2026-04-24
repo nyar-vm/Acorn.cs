@@ -83,6 +83,26 @@ public sealed class SpirvModuleData
     ///     指令列表。
     /// </summary>
     public IReadOnlyList<SpirvInstruction> Instructions { get; init; } = [];
+
+    /// <summary>
+    ///     入口点列表（由 <c>DecodeAll</c> 填充）。
+    /// </summary>
+    public IReadOnlyList<SpirvEntryPoint> EntryPoints { get; init; } = [];
+
+    /// <summary>
+    ///     装饰信息列表（由 <c>DecodeAll</c> 填充）。
+    /// </summary>
+    public IReadOnlyList<SpirvDecorationInfo> Decorations { get; init; } = [];
+
+    /// <summary>
+    ///     名称信息列表（由 <c>DecodeAll</c> 填充）。
+    /// </summary>
+    public IReadOnlyList<SpirvName> Names { get; init; } = [];
+
+    /// <summary>
+    ///     类型信息列表（由 <c>DecodeAll</c> 填充）。
+    /// </summary>
+    public IReadOnlyList<SpirvTypeInfo> Types { get; init; } = [];
 }
 
 /// <summary>

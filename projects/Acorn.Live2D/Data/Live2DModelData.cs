@@ -3,6 +3,10 @@ namespace Acorn.Live2D.Data;
 /// <summary>
 ///     Live2D Cubism 模型数据，包含从 moc3 二进制文件解码的完整模型信息。
 /// </summary>
+/// <remarks>
+///     moc3 格式采用 Structure of Arrays 范式，每个数据字段存储为独立的连续数组。
+///     此数据模型将 SoA 格式重组为面向对象的 AOS 结构，便于上层使用。
+/// </remarks>
 public sealed class Live2DModelData
 {
     /// <summary>
@@ -36,11 +40,6 @@ public sealed class Live2DModelData
     public IReadOnlyList<Live2DParameter> Parameters { get; init; } = [];
 
     /// <summary>
-    ///     参数值列表（每个参数的默认值）。
-    /// </summary>
-    public IReadOnlyList<float> ParameterValues { get; init; } = [];
-
-    /// <summary>
     ///     部件列表。
     /// </summary>
     public IReadOnlyList<Live2DPart> Parts { get; init; } = [];
@@ -56,23 +55,13 @@ public sealed class Live2DModelData
     public IReadOnlyList<Live2DDeformer> Deformers { get; init; } = [];
 
     /// <summary>
-    ///     绘制顺序列表。
-    /// </summary>
-    public IReadOnlyList<int> DrawOrders { get; init; } = [];
-
-    /// <summary>
-    ///     渲染顺序列表。
-    /// </summary>
-    public IReadOnlyList<int> RenderOrders { get; init; } = [];
-
-    /// <summary>
     ///     纹理数量。
     /// </summary>
     public int TextureCount { get; init; }
 }
 
 /// <summary>
-///     Live2D 画布信息。
+///     Live2D 画布信息，对应 moc3 段偏移表中 CanvasInfo 段。
 /// </summary>
 public sealed class Live2DCanvasInfo
 {
@@ -103,7 +92,7 @@ public sealed class Live2DCanvasInfo
 }
 
 /// <summary>
-///     Live2D 参数数据。
+///     Live2D 参数数据，由 moc3 段偏移表中 ParameterIds/ParameterMinimumValues/ParameterMaximumValues/ParameterDefaultValues 段重组而来。
 /// </summary>
 public sealed class Live2DParameter
 {
@@ -111,11 +100,6 @@ public sealed class Live2DParameter
     ///     参数标识符。
     /// </summary>
     public string Id { get; init; } = string.Empty;
-
-    /// <summary>
-    ///     参数分组。
-    /// </summary>
-    public string Group { get; init; } = string.Empty;
 
     /// <summary>
     ///     最小值。
@@ -131,15 +115,10 @@ public sealed class Live2DParameter
     ///     默认值。
     /// </summary>
     public float DefaultValue { get; init; }
-
-    /// <summary>
-    ///     是否为向量参数。
-    /// </summary>
-    public bool IsVector { get; init; }
 }
 
 /// <summary>
-///     Live2D 部件数据。
+///     Live2D 部件数据，由 moc3 段偏移表中 PartIds/PartParentPartIndices 段重组而来。
 /// </summary>
 public sealed class Live2DPart
 {
@@ -155,8 +134,8 @@ public sealed class Live2DPart
 }
 
 /// <summary>
-///     Live2D 绘制对象（ArtMesh）数据。
-/// /// </summary>
+///     Live2D 绘制对象（ArtMesh）数据，由 moc3 段偏移表中 DrawableIds/DrawableConstantFlags/DrawableTextureIndices 等段重组而来。
+/// </summary>
 public sealed class Live2DDrawable
 {
     /// <summary>
@@ -205,11 +184,6 @@ public sealed class Live2DDrawable
     public bool FlipUvY { get; init; }
 
     /// <summary>
-    ///     父变形器索引（-1 表示无父级）。
-    /// </summary>
-    public int ParentDeformerIndex { get; init; } = -1;
-
-    /// <summary>
     ///     混合模式（0=Normal, 1=Additive, 2=Multiply）。
     /// </summary>
     public int BlendMode { get; init; }
@@ -226,7 +200,7 @@ public sealed class Live2DDrawable
 }
 
 /// <summary>
-///     Live2D 变形器数据。
+///     Live2D 变形器数据，由 moc3 段偏移表中 DeformerIds/DeformerTypes/DeformerParentIndices 等段重组而来（v4+）。
 /// </summary>
 public sealed class Live2DDeformer
 {

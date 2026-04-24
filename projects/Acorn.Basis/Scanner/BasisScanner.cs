@@ -8,14 +8,14 @@ namespace Acorn.Basis.Scanner;
 /// </summary>
 public ref struct BasisScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="BasisScanner" /> 结构的新实例。
     /// </summary>
     public BasisScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
@@ -23,17 +23,17 @@ public ref struct BasisScanner
     /// </summary>
     public BasisScanHeader ScanHeader()
     {
-        if (_buffer.Length < 12)
+        if (_scanner.Length < 12)
         {
             return new BasisScanHeader();
         }
 
-        if (_buffer.MatchMagic(BasisConstants.Ktx2Magic))
+        if (_scanner.MatchMagic(BasisConstants.Ktx2Magic))
         {
             return new BasisScanHeader { Format = "KTX2" };
         }
 
-        if (_buffer.Length >= 2 && _buffer.Data[..2].SequenceEqual(BasisConstants.BasisMagic))
+        if (_scanner.Length >= 2 && _scanner.Data[..2].SequenceEqual(BasisConstants.BasisMagic))
         {
             return new BasisScanHeader { Format = "Basis" };
         }
@@ -46,8 +46,8 @@ public ref struct BasisScanner
     /// </summary>
     public bool IsBasisOrKtx2()
     {
-        if (_buffer.Length >= 12 && _buffer.MatchMagic(BasisConstants.Ktx2Magic)) return true;
-        if (_buffer.Length >= 2 && _buffer.Data[..2].SequenceEqual(BasisConstants.BasisMagic)) return true;
+        if (_scanner.Length >= 12 && _scanner.MatchMagic(BasisConstants.Ktx2Magic)) return true;
+        if (_scanner.Length >= 2 && _scanner.Data[..2].SequenceEqual(BasisConstants.BasisMagic)) return true;
         return false;
     }
 }

@@ -67,6 +67,11 @@ public sealed class PsdLayer
     public string BlendMode { get; init; } = "norm";
 
     /// <summary>
+    ///     混合模式枚举值。
+    /// </summary>
+    public PsdBlendMode BlendModeEnum { get; init; } = PsdBlendMode.Normal;
+
+    /// <summary>
     ///     不透明度（0-255）。
     /// </summary>
     public byte Opacity { get; init; } = 255;

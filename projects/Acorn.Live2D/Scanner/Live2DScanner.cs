@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using Acorn.Frame;
@@ -12,6 +13,7 @@ namespace Acorn.Live2D.Scanner;
 ///     扫描器通过流式 JSON 解析或二进制头读取快速提取版本、文件引用、参数数量等元信息，
 ///     避免完整反序列化带来的内存分配。
 ///     moc3 文件头格式：4 字节魔数 "MOC3" + 1 字节版本 + 1 字节字节序标志 + 2 字节修订号。
+///     段偏移表紧跟文件头，通过 <see cref="Live2DConstants" /> 计算各段偏移。
 /// </remarks>
 public ref struct Live2DScanner : ILive2DScanner
 {
@@ -92,7 +94,7 @@ public ref struct Live2DScanner : ILive2DScanner
     /// </remarks>
     public (int Version, bool IsBigEndian, int Revision) ScanMoc3Header()
     {
-        if (_scanner.Length < 8)
+        if (_scanner.Length < Live2DConstants.HeaderSize)
         {
             throw new InvalidDataException("moc3 文件数据过短，无法读取文件头");
         }
@@ -111,57 +113,60 @@ public ref struct Live2DScanner : ILive2DScanner
     }
 
     /// <summary>
-    ///     扫描 moc3 文件，从偏移表提取参数数量。
+    ///     扫描 moc3 文件，从段偏移表定位 CountInfo 段并提取参数数量。
     /// </summary>
+    /// <remarks>
+    ///     通过段偏移表中 CountInfo 段的偏移量定位计数表，
+    ///     然后从计数表中读取参数数量（偏移 0，i32）。
+    /// </remarks>
     public int ScanMoc3ParameterCount()
     {
-        if (_scanner.Length < 12)
-        {
-            return 0;
-        }
-
-        var (_, isBigEndian, _) = ScanMoc3Header();
-        var version = _scanner.Buffer.ReadU8At(4);
-
-        var parameterCountOffset = GetCountInfoOffset(version) + 4;
-
-        if (parameterCountOffset + 4 > _scanner.Length)
-        {
-            return 0;
-        }
-
-        return _scanner.Buffer.ReadI32At(parameterCountOffset, isBigEndian);
+        return ScanCountInfoField(Live2DConstants.CountInfoParameterCountOffset);
     }
 
     /// <summary>
-    ///     扫描 moc3 文件，从偏移表提取部件数量。
+    ///     扫描 moc3 文件，从段偏移表定位 CountInfo 段并提取部件数量。
     /// </summary>
+    /// <remarks>
+    ///     通过段偏移表中 CountInfo 段的偏移量定位计数表，
+    ///     然后从计数表中读取部件数量（偏移 4，i32）。
+    /// </remarks>
     public int ScanMoc3PartCount()
     {
-        if (_scanner.Length < 16)
-        {
-            return 0;
-        }
-
-        var (_, isBigEndian, _) = ScanMoc3Header();
-        var version = _scanner.Buffer.ReadU8At(4);
-
-        var partCountOffset = GetCountInfoOffset(version) + 8;
-
-        if (partCountOffset + 4 > _scanner.Length)
-        {
-            return 0;
-        }
-
-        return _scanner.Buffer.ReadI32At(partCountOffset, isBigEndian);
+        return ScanCountInfoField(Live2DConstants.CountInfoPartCountOffset);
     }
 
     /// <summary>
-    ///     扫描 moc3 文件，从偏移表提取绘制对象数量。
+    ///     扫描 moc3 文件，从段偏移表定位 CountInfo 段并提取绘制对象数量。
     /// </summary>
+    /// <remarks>
+    ///     通过段偏移表中 CountInfo 段的偏移量定位计数表，
+    ///     然后从计数表中读取绘制对象数量（偏移 8，i32）。
+    /// </remarks>
     public int ScanMoc3DrawableCount()
     {
-        if (_scanner.Length < 20)
+        return ScanCountInfoField(Live2DConstants.CountInfoDrawableCountOffset);
+    }
+
+    /// <summary>
+    ///     扫描 moc3 文件，从段偏移表定位 CountInfo 段并提取变形器数量（v4+）。
+    /// </summary>
+    public int ScanMoc3DeformerCount()
+    {
+        return ScanCountInfoField(Live2DConstants.CountInfoDeformerCountOffset);
+    }
+
+    /// <summary>
+    ///     扫描 moc3 文件，从段偏移表定位 CountInfo 段并提取纹理数量。
+    /// </summary>
+    public int ScanMoc3TextureCount()
+    {
+        return ScanCountInfoField(Live2DConstants.CountInfoTextureCountOffset);
+    }
+
+    private int ScanCountInfoField(int fieldOffset)
+    {
+        if (_scanner.Length < Live2DConstants.HeaderSize + Live2DConstants.OffsetTableEntrySize)
         {
             return 0;
         }
@@ -169,26 +174,30 @@ public ref struct Live2DScanner : ILive2DScanner
         var (_, isBigEndian, _) = ScanMoc3Header();
         var version = _scanner.Buffer.ReadU8At(4);
 
-        var drawableCountOffset = GetCountInfoOffset(version) + 12;
-
-        if (drawableCountOffset + 4 > _scanner.Length)
+        var countInfoSectionOffset = ReadCountInfoSectionOffset(version, isBigEndian);
+        if (countInfoSectionOffset == 0)
         {
             return 0;
         }
 
-        return _scanner.Buffer.ReadI32At(drawableCountOffset, isBigEndian);
+        var fieldPosition = countInfoSectionOffset + fieldOffset;
+        if (fieldPosition + 4 > _scanner.Length)
+        {
+            return 0;
+        }
+
+        return _scanner.Buffer.ReadI32At(fieldPosition, isBigEndian);
     }
 
-    private static int GetCountInfoOffset(int version)
+    private int ReadCountInfoSectionOffset(int version, bool isBigEndian)
     {
-        var offsetTableSize = version switch
-        {
-            3 => 88,
-            4 => 93,
-            5 => 100,
-            _ => 100
-        };
+        var countInfoEntryPosition = Live2DConstants.HeaderSize + (int)Moc3Section.CountInfo * Live2DConstants.OffsetTableEntrySize;
 
-        return 8 + offsetTableSize;
+        if (countInfoEntryPosition + 4 > _scanner.Length)
+        {
+            return 0;
+        }
+
+        return _scanner.Buffer.ReadI32At(countInfoEntryPosition, isBigEndian);
     }
 }

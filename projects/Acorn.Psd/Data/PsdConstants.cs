@@ -95,3 +95,107 @@ public enum PsdCompression : short
     /// </summary>
     Rle = 1
 }
+
+/// <summary>
+///     PSD 图层混合模式枚举。
+/// </summary>
+/// <remarks>
+///     对应 PSD 规范中图层记录的混合模式 4 字节 ASCII 标识。
+/// </remarks>
+public enum PsdBlendMode
+{
+    /// <summary>
+    ///     未知混合模式。
+    /// </summary>
+    Unknown = 0,
+
+    /// <summary>
+    ///     正常（norm）。
+    /// </summary>
+    Normal = 1,
+
+    /// <summary>
+    ///     溶解（diss）。
+    /// </summary>
+    Dissolve = 2,
+
+    /// <summary>
+    ///     正片叠底（mul）。
+    /// </summary>
+    Multiply = 3,
+
+    /// <summary>
+    ///     滤色（scrn）。
+    /// </summary>
+    Screen = 4,
+
+    /// <summary>
+    ///     叠加（over）。
+    /// </summary>
+    Overlay = 5,
+
+    /// <summary>
+    ///     柔光（sLit）。
+    /// </summary>
+    SoftLight = 6,
+
+    /// <summary>
+    ///     强光（hLit）。
+    /// </summary>
+    HardLight = 7,
+
+    /// <summary>
+    ///     颜色减淡（hLit）。
+    /// </summary>
+    ColorDodge = 8,
+
+    /// <summary>
+    ///     颜色加深（cBurn）。
+    /// </summary>
+    ColorBurn = 9,
+
+    /// <summary>
+    ///     深色（dkCl）。
+    /// </summary>
+    Darken = 10,
+
+    /// <summary>
+    ///     浅色（lgCl）。
+    /// </summary>
+    Lighten = 11,
+
+    /// <summary>
+    ///     差值（diff）。
+    /// </summary>
+    Difference = 12,
+
+    /// <summary>
+    ///     排除（smud）。
+    /// </summary>
+    Exclusion = 13,
+
+    /// <summary>
+    ///     色相（hue）。
+    /// </summary>
+    Hue = 14,
+
+    /// <summary>
+    ///     饱和度（sat）。
+    /// </summary>
+    Saturation = 15,
+
+    /// <summary>
+    ///     颜色（colr）。
+    /// </summary>
+    Color = 16,
+
+    /// <summary>
+    ///     明度（lum）。
+    /// </summary>
+    Luminosity = 17,
+
+    /// <summary>
+    ///     穿透（pass）。
+    /// </summary>
+    PassThrough = 18
+}

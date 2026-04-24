@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Acorn.Codec;
 
 namespace Acorn.Frame;
 
@@ -23,27 +24,32 @@ public ref struct ByteBufferWriter
 {
     private byte[] _buffer;
     private int _position;
+    private Endianness _endianness;
 
     /// <summary>
     ///     初始化 <see cref="ByteBufferWriter" /> 结构的新实例。
     /// </summary>
     /// <param name="buffer">要写入的目标字节缓冲区。</param>
+    /// <param name="endianness">字节序，默认为小端序。</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ByteBufferWriter(Span<byte> buffer)
+    public ByteBufferWriter(Span<byte> buffer, Endianness endianness = Endianness.LittleEndian)
     {
         _buffer = buffer.ToArray();
         _position = 0;
+        _endianness = endianness;
     }
 
     /// <summary>
     ///     初始化 <see cref="ByteBufferWriter" /> 结构的新实例。
     /// </summary>
     /// <param name="capacity">初始容量（字节）。</param>
+    /// <param name="endianness">字节序，默认为小端序。</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ByteBufferWriter(int capacity)
+    public ByteBufferWriter(int capacity, Endianness endianness = Endianness.LittleEndian)
     {
         _buffer = new byte[capacity];
         _position = 0;
+        _endianness = endianness;
     }
 
     /// <summary>
@@ -71,6 +77,18 @@ public ref struct ByteBufferWriter
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _buffer.Length - _position;
+    }
+
+    /// <summary>
+    ///     获取或设置字节序。通用写入方法（如 <see cref="WriteU16" />、<see cref="WriteU32" /> 等）
+    ///     根据此属性选择小端序或大端序。默认为小端序。
+    /// </summary>
+    public Endianness Endianness
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _endianness;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set => _endianness = value;
     }
 
     /// <summary>
@@ -347,6 +365,91 @@ public ref struct ByteBufferWriter
         EnsureCapacity(8);
         BinaryPrimitives.WriteDoubleBigEndian(_buffer.AsSpan(_position), value);
         _position += 8;
+    }
+
+    #endregion
+
+    #region 通用字节序写入
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序写入一个无符号 16 位整数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteU16(ushort value)
+    {
+        if (_endianness == Endianness.LittleEndian) WriteU16LE(value); else WriteU16BE(value);
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序写入一个无符号 32 位整数并前进 4 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteU32(uint value)
+    {
+        if (_endianness == Endianness.LittleEndian) WriteU32LE(value); else WriteU32BE(value);
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序写入一个无符号 64 位整数并前进 8 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteU64(ulong value)
+    {
+        if (_endianness == Endianness.LittleEndian) WriteU64LE(value); else WriteU64BE(value);
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序写入一个有符号 16 位整数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteI16(short value)
+    {
+        if (_endianness == Endianness.LittleEndian) WriteI16LE(value); else WriteI16BE(value);
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序写入一个有符号 32 位整数并前进 4 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteI32(int value)
+    {
+        if (_endianness == Endianness.LittleEndian) WriteI32LE(value); else WriteI32BE(value);
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序写入一个有符号 64 位整数并前进 8 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteI64(long value)
+    {
+        if (_endianness == Endianness.LittleEndian) WriteI64LE(value); else WriteI64BE(value);
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序写入一个 16 位半精度浮点数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteF16(Half value)
+    {
+        if (_endianness == Endianness.LittleEndian) WriteF16LE(value); else WriteF16BE(value);
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序写入一个 32 位浮点数并前进 4 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteF32(float value)
+    {
+        if (_endianness == Endianness.LittleEndian) WriteF32LE(value); else WriteF32BE(value);
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序写入一个 64 位浮点数并前进 8 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteF64(double value)
+    {
+        if (_endianness == Endianness.LittleEndian) WriteF64LE(value); else WriteF64BE(value);
     }
 
     #endregion

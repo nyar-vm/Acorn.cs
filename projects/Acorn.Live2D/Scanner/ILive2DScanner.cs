@@ -9,6 +9,7 @@ namespace Acorn.Live2D.Scanner;
 ///     Live2D 是 Live2D Inc. 开发的参数化 2D 动画格式，广泛用于虚拟主播和游戏角色。
 ///     扫描器专注于快速识别 Live2D 文件版本、参数数量、部件数量等元信息，
 ///     不做完整的对象反序列化，以实现零分配高性能扫描。
+///     扫描器通过段偏移表定位 CountInfo 段，从中读取各类型元素数量。
 /// </remarks>
 public interface ILive2DScanner
 {
@@ -35,6 +36,18 @@ public interface ILive2DScanner
     /// </summary>
     /// <returns>绘制对象数量。</returns>
     int ScanMoc3DrawableCount();
+
+    /// <summary>
+    ///     扫描 moc3 文件，提取变形器数量（v4+）。
+    /// </summary>
+    /// <returns>变形器数量。</returns>
+    int ScanMoc3DeformerCount();
+
+    /// <summary>
+    ///     扫描 moc3 文件，提取纹理数量。
+    /// </summary>
+    /// <returns>纹理数量。</returns>
+    int ScanMoc3TextureCount();
 
     /// <summary>
     ///     扫描 model3.json 文件，提取文件引用列表。

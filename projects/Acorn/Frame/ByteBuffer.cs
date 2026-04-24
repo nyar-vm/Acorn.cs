@@ -23,16 +23,19 @@ public ref struct ByteBuffer
 {
     private readonly ReadOnlySpan<byte> _data;
     private int _position;
+    private Endianness _endianness;
 
     /// <summary>
     ///     初始化 <see cref="ByteBuffer" /> 结构的新实例。
     /// </summary>
     /// <param name="data">要读取的字节数据。</param>
+    /// <param name="endianness">字节序，默认为小端序。</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ByteBuffer(ReadOnlySpan<byte> data)
+    public ByteBuffer(ReadOnlySpan<byte> data, Endianness endianness = Endianness.LittleEndian)
     {
         _data = data;
         _position = 0;
+        _endianness = endianness;
     }
 
     /// <summary>
@@ -71,6 +74,18 @@ public ref struct ByteBuffer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _position >= _data.Length;
+    }
+
+    /// <summary>
+    ///     获取或设置字节序。通用读取方法（如 <see cref="ReadU16" />、<see cref="ReadU32" /> 等）
+    ///     根据此属性选择小端序或大端序。默认为小端序。
+    /// </summary>
+    public Endianness Endianness
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _endianness;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set => _endianness = value;
     }
 
     /// <summary>
@@ -444,6 +459,91 @@ public ref struct ByteBuffer
 
     #endregion
 
+    #region 通用字节序读取
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序读取一个无符号 16 位整数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort ReadU16()
+    {
+        return _endianness == Endianness.LittleEndian ? ReadU16LE() : ReadU16BE();
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序读取一个无符号 32 位整数并前进 4 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint ReadU32()
+    {
+        return _endianness == Endianness.LittleEndian ? ReadU32LE() : ReadU32BE();
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序读取一个无符号 64 位整数并前进 8 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong ReadU64()
+    {
+        return _endianness == Endianness.LittleEndian ? ReadU64LE() : ReadU64BE();
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序读取一个有符号 16 位整数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public short ReadI16()
+    {
+        return _endianness == Endianness.LittleEndian ? ReadI16LE() : ReadI16BE();
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序读取一个有符号 32 位整数并前进 4 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ReadI32()
+    {
+        return _endianness == Endianness.LittleEndian ? ReadI32LE() : ReadI32BE();
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序读取一个有符号 64 位整数并前进 8 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long ReadI64()
+    {
+        return _endianness == Endianness.LittleEndian ? ReadI64LE() : ReadI64BE();
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序读取一个 16 位半精度浮点数并前进 2 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half ReadF16()
+    {
+        return _endianness == Endianness.LittleEndian ? ReadF16LE() : ReadF16BE();
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序读取一个 32 位浮点数并前进 4 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float ReadF32()
+    {
+        return _endianness == Endianness.LittleEndian ? ReadF32LE() : ReadF32BE();
+    }
+
+    /// <summary>
+    ///     以 <see cref="Endianness" /> 属性指定的字节序读取一个 64 位浮点数并前进 8 字节。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double ReadF64()
+    {
+        return _endianness == Endianness.LittleEndian ? ReadF64LE() : ReadF64BE();
+    }
+
+    #endregion
+
     #region LEB128 变长整数
 
     /// <summary>
@@ -637,6 +737,85 @@ public ref struct ByteBuffer
             shift += 7;
 
             if (shift >= 32)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     尝试从指定位置读取 LEB128 编码的无符号 64 位整数，不移动位置。
+    /// </summary>
+    /// <param name="data">数据源。</param>
+    /// <param name="value">解码后的值。</param>
+    /// <param name="consumed">消耗的字节数。</param>
+    /// <returns>如果成功解码则返回 true。</returns>
+    public static bool TryDecodeLeb128U64(ReadOnlySpan<byte> data, out ulong value, out int consumed)
+    {
+        value = 0;
+        consumed = 0;
+        ulong result = 0;
+        var shift = 0;
+
+        while (consumed < data.Length)
+        {
+            var b = data[consumed];
+            consumed++;
+            result |= (ulong)(b & 0x7F) << shift;
+
+            if ((b & 0x80) == 0)
+            {
+                value = result;
+                return true;
+            }
+
+            shift += 7;
+
+            if (shift >= 64)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     尝试从指定位置读取 LEB128 编码的有符号 64 位整数，不移动位置。
+    /// </summary>
+    /// <param name="data">数据源。</param>
+    /// <param name="value">解码后的值。</param>
+    /// <param name="consumed">消耗的字节数。</param>
+    /// <returns>如果成功解码则返回 true。</returns>
+    public static bool TryDecodeLeb128I64(ReadOnlySpan<byte> data, out long value, out int consumed)
+    {
+        value = 0;
+        consumed = 0;
+        long result = 0;
+        var shift = 0;
+        byte b;
+
+        while (consumed < data.Length)
+        {
+            b = data[consumed];
+            consumed++;
+            result |= (long)(b & 0x7F) << shift;
+            shift += 7;
+
+            if ((b & 0x80) == 0)
+            {
+                if (shift < 64 && (b & 0x40) != 0)
+                {
+                    result |= ~0L << shift;
+                }
+
+                value = result;
+                return true;
+            }
+
+            if (shift >= 64)
             {
                 return false;
             }

@@ -8,14 +8,14 @@ namespace Acorn.FlatBuffers.Scanner;
 /// </summary>
 public ref struct FlatBuffersScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="FlatBuffersScanner" /> 结构的新实例。
     /// </summary>
     public FlatBuffersScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
@@ -23,13 +23,13 @@ public ref struct FlatBuffersScanner
     /// </summary>
     public FlatBuffersScanHeader ScanHeader()
     {
-        if (_buffer.Length < 8)
+        if (_scanner.Length < 8)
         {
             return new FlatBuffersScanHeader();
         }
 
-        var rootOffset = _buffer.ReadU32LE();
-        var fileId = _buffer.ReadString(4);
+        var rootOffset = _scanner.Buffer.ReadU32LE();
+        var fileId = _scanner.Buffer.ReadString(4);
 
         return new FlatBuffersScanHeader
         {

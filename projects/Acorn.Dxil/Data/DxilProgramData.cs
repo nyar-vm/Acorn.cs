@@ -27,10 +27,19 @@ public partial struct DxilProgramHeader
     public byte MinorVersion;
 
     /// <summary>
-    ///     着色器模型类型。
+    ///     着色器模型类型（<see cref="DxilShaderModelKind" /> 枚举值）。
     /// </summary>
     [Field(Order = 2)]
-    public DxilShaderModelKind ShaderModelKind;
+    public byte ShaderModelKindRaw;
+
+    /// <summary>
+    ///     着色器模型类型。
+    /// </summary>
+    public DxilShaderModelKind ShaderModelKind
+    {
+        get => (DxilShaderModelKind)ShaderModelKindRaw;
+        init => ShaderModelKindRaw = (byte)value;
+    }
 
     /// <summary>
     ///     对齐填充字节。

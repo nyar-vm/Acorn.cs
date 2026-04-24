@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Acorn.Codec;
 
 namespace Acorn.Frame;
 
@@ -27,10 +28,11 @@ public ref struct SpanScanner
     ///     初始化 <see cref="SpanScanner" /> 结构的新实例。
     /// </summary>
     /// <param name="data">要扫描的字节数据。</param>
+    /// <param name="endianness">字节序，默认为小端序。</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SpanScanner(ReadOnlySpan<byte> data)
+    public SpanScanner(ReadOnlySpan<byte> data, Endianness endianness = Endianness.LittleEndian)
     {
-        _buffer = new ByteBuffer(data);
+        _buffer = new ByteBuffer(data, endianness);
     }
 
     /// <summary>
@@ -60,6 +62,15 @@ public ref struct SpanScanner
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _buffer.IsEnd;
+    }
+
+    /// <summary>
+    ///     获取剩余未读取的字节数。
+    /// </summary>
+    public int RemainingBytes
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _buffer.Remaining;
     }
 
     /// <summary>

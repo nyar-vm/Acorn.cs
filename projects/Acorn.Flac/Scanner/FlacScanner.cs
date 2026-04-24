@@ -8,14 +8,14 @@ namespace Acorn.Flac.Scanner;
 /// </summary>
 public ref struct FlacScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="FlacScanner" /> 结构的新实例。
     /// </summary>
     public FlacScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
@@ -23,35 +23,35 @@ public ref struct FlacScanner
     /// </summary>
     public FlacScanHeader ScanHeader()
     {
-        if (_buffer.Length < FlacConstants.StreamMarkerLength)
+        if (_scanner.Length < FlacConstants.StreamMarkerLength)
         {
             return new FlacScanHeader();
         }
 
-        if (!_buffer.MatchMagic(FlacConstants.StreamMarker))
+        if (!_scanner.MatchMagic(FlacConstants.StreamMarker))
         {
             return new FlacScanHeader();
         }
 
-        _buffer.ConsumeMagic(FlacConstants.StreamMarker);
+        _scanner.ConsumeMagic(FlacConstants.StreamMarker);
 
-        if (_buffer.Remaining < 4)
+        if (_scanner.RemainingBytes < 4)
         {
             return new FlacScanHeader { IsFlac = true };
         }
 
-        var header = _buffer.ReadU32BE();
+        var header = _scanner.Buffer.ReadU32BE();
         var isLast = (header & 0x80000000) != 0;
         var blockType = (FlacMetadataBlockType)((header >> 24) & 0x7F);
         var blockSize = (int)(header & 0x00FFFFFF);
 
-        if (blockType == FlacMetadataBlockType.StreamInfo && _buffer.Remaining >= 34)
+        if (blockType == FlacMetadataBlockType.StreamInfo && _scanner.RemainingBytes >= 34)
         {
-            var minBlockSize = _buffer.ReadU16BE();
-            var maxBlockSize = _buffer.ReadU16BE();
-            _buffer.Advance(6);
+            var minBlockSize = _scanner.Buffer.ReadU16BE();
+            var maxBlockSize = _scanner.Buffer.ReadU16BE();
+            _scanner.Advance(6);
 
-            var sampleRateBits = _buffer.ReadU32BE();
+            var sampleRateBits = _scanner.Buffer.ReadU32BE();
             var sampleRate = (int)((sampleRateBits >> 12) & 0xFFFFF);
             var channels = (int)(((sampleRateBits >> 9) & 0x07) + 1);
             var bitsPerSample = (int)(((sampleRateBits >> 4) & 0x1F) + 1);
@@ -73,7 +73,7 @@ public ref struct FlacScanner
     /// </summary>
     public bool IsFlac()
     {
-        return _buffer.Length >= 4 && _buffer.MatchMagic(FlacConstants.StreamMarker);
+        return _scanner.Length >= 4 && _scanner.MatchMagic(FlacConstants.StreamMarker);
     }
 }
 

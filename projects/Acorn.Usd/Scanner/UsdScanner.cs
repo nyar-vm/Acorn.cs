@@ -8,14 +8,14 @@ namespace Acorn.Usd.Scanner;
 /// </summary>
 public ref struct UsdScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="UsdScanner" /> 结构的新实例。
     /// </summary>
     public UsdScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
@@ -23,15 +23,15 @@ public ref struct UsdScanner
     /// </summary>
     public UsdScanHeader ScanHeader()
     {
-        if (_buffer.Length < UsdConstants.HeaderSize)
+        if (_scanner.Length < UsdConstants.HeaderSize)
         {
             return new UsdScanHeader { FileType = UsdFileType.Unknown };
         }
 
-        if (_buffer.MatchMagic(UsdConstants.UsdcMagic))
+        if (_scanner.MatchMagic(UsdConstants.UsdcMagic))
         {
-            _buffer.ConsumeMagic(UsdConstants.UsdcMagic);
-            var version = (int)_buffer.ReadU32LE();
+            _scanner.ConsumeMagic(UsdConstants.UsdcMagic);
+            var version = (int)_scanner.Buffer.ReadU32LE();
 
             return new UsdScanHeader
             {
@@ -48,7 +48,7 @@ public ref struct UsdScanner
     /// </summary>
     public bool IsUsdc()
     {
-        return _buffer.Length >= UsdConstants.MagicLength && _buffer.MatchMagic(UsdConstants.UsdcMagic);
+        return _scanner.Length >= UsdConstants.MagicLength && _scanner.MatchMagic(UsdConstants.UsdcMagic);
     }
 }
 

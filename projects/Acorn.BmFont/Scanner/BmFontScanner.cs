@@ -4,11 +4,11 @@ using Acorn.BmFont.Data;
 namespace Acorn.BmFont.Scanner;
 
 /// <summary>
-///     BMFont 文件扫描器，基于 <see cref="ByteBuffer" /> 提供对 BMFont 位图字体文件的快速元信息扫描。
+///     BMFont 文件扫描器，基于 <see cref="SpanScanner" /> 提供对 BMFont 位图字体文件的快速元信息扫描。
 /// </summary>
 public ref struct BmFontScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="BmFontScanner" /> 结构的新实例。
@@ -16,7 +16,7 @@ public ref struct BmFontScanner
     /// <param name="data">要扫描的 BMFont 字节数据。</param>
     public BmFontScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
@@ -24,43 +24,43 @@ public ref struct BmFontScanner
     /// </summary>
     public BmFontScanHeader ScanHeader()
     {
-        if (_buffer.Length < 4)
+        if (_scanner.Length < 4)
         {
             throw new InvalidDataException("BMFont 文件数据过短，无法读取头部");
         }
 
-        if (!_buffer.MatchMagic(BmFontConstants.BinaryMagic))
+        if (!_scanner.MatchMagic(BmFontConstants.BinaryMagic))
         {
             throw new InvalidDataException("BMFont 文件魔数不匹配");
         }
 
-        _buffer.ConsumeMagic(BmFontConstants.BinaryMagic);
+        _scanner.ConsumeMagic(BmFontConstants.BinaryMagic);
 
-        var version = _buffer.ReadU8();
+        var version = _scanner.Buffer.ReadU8();
 
         BmFontScanHeader header = new() { Version = version, IsBinary = true };
 
-        while (!_buffer.IsEnd)
+        while (!_scanner.IsEnd)
         {
-            if (_buffer.Remaining < 5)
+            if (_scanner.RemainingBytes < 5)
             {
                 break;
             }
 
-            var blockType = _buffer.ReadU8();
-            var blockSize = (int)_buffer.ReadU32LE();
+            var blockType = _scanner.Buffer.ReadU8();
+            var blockSize = (int)_scanner.Buffer.ReadU32LE();
 
-            if (blockType == BmFontConstants.BlockInfo && _buffer.Remaining >= 15)
+            if (blockType == BmFontConstants.BlockInfo && _scanner.RemainingBytes >= 15)
             {
-                header.FontSize = _buffer.ReadI16LE();
-                var flags = _buffer.ReadU8();
+                header.FontSize = _scanner.Buffer.ReadI16LE();
+                var flags = _scanner.Buffer.ReadU8();
                 header.Bold = (flags & 0x01) != 0;
                 header.Italic = (flags & 0x02) != 0;
                 header.Unicode = (flags & 0x04) != 0;
                 break;
             }
 
-            _buffer.Advance(blockSize);
+            _scanner.Advance(blockSize);
         }
 
         return header;
@@ -71,12 +71,12 @@ public ref struct BmFontScanner
     /// </summary>
     public bool IsBmFontBinary()
     {
-        if (_buffer.Length < 3)
+        if (_scanner.Length < 3)
         {
             return false;
         }
 
-        return _buffer.MatchMagic(BmFontConstants.BinaryMagic);
+        return _scanner.MatchMagic(BmFontConstants.BinaryMagic);
     }
 }
 

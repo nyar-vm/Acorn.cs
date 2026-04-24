@@ -8,14 +8,14 @@ namespace Acorn.Opus.Scanner;
 /// </summary>
 public ref struct OpusScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="OpusScanner" /> 结构的新实例。
     /// </summary>
     public OpusScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
@@ -23,21 +23,21 @@ public ref struct OpusScanner
     /// </summary>
     public OpusScanHeader ScanHeader()
     {
-        if (_buffer.Length < OpusConstants.HeaderSize)
+        if (_scanner.Length < OpusConstants.HeaderSize)
         {
             return new OpusScanHeader();
         }
 
-        if (!_buffer.MatchMagic(OpusConstants.OpusHead))
+        if (!_scanner.MatchMagic(OpusConstants.OpusHead))
         {
             return new OpusScanHeader();
         }
 
-        _buffer.ConsumeMagic(OpusConstants.OpusHead);
-        var version = _buffer.ReadU8();
-        var channels = _buffer.ReadU8();
-        var preSkip = _buffer.ReadU16LE();
-        var sampleRate = _buffer.ReadU32LE();
+        _scanner.ConsumeMagic(OpusConstants.OpusHead);
+        var version = _scanner.Buffer.ReadU8();
+        var channels = _scanner.Buffer.ReadU8();
+        var preSkip = _scanner.Buffer.ReadU16LE();
+        var sampleRate = _scanner.Buffer.ReadU32LE();
 
         return new OpusScanHeader
         {
@@ -52,7 +52,7 @@ public ref struct OpusScanner
     /// </summary>
     public bool IsOpus()
     {
-        return _buffer.Length >= 8 && _buffer.MatchMagic(OpusConstants.OpusHead);
+        return _scanner.Length >= 8 && _scanner.MatchMagic(OpusConstants.OpusHead);
     }
 }
 

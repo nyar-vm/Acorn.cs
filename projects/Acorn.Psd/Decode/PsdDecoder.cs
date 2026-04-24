@@ -170,6 +170,7 @@ public ref struct PsdDecoder
         }
 
         var blendMode = _buffer.ReadString(4);
+        var blendModeEnum = ParseBlendMode(blendMode);
         var opacity = _buffer.ReadU8();
         var clipping = _buffer.ReadU8();
         var flags = _buffer.ReadU8();
@@ -209,6 +210,7 @@ public ref struct PsdDecoder
             ChannelCount = channelCount,
             ChannelDataLengths = channelDataLengths,
             BlendMode = blendMode,
+            BlendModeEnum = blendModeEnum,
             Opacity = opacity,
             IsVisible = isVisible
         };
@@ -264,6 +266,32 @@ public ref struct PsdDecoder
         }
 
         return str;
+    }
+
+    private static PsdBlendMode ParseBlendMode(string blendMode)
+    {
+        return blendMode switch
+        {
+            "norm" => PsdBlendMode.Normal,
+            "diss" => PsdBlendMode.Dissolve,
+            "mul " => PsdBlendMode.Multiply,
+            "scrn" => PsdBlendMode.Screen,
+            "over" => PsdBlendMode.Overlay,
+            "sLit" => PsdBlendMode.SoftLight,
+            "hLit" => PsdBlendMode.HardLight,
+            "cLit" => PsdBlendMode.ColorDodge,
+            "cBurn" => PsdBlendMode.ColorBurn,
+            "dkCl" => PsdBlendMode.Darken,
+            "lgCl" => PsdBlendMode.Lighten,
+            "diff" => PsdBlendMode.Difference,
+            "smud" => PsdBlendMode.Exclusion,
+            "hue " => PsdBlendMode.Hue,
+            "sat " => PsdBlendMode.Saturation,
+            "colr" => PsdBlendMode.Color,
+            "lum " => PsdBlendMode.Luminosity,
+            "pass" => PsdBlendMode.PassThrough,
+            _ => PsdBlendMode.Unknown
+        };
     }
 
     #endregion

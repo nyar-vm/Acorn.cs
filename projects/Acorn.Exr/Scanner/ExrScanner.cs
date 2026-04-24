@@ -8,14 +8,14 @@ namespace Acorn.Exr.Scanner;
 /// </summary>
 public ref struct ExrScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="ExrScanner" /> 结构的新实例。
     /// </summary>
     public ExrScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
     /// <summary>
@@ -23,18 +23,18 @@ public ref struct ExrScanner
     /// </summary>
     public ExrScanHeader ScanHeader()
     {
-        if (_buffer.Length < ExrConstants.HeaderSize)
+        if (_scanner.Length < ExrConstants.HeaderSize)
         {
             return new ExrScanHeader();
         }
 
-        if (!_buffer.MatchMagic(ExrConstants.MagicNumber))
+        if (!_scanner.MatchMagic(ExrConstants.MagicNumber))
         {
             return new ExrScanHeader();
         }
 
-        _buffer.ConsumeMagic(ExrConstants.MagicNumber);
-        var version = _buffer.ReadU32LE();
+        _scanner.ConsumeMagic(ExrConstants.MagicNumber);
+        var version = _scanner.Buffer.ReadU32LE();
 
         return new ExrScanHeader
         {
@@ -50,7 +50,7 @@ public ref struct ExrScanner
     /// </summary>
     public bool IsExr()
     {
-        return _buffer.Length >= 4 && _buffer.MatchMagic(ExrConstants.MagicNumber);
+        return _scanner.Length >= 4 && _scanner.MatchMagic(ExrConstants.MagicNumber);
     }
 }
 

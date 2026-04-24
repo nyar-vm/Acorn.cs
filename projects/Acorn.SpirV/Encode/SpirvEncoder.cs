@@ -22,13 +22,12 @@ public sealed class SpirvEncoder
     public byte[] Encode(SpirvModuleData data)
     {
         var size = 20 + CalculateInstructionsSize(data.Instructions);
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(size);
 
         WriteHeader(ref writer, data);
         WriteInstructions(ref writer, data.Instructions);
 
-        return buffer[..writer.Position];
+        return writer.ToArray();
     }
 
     /// <summary>
@@ -39,12 +38,11 @@ public sealed class SpirvEncoder
     public byte[] EncodeInstructions(IReadOnlyList<SpirvInstruction> instructions)
     {
         var size = CalculateInstructionsSize(instructions);
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(size);
 
         WriteInstructions(ref writer, instructions);
 
-        return buffer[..writer.Position];
+        return writer.ToArray();
     }
 
     /// <summary>
@@ -56,8 +54,7 @@ public sealed class SpirvEncoder
     public byte[] EncodeInstruction(SpirvOpCode opcode, IReadOnlyList<uint> operands)
     {
         var wordCount = (ushort)(1 + operands.Count);
-        var buffer = new byte[wordCount * 4];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(wordCount * 4);
 
         var firstWord = (uint)(wordCount << 16) | (ushort)opcode;
         writer.WriteU32LE(firstWord);
@@ -67,7 +64,7 @@ public sealed class SpirvEncoder
             writer.WriteU32LE(operand);
         }
 
-        return buffer[..writer.Position];
+        return writer.ToArray();
     }
 
     /// <summary>
