@@ -35,7 +35,7 @@ public ref struct ZipScanner
             return false;
         }
 
-        return _scanner.MatchMagic(ZipConstants.LocalFileHeaderMagic);
+        return _scanner.Buffer.ReadU32At(0) == ZipConstants.LocalFileHeaderMagic;
     }
 
     /// <summary>

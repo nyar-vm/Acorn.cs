@@ -27,6 +27,11 @@ public static class PsdConstants
     ///     PSD 扩展长度标记（4GB 以上）。
     /// </summary>
     public const uint ExtendedLengthMarker = 0xFFFFFFFF;
+
+    /// <summary>
+    ///     PSD 文件头大小（26 字节：4 签名 + 2 版本 + 6 保留 + 2 通道 + 4 高度 + 4 宽度 + 2 深度 + 2 颜色模式）。
+    /// </summary>
+    public const int HeaderSize = 26;
 }
 
 /// <summary>

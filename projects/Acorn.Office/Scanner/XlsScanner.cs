@@ -30,12 +30,12 @@ public ref struct XlsScanner
     /// </summary>
     public bool ValidateHeader()
     {
-        if (_scanner.Length < XlsConstants.HeaderSize)
+        if (_scanner.Length < 8)
         {
             return false;
         }
 
-        return _scanner.MatchMagic(XlsConstants.MagicNumber);
+        return _scanner.MatchMagic(OfficeConstants.Ole2MagicNumber);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public ref struct XlsScanner
             return stats;
         }
 
-        _scanner.ConsumeMagic(XlsConstants.MagicNumber);
+        _scanner.ConsumeMagic(OfficeConstants.Ole2MagicNumber);
 
         while (!_scanner.IsEnd && _scanner.Position + 4 <= _scanner.Length)
         {
@@ -59,7 +59,7 @@ public ref struct XlsScanner
 
             switch (recordType)
             {
-                case XlsRecordType.BOF:
+                case OfficeConstants.XlsRecordType.Bof8:
                     if (recordSize >= 2)
                     {
                         var biffVersion = _scanner.Buffer.ReadU16LE();
@@ -68,11 +68,11 @@ public ref struct XlsScanner
 
                     _scanner.Advance(recordSize - (recordSize >= 2 ? 2 : 0));
                     break;
-                case XlsRecordType.SheetName:
+                case OfficeConstants.XlsRecordType.BoundSheet:
                     stats.SheetCount++;
                     _scanner.Advance(recordSize);
                     break;
-                case XlsRecordType.EOF:
+                case OfficeConstants.XlsRecordType.Eof:
                     return stats;
                 default:
                     _scanner.Advance(recordSize);
@@ -98,6 +98,26 @@ public sealed class XlsScanStatistics
     ///     工作表数量。
     /// </summary>
     public int SheetCount { get; set; }
+
+    /// <summary>
+    ///     行数量。
+    /// </summary>
+    public int RowCount { get; set; }
+
+    /// <summary>
+    ///     数字单元格数量。
+    /// </summary>
+    public int NumericCellCount { get; set; }
+
+    /// <summary>
+    ///     字符串单元格数量。
+    /// </summary>
+    public int StringCellCount { get; set; }
+
+    /// <summary>
+    ///     公式数量。
+    /// </summary>
+    public int FormulaCount { get; set; }
 
     /// <summary>
     ///     BIFF 版本名称。

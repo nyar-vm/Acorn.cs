@@ -127,7 +127,7 @@ public ref struct WasmScanner : IWasmScanner
                 case WasmSectionId.Data:
                     stats.DataCount = (int)_scanner.Buffer.ReadLeb128U32();
                     break;
-                case WasmSectionId.DataCount:
+                case (WasmSectionId)12:
                     stats.DataCountSection = (int)_scanner.Buffer.ReadLeb128U32();
                     break;
             }
@@ -141,9 +141,9 @@ public ref struct WasmScanner : IWasmScanner
     /// <summary>
     ///     扫描 WASM 模块，提取导出名称列表。
     /// </summary>
-    public List<(WasmExportKind Kind, string Name)> ScanExports()
+    public List<(WasmExternalKind Kind, string Name)> ScanExports()
     {
-        var exports = new List<(WasmExportKind, string)>();
+        var exports = new List<(WasmExternalKind, string)>();
         var header = ScanHeader();
 
         while (!_scanner.IsEnd)
@@ -165,7 +165,7 @@ public ref struct WasmScanner : IWasmScanner
                 for (var i = 0; i < count; i++)
                 {
                     var name = ReadName();
-                    var kind = (WasmExportKind)_scanner.Buffer.ReadU8();
+                    var kind = (WasmExternalKind)_scanner.Buffer.ReadU8();
                     _scanner.Buffer.ReadLeb128U32();
                     exports.Add((kind, name));
                 }
@@ -199,4 +199,75 @@ public sealed class WasmScanHeader
         2 => "Feature Test",
         _ => $"0x{Version:X8}"
     };
+}
+
+/// <summary>
+///     WASM 模块统计信息。
+/// </summary>
+public sealed class WasmStatistics
+{
+    /// <summary>
+    ///     WASM 版本号。
+    /// </summary>
+    public uint Version { get; init; }
+
+    /// <summary>
+    ///     类型段大小。
+    /// </summary>
+    public int TypeSectionSize { get; set; }
+
+    /// <summary>
+    ///     导入数量。
+    /// </summary>
+    public int ImportCount { get; set; }
+
+    /// <summary>
+    ///     函数数量。
+    /// </summary>
+    public int FunctionCount { get; set; }
+
+    /// <summary>
+    ///     表数量。
+    /// </summary>
+    public int TableCount { get; set; }
+
+    /// <summary>
+    ///     内存数量。
+    /// </summary>
+    public int MemoryCount { get; set; }
+
+    /// <summary>
+    ///     全局变量数量。
+    /// </summary>
+    public int GlobalCount { get; set; }
+
+    /// <summary>
+    ///     导出数量。
+    /// </summary>
+    public int ExportCount { get; set; }
+
+    /// <summary>
+    ///     是否有起始函数。
+    /// </summary>
+    public bool HasStartFunction { get; set; }
+
+    /// <summary>
+    ///     元素段数量。
+    /// </summary>
+    public int ElementCount { get; set; }
+
+    /// <summary>
+    ///     代码段数量。
+    /// </summary>
+    public int CodeCount { get; set; }
+
+    /// <summary>
+    ///     数据段数量。
+    /// </summary>
+    public int DataCount { get; set; }
+
+    /// <summary>
+    ///     DataCount 段值。
+    /// </summary>
+    public int DataCountSection { get; set; }
 }

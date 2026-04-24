@@ -59,7 +59,7 @@ public ref struct PsdScanner
             Height = (int)height,
             Width = (int)width,
             Depth = depth,
-            ColorMode = (PsdColorMode)colorMode
+            ColorMode = colorMode
         };
     }
 
@@ -82,20 +82,42 @@ public ref struct PsdScanner
         _scanner.Advance(6);
 
         var colorModeDataLength = _scanner.Buffer.ReadU32BE();
-        _scanner.Advance((int)colorModeDataLength);
+
+        if (colorModeDataLength > 0 && _scanner.Position + (int)colorModeDataLength <= _scanner.Length)
+        {
+            _scanner.Advance((int)colorModeDataLength);
+        }
+        else if (colorModeDataLength > 0)
+        {
+            return names;
+        }
 
         var imageResourcesLength = _scanner.Buffer.ReadU32BE();
-        _scanner.Advance((int)imageResourcesLength);
+
+        if (imageResourcesLength > 0 && _scanner.Position + (int)imageResourcesLength <= _scanner.Length)
+        {
+            _scanner.Advance((int)imageResourcesLength);
+        }
+        else if (imageResourcesLength > 0)
+        {
+            return names;
+        }
 
         var layerAndMaskInfoLength = _scanner.Buffer.ReadU32BE();
+
+        if (layerAndMaskInfoLength == 0)
+        {
+            return names;
+        }
+
         var layerInfoEnd = _scanner.Position + (int)layerAndMaskInfoLength;
 
         var layerInfoLength = _scanner.Buffer.ReadU32BE();
-        var layerCount = _scanner.Buffer.ReadI16BE();
+        var layerCount = (short)_scanner.Buffer.ReadI16BE();
 
         if (layerCount < 0)
         {
-            layerCount = -layerCount;
+            layerCount = (short)(-layerCount);
         }
 
         for (var i = 0; i < layerCount; i++)
@@ -147,14 +169,28 @@ public ref struct PsdScanner
         _scanner.Advance(6);
 
         var colorModeDataLength = _scanner.Buffer.ReadU32BE();
-        _scanner.Advance((int)colorModeDataLength);
+
+        if (colorModeDataLength > 0)
+        {
+            _scanner.Advance((int)colorModeDataLength);
+        }
 
         var imageResourcesLength = _scanner.Buffer.ReadU32BE();
-        _scanner.Advance((int)imageResourcesLength);
+
+        if (imageResourcesLength > 0)
+        {
+            _scanner.Advance((int)imageResourcesLength);
+        }
 
         var layerAndMaskInfoLength = _scanner.Buffer.ReadU32BE();
+
+        if (layerAndMaskInfoLength == 0)
+        {
+            return 0;
+        }
+
         var layerInfoLength = _scanner.Buffer.ReadU32BE();
-        var layerCount = _scanner.Buffer.ReadI16BE();
+        var layerCount = (short)_scanner.Buffer.ReadI16BE();
 
         return layerCount < 0 ? -layerCount : layerCount;
     }
@@ -193,10 +229,26 @@ public sealed class PsdScanHeader
     /// <summary>
     ///     颜色模式。
     /// </summary>
-    public PsdColorMode ColorMode { get; init; }
+    public ushort ColorMode { get; init; }
 
     /// <summary>
     ///     版本名称。
     /// </summary>
     public string VersionName => Version == 1 ? "PSD" : "PSB";
+
+    /// <summary>
+    ///     颜色模式名称。
+    /// </summary>
+    public string ColorModeName => ((PsdColorMode)ColorMode) switch
+    {
+        PsdColorMode.Bitmap => "位图",
+        PsdColorMode.Grayscale => "灰度",
+        PsdColorMode.Indexed => "索引色",
+        PsdColorMode.Rgb => "RGB",
+        PsdColorMode.Cmyk => "CMYK",
+        PsdColorMode.Multichannel => "多通道",
+        PsdColorMode.Duotone => "双色调",
+        PsdColorMode.Lab => "Lab",
+        _ => "未知"
+    };
 }
