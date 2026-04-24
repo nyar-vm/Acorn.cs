@@ -20,9 +20,7 @@ public sealed class XlsEncoder
     /// <returns>XLS 二进制数据。</returns>
     public byte[] Encode(ExcelWorkbookData data)
     {
-        var size = EstimateSize(data);
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(256);
 
         WriteBOF(ref writer, 0x0005);
         WriteWriteAccess(ref writer);
@@ -36,7 +34,7 @@ public sealed class XlsEncoder
 
         WriteEOF(ref writer);
 
-        return buffer[..writer.Position];
+        return writer.ToArray();
     }
 
     #region 私有编码方法
@@ -86,13 +84,15 @@ public sealed class XlsEncoder
     private static void WriteBoundSheet(ref ByteBufferWriter writer, ExcelSheetData sheet)
     {
         var nameBytes = Encoding.Unicode.GetBytes(sheet.Name);
-        var recordLength = 8 + 1 + 1 + nameBytes.Length;
+        var recordLength = 4 + 1 + 1 + 1 + 1 + nameBytes.Length;
 
         writer.WriteU16LE(0x0085);
         writer.WriteU16LE((ushort)recordLength);
         writer.WriteU32LE(0);
         writer.WriteU8(0);
-        writer.WriteU8((byte)(0x01 | (nameBytes.Length << 1)));
+        writer.WriteU8(0);
+        writer.WriteU8((byte)sheet.Name.Length);
+        writer.WriteU8(0x01);
         writer.Write(nameBytes);
     }
 
@@ -100,20 +100,6 @@ public sealed class XlsEncoder
     {
         writer.WriteU16LE(0x000A);
         writer.WriteU16LE(0);
-    }
-
-    private static int EstimateSize(ExcelWorkbookData data)
-    {
-        var size = 16 + 112 + 4 + 4;
-
-        foreach (var sheet in data.Sheets)
-        {
-            size += 4 + 8 + 2 + Encoding.Unicode.GetByteCount(sheet.Name);
-        }
-
-        size += 4 + 1024;
-
-        return size;
     }
 
     #endregion

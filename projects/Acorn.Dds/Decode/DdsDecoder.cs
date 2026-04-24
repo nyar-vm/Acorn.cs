@@ -67,7 +67,7 @@ public ref struct DdsDecoder
     /// <summary>
     ///     仅解码 DDS 文件头信息。
     /// </summary>
-    public DdsHeaderInfo DecodeHeader()
+    public DdsTextureData DecodeHeader()
     {
         var magic = _buffer.ReadString(4);
 
@@ -76,7 +76,16 @@ public ref struct DdsDecoder
             throw new InvalidDataException($"DDS 文件签名无效，期望 \"DDS \"，实际 \"{magic}\"");
         }
 
-        return ReadHeader();
+        var header = ReadHeader();
+
+        return new DdsTextureData
+        {
+            Height = header.Height,
+            Width = header.Width,
+            Depth = header.Depth,
+            MipMapCount = header.MipMapCount,
+            PixelFormat = header.PixelFormat
+        };
     }
 
     #region 私有解析方法

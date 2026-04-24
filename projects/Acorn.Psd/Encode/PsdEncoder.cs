@@ -20,9 +20,7 @@ public sealed class PsdEncoder
     /// <returns>PSD 二进制数据。</returns>
     public byte[] Encode(PsdImageData data)
     {
-        var size = EstimateSize(data);
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(256);
 
         WriteFileHeader(ref writer, data);
         WriteColorModeData(ref writer);
@@ -30,7 +28,7 @@ public sealed class PsdEncoder
         WriteLayerAndMaskInfo(ref writer, data.Layers);
         WriteImageData(ref writer, data);
 
-        return buffer[..writer.Position];
+        return writer.ToArray();
     }
 
     #region 私有编码方法
@@ -74,9 +72,7 @@ public sealed class PsdEncoder
 
     private static byte[] EncodeLayerInfo(IReadOnlyList<PsdLayer> layers)
     {
-        var size = EstimateLayerInfoSize(layers);
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(256);
 
         writer.WriteI16BE((short)layers.Count);
 
@@ -85,7 +81,17 @@ public sealed class PsdEncoder
             WriteLayer(ref writer, layer);
         }
 
-        return buffer[..writer.Position];
+        foreach (var layer in layers)
+        {
+            WriteChannelImageData(ref writer, layer);
+        }
+
+        if (writer.Position % 2 != 0)
+        {
+            writer.WriteU8(0);
+        }
+
+        return writer.ToArray();
     }
 
     private static void WriteLayer(ref ByteBufferWriter writer, PsdLayer layer)
@@ -99,7 +105,7 @@ public sealed class PsdEncoder
         for (var i = 0; i < layer.ChannelCount; i++)
         {
             writer.WriteI16BE((short)i);
-            writer.WriteU32BE(0);
+            writer.WriteU32BE(2);
         }
 
         writer.WriteString("8BIM");
@@ -110,9 +116,10 @@ public sealed class PsdEncoder
         writer.WriteU8(0);
 
         var nameBytes = Encoding.ASCII.GetBytes(layer.Name);
-        var extraDataLength = 4 + 1 + nameBytes.Length + ((nameBytes.Length + 1) % 2 != 0 ? 1 : 0);
+        var extraDataLength = 4 + 4 + 1 + nameBytes.Length + ((nameBytes.Length + 1) % 2 != 0 ? 1 : 0);
         writer.WriteU32BE((uint)extraDataLength);
 
+        writer.WriteU32BE(0);
         writer.WriteU32BE(0);
         writer.WriteU8((byte)nameBytes.Length);
         writer.Write(nameBytes);
@@ -120,6 +127,14 @@ public sealed class PsdEncoder
         if ((nameBytes.Length + 1) % 2 != 0)
         {
             writer.WriteU8(0);
+        }
+    }
+
+    private static void WriteChannelImageData(ref ByteBufferWriter writer, PsdLayer layer)
+    {
+        for (var i = 0; i < layer.ChannelCount; i++)
+        {
+            writer.WriteU16BE(0);
         }
     }
 
@@ -131,33 +146,6 @@ public sealed class PsdEncoder
         {
             writer.Write(data.MergedImageData);
         }
-    }
-
-    private static int EstimateSize(PsdImageData data)
-    {
-        return 26 + 8 + 8 + EstimateLayerAndMaskInfoSize(data.Layers) + (data.MergedImageData?.Length ?? 0) + 2 + 1024;
-    }
-
-    private static int EstimateLayerAndMaskInfoSize(IReadOnlyList<PsdLayer> layers)
-    {
-        if (layers.Count == 0)
-        {
-            return 4;
-        }
-
-        return 8 + EstimateLayerInfoSize(layers);
-    }
-
-    private static int EstimateLayerInfoSize(IReadOnlyList<PsdLayer> layers)
-    {
-        var size = 2;
-
-        foreach (var layer in layers)
-        {
-            size += 18 + layer.ChannelCount * 6 + 8 + 4 + 1 + layer.Name.Length + 2;
-        }
-
-        return size;
     }
 
     #endregion

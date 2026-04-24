@@ -73,12 +73,12 @@ public class FrameScannerTests
     [Fact]
     public void TryReadNext_LengthPrefixProtocol_SingleFrame()
     {
-        var buf = new byte[8];
-        var writer = new AcornFrame.ByteBufferWriter(buf);
+        var writer = new AcornFrame.ByteBufferWriter(8);
         writer.WriteI32LE(4);
         writer.Write(new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
-        var scanner = new AcornFrame.FrameScanner<TestLengthPrefixProtocol>(buf);
+        var data = writer.WrittenData;
+        var scanner = new AcornFrame.FrameScanner<TestLengthPrefixProtocol>(data);
         Assert.True(scanner.TryReadNext(out var frame));
         Assert.Equal(8, frame.Size);
         Assert.Equal(4, frame.Payload.Length);
@@ -89,14 +89,14 @@ public class FrameScannerTests
     [Fact]
     public void TryReadNext_LengthPrefixProtocol_MultipleFrames()
     {
-        var buf = new byte[12];
-        var writer = new AcornFrame.ByteBufferWriter(buf);
+        var writer = new AcornFrame.ByteBufferWriter(12);
         writer.WriteI32LE(2);
         writer.Write(new byte[] { 0xAA, 0xBB });
         writer.WriteI32LE(2);
         writer.Write(new byte[] { 0xCC, 0xDD });
 
-        var scanner = new AcornFrame.FrameScanner<TestLengthPrefixProtocol>(buf);
+        var data = writer.WrittenData;
+        var scanner = new AcornFrame.FrameScanner<TestLengthPrefixProtocol>(data);
 
         Assert.True(scanner.TryReadNext(out var frame1));
         Assert.Equal(6, frame1.Size);
@@ -113,11 +113,10 @@ public class FrameScannerTests
     [Fact]
     public void TryReadNext_LengthPrefixProtocol_IncompleteData()
     {
-        var fullBuf = new byte[8];
-        var writer = new AcornFrame.ByteBufferWriter(fullBuf);
+        var writer = new AcornFrame.ByteBufferWriter(8);
         writer.WriteI32LE(100);
 
-        var partialData = fullBuf.AsSpan(0, 3).ToArray();
+        var partialData = writer.WrittenData.Slice(0, 3).ToArray();
         var scanner = new AcornFrame.FrameScanner<TestLengthPrefixProtocol>(partialData);
         Assert.False(scanner.TryReadNext(out _));
     }
@@ -141,12 +140,12 @@ public class FrameScannerTests
     [Fact]
     public void TryPeekFrameSize_DoesNotConsumeData()
     {
-        var buf = new byte[8];
-        var writer = new AcornFrame.ByteBufferWriter(buf);
+        var writer = new AcornFrame.ByteBufferWriter(8);
         writer.WriteI32LE(4);
         writer.Write(new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
-        var scanner = new AcornFrame.FrameScanner<TestLengthPrefixProtocol>(buf);
+        var data = writer.WrittenData;
+        var scanner = new AcornFrame.FrameScanner<TestLengthPrefixProtocol>(data);
 
         Assert.True(scanner.TryPeekFrameSize(out var size));
         Assert.Equal(8, size);

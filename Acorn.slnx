@@ -24,4 +24,7 @@
     <Project Path="projects\Generator.Acorn\Generator.Acorn.csproj" />
 
     <Project Path="vendors\Nyar.Vendor.Acorn\Nyar.Vendor.Acorn.csproj" />
+
+    <Project Path="examples\Acorn.Psd.Tests\Acorn.Psd.Tests.csproj" />
+    <Project Path="examples\Acorn.Office.Tests\Acorn.Office.Tests.csproj" />
 </Solution>

@@ -154,10 +154,12 @@ public ref struct PsdDecoder
         var right = _buffer.ReadI32BE();
         var channelCount = _buffer.ReadU16BE();
 
+        var channelDataLengths = new uint[channelCount];
+
         for (var i = 0; i < channelCount; i++)
         {
             _buffer.Advance(2);
-            var dataLength = _buffer.ReadU32BE();
+            channelDataLengths[i] = _buffer.ReadU32BE();
         }
 
         var blendModeSignature = _buffer.ReadString(4);
@@ -178,6 +180,24 @@ public ref struct PsdDecoder
         var extraDataLength = _buffer.ReadU32BE();
         var extraDataEnd = _buffer.Position + (int)extraDataLength;
 
+        if (_buffer.Position + 4 <= extraDataEnd)
+        {
+            var layerMaskDataLength = _buffer.ReadU32BE();
+            if (layerMaskDataLength > 0 && _buffer.Position + (int)layerMaskDataLength <= extraDataEnd)
+            {
+                _buffer.Advance((int)layerMaskDataLength);
+            }
+        }
+
+        if (_buffer.Position + 4 <= extraDataEnd)
+        {
+            var blendingRangesLength = _buffer.ReadU32BE();
+            if (blendingRangesLength > 0 && _buffer.Position + (int)blendingRangesLength <= extraDataEnd)
+            {
+                _buffer.Advance((int)blendingRangesLength);
+            }
+        }
+
         var name = ReadPascalString();
 
         _buffer.Position = extraDataEnd;
@@ -187,6 +207,7 @@ public ref struct PsdDecoder
             Name = name,
             Bounds = (top, left, bottom, right),
             ChannelCount = channelCount,
+            ChannelDataLengths = channelDataLengths,
             BlendMode = blendMode,
             Opacity = opacity,
             IsVisible = isVisible
@@ -197,19 +218,14 @@ public ref struct PsdDecoder
     {
         for (var i = 0; i < layer.ChannelCount; i++)
         {
-            var compression = _buffer.ReadU16BE();
-
-            var rowSize = (layer.Bounds.Right - layer.Bounds.Left) * (layer.Bounds.Bottom - layer.Bounds.Top);
-            var dataLength = compression switch
+            if (i < layer.ChannelDataLengths.Count)
             {
-                0 => rowSize,
-                1 => rowSize,
-                _ => rowSize
-            };
+                var dataLength = (int)layer.ChannelDataLengths[i];
 
-            if (dataLength > 0)
-            {
-                _buffer.Advance(dataLength);
+                if (dataLength > 0)
+                {
+                    _buffer.Advance(dataLength);
+                }
             }
         }
     }

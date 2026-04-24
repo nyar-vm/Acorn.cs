@@ -91,8 +91,7 @@ public class FixedBytesTests
     [Fact]
     public void FixedBytes4_RoundTrip_WithByteBuffer()
     {
-        var buf = new byte[32];
-        var writer = new Acorn.Frame.ByteBufferWriter(buf);
+        var writer = new Acorn.Frame.ByteBufferWriter(32);
 
         var original = new FixedBytes4();
         original[0] = 0x89;
@@ -101,7 +100,7 @@ public class FixedBytesTests
         original[3] = 0x47;
         writer.Write(original.AsSpan());
 
-        var reader = new Acorn.Frame.ByteBuffer(buf);
+        var reader = new Acorn.Frame.ByteBuffer(writer.WrittenData);
         var read = FixedBytes4.FromSpan(reader.ReadBytes(4));
 
         Assert.Equal(0x89, read[0]);

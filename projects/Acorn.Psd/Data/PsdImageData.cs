@@ -77,6 +77,11 @@ public sealed class PsdLayer
     public bool IsVisible { get; init; } = true;
 
     /// <summary>
+    ///     各通道图像数据的字节长度（含压缩类型 2 字节）。
+    /// </summary>
+    public IReadOnlyList<uint> ChannelDataLengths { get; init; } = [];
+
+    /// <summary>
     ///     图层像素数据（按通道存储）。
     /// </summary>
     public IReadOnlyDictionary<int, byte[]> ChannelData { get; init; } = new Dictionary<int, byte[]>();

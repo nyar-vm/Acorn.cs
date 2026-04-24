@@ -5,7 +5,7 @@ using Acorn.Spirv.Data;
 namespace Acorn.Spirv.Scanner;
 
 /// <summary>
-///     SPIR-V 格式扫描器的默认实现，基于 <see cref="ByteBuffer" /> 提供零分配的快速数据扫描。
+///     SPIR-V 格式扫描器的默认实现，基于 <see cref="SpanScanner" /> 提供零分配的快速数据扫描。
 /// </summary>
 /// <remarks>
 ///     SPIR-V 是 Khronos 定义的着色器二进制中间语言，用于 Vulkan、OpenCL 等图形和计算 API。
@@ -13,7 +13,7 @@ namespace Acorn.Spirv.Scanner;
 /// </remarks>
 public ref struct SpirvScanner : ISpirvScanner
 {
-    private ByteBuffer _buffer;
+    private SpanScanner _scanner;
 
     /// <summary>
     ///     初始化 <see cref="SpirvScanner" /> 结构的新实例。
@@ -21,59 +21,18 @@ public ref struct SpirvScanner : ISpirvScanner
     /// <param name="data">要扫描的 SPIR-V 二进制数据。</param>
     public SpirvScanner(ReadOnlySpan<byte> data)
     {
-        _buffer = new ByteBuffer(data);
+        _scanner = new SpanScanner(data);
     }
 
-    /// <inheritdoc />
-    public int Position
-    {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    /// <inheritdoc />
-    public int Length => _buffer.Length;
-
-    /// <inheritdoc />
-    public bool IsEndOfData => _buffer.IsEnd;
-
-    /// <inheritdoc />
-    public ReadOnlySpan<byte> Remaining => _buffer.RemainingSpan;
-
-    /// <inheritdoc />
-    public void Advance(int count)
-    {
-        _buffer.Advance(count);
-    }
-
-    /// <inheritdoc />
-    public ReadOnlySpan<byte> Peek(int count)
-    {
-        return _buffer.Peek(count);
-    }
-
-    /// <inheritdoc />
-    public ReadOnlySpan<byte> Read(int count)
-    {
-        return _buffer.ReadBytes(count);
-    }
-
-    /// <inheritdoc />
-    public bool MatchMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.MatchMagic(magic);
-    }
-
-    /// <inheritdoc />
-    public bool ConsumeMagic(ReadOnlySpan<byte> magic)
-    {
-        return _buffer.ConsumeMagic(magic);
-    }
+    /// <summary>
+    ///     获取底层扫描器，提供位置管理、魔数匹配等通用操作。
+    /// </summary>
+    public SpanScanner Scanner => _scanner;
 
     /// <inheritdoc />
     public uint ReadSpirvWord()
     {
-        return _buffer.ReadU32LE();
+        return _scanner.Buffer.ReadU32LE();
     }
 
     /// <inheritdoc />
@@ -89,9 +48,9 @@ public ref struct SpirvScanner : ISpirvScanner
     public string ReadSpirvString()
     {
         var bytes = new List<byte>();
-        var startWordPosition = _buffer.Position;
+        var startWordPosition = _scanner.Position;
 
-        while (_buffer.Position + 4 <= _buffer.Length)
+        while (_scanner.Position + 4 <= _scanner.Length)
         {
             var word = ReadSpirvWord();
 
@@ -102,13 +61,13 @@ public ref struct SpirvScanner : ISpirvScanner
 
                 if (b == 0)
                 {
-                    var consumedWords = (_buffer.Position - startWordPosition) / 4;
+                    var consumedWords = (_scanner.Position - startWordPosition) / 4;
                     var alignedWords = (bytes.Count + 3) / 4;
 
                     if (alignedWords > consumedWords)
                     {
                         var extraWords = alignedWords - consumedWords;
-                        Advance(extraWords * 4);
+                        _scanner.Advance(extraWords * 4);
                     }
 
                     var charCount = bytes.Count - 1;
@@ -136,22 +95,22 @@ public ref struct SpirvScanner : ISpirvScanner
     /// <returns>SPIR-V 文件头信息。</returns>
     public SpirvHeader ScanHeader()
     {
-        if (_buffer.Length < 20)
+        if (_scanner.Length < 20)
         {
             throw new InvalidDataException("SPIR-V 文件数据过短，无法读取文件头");
         }
 
-        var magicNumber = _buffer.ReadU32At(0);
+        var magicNumber = _scanner.Buffer.ReadU32At(0);
 
         if (magicNumber != SpirvConstants.MagicNumber)
         {
             throw new InvalidDataException($"SPIR-V 文件魔数不匹配，期望 0x07230203，实际 0x{magicNumber:X8}");
         }
 
-        var version = _buffer.ReadU32At(4);
-        var generatorMagic = _buffer.ReadU32At(8);
-        var bound = _buffer.ReadU32At(12);
-        var schema = _buffer.ReadU32At(16);
+        var version = _scanner.Buffer.ReadU32At(4);
+        var generatorMagic = _scanner.Buffer.ReadU32At(8);
+        var bound = _scanner.Buffer.ReadU32At(12);
+        var schema = _scanner.Buffer.ReadU32At(16);
 
         return new SpirvHeader
         {
@@ -181,9 +140,9 @@ public ref struct SpirvScanner : ISpirvScanner
 
         var offset = 20;
 
-        while (offset + 4 <= _buffer.Length)
+        while (offset + 4 <= _scanner.Length)
         {
-            var firstWord = _buffer.ReadI32At(offset, false) & 0xFFFFFFFF;
+            var firstWord = _scanner.Buffer.ReadI32At(offset, false) & 0xFFFFFFFF;
             var wordCount = (ushort)(firstWord >> 16);
             var opcode = (SpirvOpCode)(firstWord & 0xFFFF);
 
@@ -198,11 +157,11 @@ public ref struct SpirvScanner : ISpirvScanner
             {
                 entryPointCount++;
 
-                if (offset + 12 <= _buffer.Length && wordCount >= 3)
+                if (offset + 12 <= _scanner.Length && wordCount >= 3)
                 {
-                    var executionModel = (SpirvExecutionModel)_buffer.ReadU32At(offset + 4);
+                    var executionModel = (SpirvExecutionModel)_scanner.Buffer.ReadU32At(offset + 4);
                     var nameStart = offset + 12;
-                    var name = _buffer.ReadStringAt(nameStart);
+                    var name = _scanner.Buffer.ReadStringAt(nameStart);
                     entryPoints.Add((executionModel, name));
                 }
             }
@@ -210,9 +169,9 @@ public ref struct SpirvScanner : ISpirvScanner
             {
                 capabilityCount++;
 
-                if (offset + 8 <= _buffer.Length)
+                if (offset + 8 <= _scanner.Length)
                 {
-                    var capability = (SpirvCapability)_buffer.ReadU32At(offset + 4);
+                    var capability = (SpirvCapability)_scanner.Buffer.ReadU32At(offset + 4);
                     capabilities.Add(capability);
                 }
             }
@@ -260,9 +219,9 @@ public ref struct SpirvScanner : ISpirvScanner
         var names = new List<string>();
         var offset = 20;
 
-        while (offset + 4 <= _buffer.Length)
+        while (offset + 4 <= _scanner.Length)
         {
-            var firstWord = _buffer.ReadI32At(offset, false) & 0xFFFFFFFF;
+            var firstWord = _scanner.Buffer.ReadI32At(offset, false) & 0xFFFFFFFF;
             var wordCount = (ushort)(firstWord >> 16);
             var opcode = (SpirvOpCode)(firstWord & 0xFFFF);
 
@@ -274,7 +233,7 @@ public ref struct SpirvScanner : ISpirvScanner
             if (opcode == SpirvOpCode.OpEntryPoint && wordCount >= 3)
             {
                 var nameStart = offset + 12;
-                var name = _buffer.ReadStringAt(nameStart);
+                var name = _scanner.Buffer.ReadStringAt(nameStart);
                 names.Add(name);
             }
 

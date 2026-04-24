@@ -5,7 +5,7 @@ using System.Text;
 namespace Acorn.Frame;
 
 /// <summary>
-///     零拷贝内存写入缓冲区，基于 <see cref="Span{T}" /> 提供零分配的二进制数据写入能力。
+///     内存写入缓冲区，基于 <see cref="Span{T}" /> 提供零分配的二进制数据写入能力。
 /// </summary>
 /// <remarks>
 ///     <para>
@@ -13,12 +13,15 @@ namespace Acorn.Frame;
 ///     <see cref="BinaryPrimitives" />，避免任何堆分配和流包装开销。
 ///     </para>
 ///     <para>
+///     当写入超出缓冲区容量时，自动扩容为原来的 2 倍，确保编码器无需预计算精确大小。
+///     </para>
+///     <para>
 ///     热路径方法标记 <see cref="MethodImplOptions.AggressiveInlining" /> 以确保 JIT 内联。
 ///     </para>
 /// </remarks>
 public ref struct ByteBufferWriter
 {
-    private readonly Span<byte> _buffer;
+    private byte[] _buffer;
     private int _position;
 
     /// <summary>
@@ -28,7 +31,18 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ByteBufferWriter(Span<byte> buffer)
     {
-        _buffer = buffer;
+        _buffer = buffer.ToArray();
+        _position = 0;
+    }
+
+    /// <summary>
+    ///     初始化 <see cref="ByteBufferWriter" /> 结构的新实例。
+    /// </summary>
+    /// <param name="capacity">初始容量（字节）。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ByteBufferWriter(int capacity)
+    {
+        _buffer = new byte[capacity];
         _position = 0;
     }
 
@@ -59,6 +73,11 @@ public ref struct ByteBufferWriter
         get => _buffer.Length - _position;
     }
 
+    /// <summary>
+    ///     获取已写入数据的只读视图。
+    /// </summary>
+    public ReadOnlySpan<byte> WrittenData => new(_buffer, 0, _position);
+
     #region 基础写入
 
     /// <summary>
@@ -70,11 +89,8 @@ public ref struct ByteBufferWriter
     public Span<byte> GetSpan(int sizeHint = 0)
     {
         var size = sizeHint <= 0 ? _buffer.Length - _position : sizeHint;
-        if (_position + size > _buffer.Length)
-        {
-            throw new InvalidOperationException("写入空间不足");
-        }
-        return _buffer.Slice(_position, size);
+        EnsureCapacity(size);
+        return _buffer.AsSpan(_position, size);
     }
 
     /// <summary>
@@ -88,12 +104,8 @@ public ref struct ByteBufferWriter
         {
             throw new ArgumentOutOfRangeException(nameof(bytes), "前进字节数不能为负数");
         }
-        var newPosition = _position + bytes;
-        if (newPosition > _buffer.Length)
-        {
-            throw new InvalidOperationException("写入位置超出缓冲区范围");
-        }
-        _position = newPosition;
+
+        _position += bytes;
     }
 
     /// <summary>
@@ -103,11 +115,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(ReadOnlySpan<byte> data)
     {
-        if (_position + data.Length > _buffer.Length)
-        {
-            throw new InvalidOperationException("写入数据超出缓冲区范围");
-        }
-        data.CopyTo(_buffer.Slice(_position));
+        EnsureCapacity(data.Length);
+        data.CopyTo(_buffer.AsSpan(_position));
         _position += data.Length;
     }
 
@@ -121,10 +130,7 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU8(byte value)
     {
-        if (_position >= _buffer.Length)
-        {
-            throw new InvalidOperationException("写入位置超出缓冲区范围");
-        }
+        EnsureCapacity(1);
         _buffer[_position++] = value;
     }
 
@@ -134,7 +140,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU16LE(ushort value)
     {
-        BinaryPrimitives.WriteUInt16LittleEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(2);
+        BinaryPrimitives.WriteUInt16LittleEndian(_buffer.AsSpan(_position), value);
         _position += 2;
     }
 
@@ -144,7 +151,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU16BE(ushort value)
     {
-        BinaryPrimitives.WriteUInt16BigEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(2);
+        BinaryPrimitives.WriteUInt16BigEndian(_buffer.AsSpan(_position), value);
         _position += 2;
     }
 
@@ -154,7 +162,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU32LE(uint value)
     {
-        BinaryPrimitives.WriteUInt32LittleEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(4);
+        BinaryPrimitives.WriteUInt32LittleEndian(_buffer.AsSpan(_position), value);
         _position += 4;
     }
 
@@ -164,7 +173,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU32BE(uint value)
     {
-        BinaryPrimitives.WriteUInt32BigEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(4);
+        BinaryPrimitives.WriteUInt32BigEndian(_buffer.AsSpan(_position), value);
         _position += 4;
     }
 
@@ -174,7 +184,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU64LE(ulong value)
     {
-        BinaryPrimitives.WriteUInt64LittleEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(8);
+        BinaryPrimitives.WriteUInt64LittleEndian(_buffer.AsSpan(_position), value);
         _position += 8;
     }
 
@@ -184,7 +195,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU64BE(ulong value)
     {
-        BinaryPrimitives.WriteUInt64BigEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(8);
+        BinaryPrimitives.WriteUInt64BigEndian(_buffer.AsSpan(_position), value);
         _position += 8;
     }
 
@@ -207,7 +219,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteI16LE(short value)
     {
-        BinaryPrimitives.WriteInt16LittleEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(2);
+        BinaryPrimitives.WriteInt16LittleEndian(_buffer.AsSpan(_position), value);
         _position += 2;
     }
 
@@ -217,7 +230,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteI16BE(short value)
     {
-        BinaryPrimitives.WriteInt16BigEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(2);
+        BinaryPrimitives.WriteInt16BigEndian(_buffer.AsSpan(_position), value);
         _position += 2;
     }
 
@@ -227,7 +241,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteI32LE(int value)
     {
-        BinaryPrimitives.WriteInt32LittleEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(4);
+        BinaryPrimitives.WriteInt32LittleEndian(_buffer.AsSpan(_position), value);
         _position += 4;
     }
 
@@ -237,7 +252,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteI32BE(int value)
     {
-        BinaryPrimitives.WriteInt32BigEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(4);
+        BinaryPrimitives.WriteInt32BigEndian(_buffer.AsSpan(_position), value);
         _position += 4;
     }
 
@@ -247,7 +263,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteI64LE(long value)
     {
-        BinaryPrimitives.WriteInt64LittleEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(8);
+        BinaryPrimitives.WriteInt64LittleEndian(_buffer.AsSpan(_position), value);
         _position += 8;
     }
 
@@ -257,7 +274,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteI64BE(long value)
     {
-        BinaryPrimitives.WriteInt64BigEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(8);
+        BinaryPrimitives.WriteInt64BigEndian(_buffer.AsSpan(_position), value);
         _position += 8;
     }
 
@@ -271,7 +289,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteF16LE(Half value)
     {
-        BinaryPrimitives.WriteUInt16LittleEndian(_buffer.Slice(_position), BitConverter.HalfToUInt16Bits(value));
+        EnsureCapacity(2);
+        BinaryPrimitives.WriteUInt16LittleEndian(_buffer.AsSpan(_position), BitConverter.HalfToUInt16Bits(value));
         _position += 2;
     }
 
@@ -281,7 +300,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteF16BE(Half value)
     {
-        BinaryPrimitives.WriteUInt16BigEndian(_buffer.Slice(_position), BitConverter.HalfToUInt16Bits(value));
+        EnsureCapacity(2);
+        BinaryPrimitives.WriteUInt16BigEndian(_buffer.AsSpan(_position), BitConverter.HalfToUInt16Bits(value));
         _position += 2;
     }
 
@@ -291,7 +311,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteF32LE(float value)
     {
-        BinaryPrimitives.WriteSingleLittleEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(4);
+        BinaryPrimitives.WriteSingleLittleEndian(_buffer.AsSpan(_position), value);
         _position += 4;
     }
 
@@ -301,7 +322,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteF32BE(float value)
     {
-        BinaryPrimitives.WriteSingleBigEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(4);
+        BinaryPrimitives.WriteSingleBigEndian(_buffer.AsSpan(_position), value);
         _position += 4;
     }
 
@@ -311,7 +333,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteF64LE(double value)
     {
-        BinaryPrimitives.WriteDoubleLittleEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(8);
+        BinaryPrimitives.WriteDoubleLittleEndian(_buffer.AsSpan(_position), value);
         _position += 8;
     }
 
@@ -321,7 +344,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteF64BE(double value)
     {
-        BinaryPrimitives.WriteDoubleBigEndian(_buffer.Slice(_position), value);
+        EnsureCapacity(8);
+        BinaryPrimitives.WriteDoubleBigEndian(_buffer.AsSpan(_position), value);
         _position += 8;
     }
 
@@ -335,6 +359,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128U32(uint value)
     {
+        EnsureCapacity(5);
+
         while (true)
         {
             var b = (byte)(value & 0x7F);
@@ -351,6 +377,8 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128U64(ulong value)
     {
+        EnsureCapacity(10);
+
         while (true)
         {
             var b = (byte)(value & 0x7F);
@@ -367,7 +395,9 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128I32(int value)
     {
+        EnsureCapacity(5);
         var more = true;
+
         while (more)
         {
             var b = (byte)(value & 0x7F);
@@ -426,15 +456,8 @@ public ref struct ByteBufferWriter
     public void WriteString(string value)
     {
         var maxByteCount = Encoding.UTF8.GetMaxByteCount(value.Length);
-
-        if (_position + maxByteCount > _buffer.Length)
-        {
-            var bytes = Encoding.UTF8.GetBytes(value);
-            Write(bytes);
-            return;
-        }
-
-        var written = Encoding.UTF8.GetBytes(value, _buffer.Slice(_position));
+        EnsureCapacity(maxByteCount);
+        var written = Encoding.UTF8.GetBytes(value, _buffer.AsSpan(_position));
         _position += written;
     }
 
@@ -455,24 +478,52 @@ public ref struct ByteBufferWriter
     public void WriteLeb128String(string value)
     {
         var maxByteCount = Encoding.UTF8.GetMaxByteCount(value.Length);
-
-        if (_position + maxByteCount + 5 > _buffer.Length)
-        {
-            var bytes = Encoding.UTF8.GetBytes(value);
-            WriteLeb128U32((uint)bytes.Length);
-            Write(bytes);
-            return;
-        }
+        EnsureCapacity(maxByteCount + 5);
 
         var leb128Start = _position;
         WriteLeb128U32(0);
-        var written = Encoding.UTF8.GetBytes(value, _buffer.Slice(_position));
+        var written = Encoding.UTF8.GetBytes(value, _buffer.AsSpan(_position));
         _position += written;
 
         var savedPosition = _position;
         _position = leb128Start;
         WriteLeb128U32((uint)written);
         _position = savedPosition;
+    }
+
+    #endregion
+
+    #region 输出方法
+
+    /// <summary>
+    ///     将已写入的数据复制到新数组。
+    /// </summary>
+    /// <returns>包含已写入数据的字节数组。</returns>
+    public byte[] ToArray()
+    {
+        return WrittenData.ToArray();
+    }
+
+    #endregion
+
+    #region 私有方法
+
+    /// <summary>
+    ///     确保缓冲区有足够的剩余容量，不足时自动扩容。
+    /// </summary>
+    /// <param name="needed">需要的额外字节数。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void EnsureCapacity(int needed)
+    {
+        if (_position + needed <= _buffer.Length)
+        {
+            return;
+        }
+
+        var newCapacity = Math.Max(_buffer.Length * 2, _position + needed);
+        var newBuffer = new byte[newCapacity];
+        Array.Copy(_buffer, newBuffer, _position);
+        _buffer = newBuffer;
     }
 
     #endregion

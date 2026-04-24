@@ -19,9 +19,14 @@ public static class OfficeConstants
     public static class XlsRecordType
     {
         /// <summary>
-        ///     Beginning of File。
+        ///     Beginning of File（BIFF2-7）。
         /// </summary>
         public const ushort Bof = 0x0009;
+
+        /// <summary>
+        ///     Beginning of File（BIFF8 Workbook）。
+        /// </summary>
+        public const ushort Bof8 = 0x0809;
         
         /// <summary>
         ///     End of File。
@@ -57,6 +62,21 @@ public static class OfficeConstants
         ///     RK 值（紧凑数字）。
         /// </summary>
         public const ushort Rk = 0x027E;
+
+        /// <summary>
+        ///     工作表绑定记录。
+        /// </summary>
+        public const ushort BoundSheet = 0x0085;
+
+        /// <summary>
+        ///     共享字符串表。
+        /// </summary>
+        public const ushort Sst = 0x00FC;
+
+        /// <summary>
+        ///     工作簿 BOF（BIFF8 Workbook）。
+        /// </summary>
+        public const ushort BofWorkbook = 0x0809;
     }
     
     /// <summary>

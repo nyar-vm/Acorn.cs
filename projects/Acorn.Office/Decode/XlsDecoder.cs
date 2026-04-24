@@ -73,23 +73,23 @@ public ref struct XlsDecoder
 
         var reader = new ByteBuffer(data);
         var sheetOffset = reader.ReadU32LE();
-        var flags = reader.ReadU8();
+        var visibility = reader.ReadU8();
+        var sheetType = reader.ReadU8();
         var nameLength = reader.ReadU8();
+        var flags = reader.ReadU8();
+
+        var isUnicode = (flags & 0x01) != 0;
 
         string sheetName;
 
-        if (reader.Remaining >= nameLength)
-        {
-            var nameBytes = reader.ReadBytes(nameLength).ToArray();
+        var byteLength = isUnicode ? nameLength * 2 : nameLength;
 
-            if (nameLength > 0 && (nameBytes[0] & 0x01) != 0)
-            {
-                sheetName = Encoding.Unicode.GetString(nameBytes, 1, nameBytes.Length - 1);
-            }
-            else
-            {
-                sheetName = Encoding.ASCII.GetString(nameBytes);
-            }
+        if (reader.Remaining >= byteLength && byteLength > 0)
+        {
+            var nameBytes = reader.ReadBytes(byteLength).ToArray();
+            sheetName = isUnicode
+                ? Encoding.Unicode.GetString(nameBytes)
+                : Encoding.ASCII.GetString(nameBytes);
         }
         else
         {
