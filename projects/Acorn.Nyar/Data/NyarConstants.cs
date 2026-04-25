@@ -6,7 +6,7 @@ namespace Acorn.Nyar.Data;
 public static class NyarConstants
 {
     /// <summary>
-    ///     .nyarc 文件魔数（"NYAR" 大端序）。
+    ///     .nyar 文件魔数（"NYAR" 大端序）。
     /// </summary>
     public static ReadOnlySpan<byte> MagicNumber => new byte[] { 0x4E, 0x59, 0x41, 0x52 };
 

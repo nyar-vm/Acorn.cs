@@ -5,29 +5,28 @@ using Acorn.Nyar.Data;
 namespace Acorn.Nyar.Encode;
 
 /// <summary>
-///     Nyar 字节码模块编码器，将 C# 数据结构编码为 .nyarc 字节码格式。
+///     Nyar 字节码模块编码器，将 C# 数据结构编码为 .nyar 字节码格式。
 /// </summary>
 /// <remarks>
-///     .nyarc 是 NyarVM 的字节码模块格式，采用分段式二进制布局。
+///     .nyar 是 NyarVM 的字节码模块格式，采用分段式二进制布局。
 ///     编码器将模块数据序列化为符合 NyarVM 规范的二进制数据。
 ///     二进制布局：[Header 16B] → [Section Headers N*9B] → [Name Section] → [Section Data...]
 /// </remarks>
 public sealed class NyarEncoder
 {
     /// <summary>
-    ///     将 Nyar 模块数据编码为 .nyarc 二进制格式。
+    ///     将 Nyar 模块数据编码为 .nyar 二进制格式。
     /// </summary>
     /// <param name="data">Nyar 模块数据。</param>
-    /// <returns>.nyarc 二进制数据。</returns>
+    /// <returns>.nyar 二进制数据。</returns>
     public byte[] Encode(NyarModuleData data)
     {
         var sections = BuildSections(data);
         var size = EstimateSize(data, sections);
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(size);
 
         WriteHeader(ref writer, data, sections.Count);
-        WriteSectionHeaders(ref writer, sections);
+        WriteSectionHeaders(ref writer, sections, data.Name);
         WriteNameSection(ref writer, data.Name);
 
         foreach (var section in sections)
@@ -35,7 +34,7 @@ public sealed class NyarEncoder
             writer.Write(section.Data);
         }
 
-        return buffer[..writer.Position];
+        return writer.ToArray();
     }
 
     #region 私有编码方法
@@ -97,8 +96,7 @@ public sealed class NyarEncoder
             }
         }
 
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(size);
 
         writer.WriteI32LE(constants.Count);
 
@@ -135,7 +133,7 @@ public sealed class NyarEncoder
         return new NyarSection
         {
             Kind = NyarSectionKind.Constants,
-            Data = buffer[..writer.Position].ToArray()
+            Data = writer.ToArray()
         };
     }
 
@@ -148,8 +146,7 @@ public sealed class NyarEncoder
             size += Encoding.UTF8.GetByteCount(func.Name);
         }
 
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(size);
 
         writer.WriteI32LE(functions.Count);
 
@@ -164,7 +161,7 @@ public sealed class NyarEncoder
         return new NyarSection
         {
             Kind = NyarSectionKind.Functions,
-            Data = buffer[..writer.Position].ToArray()
+            Data = writer.ToArray()
         };
     }
 
@@ -177,8 +174,7 @@ public sealed class NyarEncoder
             size += 1 + 4 + Encoding.UTF8.GetByteCount(import.ModuleName) + 4 + Encoding.UTF8.GetByteCount(import.SymbolName);
         }
 
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(size);
 
         writer.WriteI32LE(imports.Count);
 
@@ -192,7 +188,7 @@ public sealed class NyarEncoder
         return new NyarSection
         {
             Kind = NyarSectionKind.Imports,
-            Data = buffer[..writer.Position].ToArray()
+            Data = writer.ToArray()
         };
     }
 
@@ -205,8 +201,7 @@ public sealed class NyarEncoder
             size += 1 + 4 + Encoding.UTF8.GetByteCount(export.SymbolName);
         }
 
-        var buffer = new byte[size];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(size);
 
         writer.WriteI32LE(exports.Count);
 
@@ -219,13 +214,13 @@ public sealed class NyarEncoder
         return new NyarSection
         {
             Kind = NyarSectionKind.Exports,
-            Data = buffer[..writer.Position].ToArray()
+            Data = writer.ToArray()
         };
     }
 
     private static void WriteHeader(ref ByteBufferWriter writer, NyarModuleData data, int sectionCount)
     {
-        writer.WriteU32LE(NyarConstants.MagicValue);
+        writer.WriteU32BE(NyarConstants.MagicValue);
         writer.WriteU32LE(data.Version);
         writer.WriteI32LE(sectionCount);
 
@@ -233,21 +228,12 @@ public sealed class NyarEncoder
         writer.WriteI32LE(nameOffset);
     }
 
-    private static void WriteSectionHeaders(ref ByteBufferWriter writer, List<NyarSection> sections)
+    private static void WriteSectionHeaders(ref ByteBufferWriter writer, List<NyarSection> sections, string moduleName)
     {
-        var dataStart = NyarConstants.HeaderSize + sections.Count * NyarConstants.SectionHeaderSize;
-
-        var nameBytes = Encoding.UTF8.GetBytes(sections.Count > 0 ? "" : "");
-        dataStart += 4;
+        var nameByteCount = Encoding.UTF8.GetByteCount(moduleName);
+        var dataStart = NyarConstants.HeaderSize + sections.Count * NyarConstants.SectionHeaderSize + 4 + nameByteCount;
 
         var currentOffset = dataStart;
-
-        foreach (var section in sections)
-        {
-            currentOffset += section.Data.Length;
-        }
-
-        currentOffset = dataStart;
 
         for (var i = 0; i < sections.Count; i++)
         {

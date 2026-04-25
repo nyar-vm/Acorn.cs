@@ -1,0 +1,221 @@
+using Acorn.Nyar.Data;
+using Acorn.Nyar.Decode;
+using Acorn.Nyar.Encode;
+using Acorn.Nyar.Scanner;
+
+namespace Acorn.Tests.NyarTests;
+
+public class NyarRoundTripTests
+{
+    [Fact]
+    public void Encode_Decode_MinimalModule()
+    {
+        var original = new NyarModuleData
+        {
+            Version = 1,
+            Name = "test_module",
+            Constants = [],
+            Functions = [],
+            Imports = [],
+            Exports = []
+        };
+
+        var encoder = new NyarEncoder();
+        var bytes = encoder.Encode(original);
+
+        var decoder = new NyarDecoder(bytes);
+        var decoded = decoder.Decode();
+
+        Assert.Equal(original.Version, decoded.Version);
+        Assert.Equal(original.Name, decoded.Name);
+        Assert.Empty(decoded.Constants);
+        Assert.Empty(decoded.Functions);
+        Assert.Empty(decoded.Imports);
+        Assert.Empty(decoded.Exports);
+    }
+
+    [Fact]
+    public void Encode_Decode_FullModule()
+    {
+        var original = new NyarModuleData
+        {
+            Version = 1,
+            Name = "full_module",
+            Constants =
+            [
+                new NyarConstant { Kind = NyarConstantKind.Int32, Value = 42 },
+                new NyarConstant { Kind = NyarConstantKind.Float64, Value = 3.14 },
+                new NyarConstant { Kind = NyarConstantKind.Bool, Value = true },
+                new NyarConstant { Kind = NyarConstantKind.Null, Value = null },
+                new NyarConstant { Kind = NyarConstantKind.String, Value = "hello" },
+                new NyarConstant { Kind = NyarConstantKind.BigInt, Value = new byte[] { 0, 0xFF, 0x01 } }
+            ],
+            Functions =
+            [
+                new NyarFunction { Name = "add", Arity = 2, LocalCount = 0, CodeLength = 8 },
+                new NyarFunction { Name = "main", Arity = 0, LocalCount = 3, CodeLength = 16 }
+            ],
+            Imports =
+            [
+                new NyarImport { Kind = NyarImportKind.Function, ModuleName = "math", SymbolName = "sqrt" },
+                new NyarImport { Kind = NyarImportKind.Global, ModuleName = "config", SymbolName = "version" }
+            ],
+            Exports =
+            [
+                new NyarExport { Kind = NyarExportKind.Function, SymbolName = "add" },
+                new NyarExport { Kind = NyarExportKind.Global, SymbolName = "count" }
+            ]
+        };
+
+        var encoder = new NyarEncoder();
+        var bytes = encoder.Encode(original);
+
+        var decoder = new NyarDecoder(bytes);
+        var decoded = decoder.Decode();
+
+        Assert.Equal(original.Version, decoded.Version);
+        Assert.Equal(original.Name, decoded.Name);
+
+        Assert.Equal(6, decoded.Constants.Count);
+        Assert.Equal(NyarConstantKind.Int32, decoded.Constants[0].Kind);
+        Assert.Equal(42, decoded.Constants[0].Value);
+        Assert.Equal(NyarConstantKind.Float64, decoded.Constants[1].Kind);
+        Assert.Equal(3.14, decoded.Constants[1].Value);
+        Assert.Equal(NyarConstantKind.Bool, decoded.Constants[2].Kind);
+        Assert.Equal(true, decoded.Constants[2].Value);
+        Assert.Equal(NyarConstantKind.Null, decoded.Constants[3].Kind);
+        Assert.Null(decoded.Constants[3].Value);
+        Assert.Equal(NyarConstantKind.String, decoded.Constants[4].Kind);
+        Assert.Equal("hello", decoded.Constants[4].Value);
+        Assert.Equal(NyarConstantKind.BigInt, decoded.Constants[5].Kind);
+        Assert.Equal(new byte[] { 0, 0xFF, 0x01 }, decoded.Constants[5].Value);
+
+        Assert.Equal(2, decoded.Functions.Count);
+        Assert.Equal("add", decoded.Functions[0].Name);
+        Assert.Equal(2, decoded.Functions[0].Arity);
+        Assert.Equal(0, decoded.Functions[0].LocalCount);
+        Assert.Equal(8, decoded.Functions[0].CodeLength);
+        Assert.Equal("main", decoded.Functions[1].Name);
+        Assert.Equal(0, decoded.Functions[1].Arity);
+        Assert.Equal(3, decoded.Functions[1].LocalCount);
+        Assert.Equal(16, decoded.Functions[1].CodeLength);
+
+        Assert.Equal(2, decoded.Imports.Count);
+        Assert.Equal(NyarImportKind.Function, decoded.Imports[0].Kind);
+        Assert.Equal("math", decoded.Imports[0].ModuleName);
+        Assert.Equal("sqrt", decoded.Imports[0].SymbolName);
+        Assert.Equal(NyarImportKind.Global, decoded.Imports[1].Kind);
+        Assert.Equal("config", decoded.Imports[1].ModuleName);
+        Assert.Equal("version", decoded.Imports[1].SymbolName);
+
+        Assert.Equal(2, decoded.Exports.Count);
+        Assert.Equal(NyarExportKind.Function, decoded.Exports[0].Kind);
+        Assert.Equal("add", decoded.Exports[0].SymbolName);
+        Assert.Equal(NyarExportKind.Global, decoded.Exports[1].Kind);
+        Assert.Equal("count", decoded.Exports[1].SymbolName);
+    }
+
+    [Fact]
+    public void Decode_InvalidMagic_Throws()
+    {
+        var data = new byte[16];
+
+        Assert.Throws<InvalidDataException>(() =>
+        {
+            var decoder = new NyarDecoder(data);
+            decoder.Decode();
+        });
+    }
+
+    [Fact]
+    public void Decode_TooShort_Throws()
+    {
+        var data = new byte[4];
+
+        Assert.Throws<InvalidDataException>(() =>
+        {
+            var decoder = new NyarDecoder(data);
+            decoder.Decode();
+        });
+    }
+
+    [Fact]
+    public void DecodeHeader_ReturnsCorrectInfo()
+    {
+        var original = new NyarModuleData
+        {
+            Version = 1,
+            Name = "header_test",
+            Constants = [new NyarConstant { Kind = NyarConstantKind.Int32, Value = 1 }],
+            Functions = [],
+            Imports = [],
+            Exports = []
+        };
+
+        var encoder = new NyarEncoder();
+        var bytes = encoder.Encode(original);
+
+        var decoder = new NyarDecoder(bytes);
+        var (version, moduleName) = decoder.DecodeHeader();
+
+        Assert.Equal(1u, version);
+        Assert.Equal("header_test", moduleName);
+    }
+}
+
+public class NyarScannerTests
+{
+    [Fact]
+    public void IsNyar_ValidData_ReturnsTrue()
+    {
+        var original = new NyarModuleData
+        {
+            Name = "scan_test",
+            Constants = [],
+            Functions = [],
+            Imports = [],
+            Exports = []
+        };
+
+        var encoder = new NyarEncoder();
+        var bytes = encoder.Encode(original);
+
+        var scanner = new NyarScanner(bytes);
+        Assert.True(scanner.IsNyar());
+    }
+
+    [Fact]
+    public void IsNyar_InvalidData_ReturnsFalse()
+    {
+        var data = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+        var scanner = new NyarScanner(data);
+        Assert.False(scanner.IsNyar());
+    }
+
+    [Fact]
+    public void ScanHeader_ReturnsCorrectInfo()
+    {
+        var original = new NyarModuleData
+        {
+            Name = "scan_header_test",
+            Constants = [new NyarConstant { Kind = NyarConstantKind.Int32, Value = 1 }],
+            Functions = [new NyarFunction { Name = "fn", Arity = 1, LocalCount = 0, CodeLength = 4 }],
+            Imports = [new NyarImport { Kind = NyarImportKind.Function, ModuleName = "m", SymbolName = "s" }],
+            Exports = [new NyarExport { Kind = NyarExportKind.Function, SymbolName = "e" }]
+        };
+
+        var encoder = new NyarEncoder();
+        var bytes = encoder.Encode(original);
+
+        var scanner = new NyarScanner(bytes);
+        var header = scanner.ScanHeader();
+
+        Assert.Equal(1u, header.Version);
+        Assert.Equal("scan_header_test", header.ModuleName);
+        Assert.Equal(4, header.SectionCount);
+        Assert.True(header.HasConstantsSection);
+        Assert.True(header.HasFunctionsSection);
+        Assert.True(header.HasImportsSection);
+        Assert.True(header.HasExportsSection);
+    }
+}

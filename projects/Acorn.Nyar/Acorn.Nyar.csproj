@@ -8,7 +8,7 @@
     <AssemblyName>Acorn.Nyar</AssemblyName>
     <Version>0.0.0</Version>
     <Authors>nyar-vm</Authors>
-    <Description>Acorn Nyar 格式库，提供 .nyar 字节码模块的编码功能</Description>
+    <Description>Acorn Nyar 格式库，提供 .nyar 字节码模块的编码、解码和扫描功能</Description>
     <PackageProjectUrl>https://github.com/nyar-vm/Acorn.cs</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nyar-vm/Acorn.cs</RepositoryUrl>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
