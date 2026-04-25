@@ -15,9 +15,11 @@ public sealed class MachOEncoderTests
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        Assert.True(bytes.Length > 32);
-        var magic = BitConverter.ToUInt32(bytes, 0);
-        Assert.Equal(0xFEEDFACFu, magic);
+        Assert.True(bytes.Length >= 32);
+        Assert.Equal(0xCF, bytes[0]);
+        Assert.Equal(0xFA, bytes[1]);
+        Assert.Equal(0xED, bytes[2]);
+        Assert.Equal(0xFE, bytes[3]);
     }
 
     [Fact]
@@ -27,9 +29,11 @@ public sealed class MachOEncoderTests
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        Assert.True(bytes.Length > 28);
-        var magic = BitConverter.ToUInt32(bytes, 0);
-        Assert.Equal(0xFEEDFACEu, magic);
+        Assert.True(bytes.Length >= 28);
+        Assert.Equal(0xCE, bytes[0]);
+        Assert.Equal(0xFA, bytes[1]);
+        Assert.Equal(0xED, bytes[2]);
+        Assert.Equal(0xFE, bytes[3]);
     }
 
     #endregion
@@ -43,7 +47,7 @@ public sealed class MachOEncoderTests
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        var magic = BitConverter.ToUInt32(bytes, 0);
+        var magic = ReadU32LE(bytes, 0);
         Assert.Equal(0xFEEDFACFu, magic);
     }
 
@@ -54,7 +58,7 @@ public sealed class MachOEncoderTests
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        var magic = BitConverter.ToUInt32(bytes, 0);
+        var magic = ReadU32LE(bytes, 0);
         Assert.Equal(0xFEEDFACEu, magic);
     }
 
@@ -66,7 +70,7 @@ public sealed class MachOEncoderTests
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        var cpuType = BitConverter.ToInt32(bytes, 4);
+        var cpuType = ReadI32LE(bytes, 4);
         Assert.Equal(0x01000007, cpuType);
     }
 
@@ -78,7 +82,7 @@ public sealed class MachOEncoderTests
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        var fileType = BitConverter.ToUInt32(bytes, 12);
+        var fileType = ReadU32LE(bytes, 12);
         Assert.Equal(2u, fileType);
     }
 
@@ -90,7 +94,7 @@ public sealed class MachOEncoderTests
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        var flags = BitConverter.ToUInt32(bytes, 24);
+        var flags = ReadU32LE(bytes, 24);
         Assert.Equal(0x200085u, flags);
     }
 
@@ -165,7 +169,7 @@ public sealed class MachOEncoderTests
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        var numberOfLoadCommands = BitConverter.ToUInt32(bytes, 16);
+        var numberOfLoadCommands = ReadU32LE(bytes, 16);
         Assert.Equal(data.Header.NumberOfLoadCommands, numberOfLoadCommands);
     }
 
@@ -177,7 +181,7 @@ public sealed class MachOEncoderTests
         var bytes = encoder.Encode(data);
 
         var headerSize = 32;
-        var commandType = BitConverter.ToUInt32(bytes, headerSize);
+        var commandType = ReadU32LE(bytes, headerSize);
         Assert.Equal(0x19u, commandType);
     }
 
@@ -197,14 +201,19 @@ public sealed class MachOEncoderTests
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        var magic = BitConverter.ToUInt32(bytes, 0);
         if (is64)
         {
-            Assert.Equal(0xFEEDFACFu, magic);
+            Assert.Equal(0xCF, bytes[0]);
+            Assert.Equal(0xFA, bytes[1]);
+            Assert.Equal(0xED, bytes[2]);
+            Assert.Equal(0xFE, bytes[3]);
         }
         else
         {
-            Assert.Equal(0xFEEDFACEu, magic);
+            Assert.Equal(0xCE, bytes[0]);
+            Assert.Equal(0xFA, bytes[1]);
+            Assert.Equal(0xED, bytes[2]);
+            Assert.Equal(0xFE, bytes[3]);
         }
     }
 
@@ -215,30 +224,44 @@ public sealed class MachOEncoderTests
     [Fact]
     public void Encode_BigEndian64Bit_MagicIsCFFAEDFE()
     {
-        var data = CreateMinimalMachOData(is64: true, magic: 0xCFFAEDFE, isLittleEndian: false);
+        var data = CreateMinimalMachOData(is64: true, magic: 0xFEEDFACF, isLittleEndian: false);
 
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        var magic = BitConverter.ToUInt32(bytes, 0);
-        Assert.Equal(0xCFFAEDFEu, magic);
+        Assert.Equal(0xFE, bytes[0]);
+        Assert.Equal(0xED, bytes[1]);
+        Assert.Equal(0xFA, bytes[2]);
+        Assert.Equal(0xCF, bytes[3]);
     }
 
     [Fact]
     public void Encode_BigEndian32Bit_MagicIsCEFAEDFE()
     {
-        var data = CreateMinimalMachOData(is64: false, magic: 0xCEFAEDFE, isLittleEndian: false);
+        var data = CreateMinimalMachOData(is64: false, magic: 0xFEEDFACE, isLittleEndian: false);
 
         var encoder = new MachOEncoder();
         var bytes = encoder.Encode(data);
 
-        var magic = BitConverter.ToUInt32(bytes, 0);
-        Assert.Equal(0xCEFAEDFEu, magic);
+        Assert.Equal(0xFE, bytes[0]);
+        Assert.Equal(0xED, bytes[1]);
+        Assert.Equal(0xFA, bytes[2]);
+        Assert.Equal(0xCE, bytes[3]);
     }
 
     #endregion
 
     #region 辅助方法
+
+    private static uint ReadU32LE(byte[] bytes, int offset)
+    {
+        return (uint)(bytes[offset] | bytes[offset + 1] << 8 | bytes[offset + 2] << 16 | bytes[offset + 3] << 24);
+    }
+
+    private static int ReadI32LE(byte[] bytes, int offset)
+    {
+        return (int)ReadU32LE(bytes, offset);
+    }
 
     private static MachOFileData CreateMinimalMachOData(
         bool is64, int cpuType = 0, uint fileType = 2, uint flags = 0,

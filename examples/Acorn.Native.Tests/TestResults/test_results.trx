@@ -1,0 +1,805 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="851ce9ca-0f9b-4623-83c1-b2843079b616" name="Administrator@ASTER-SURFACE 2026-04-26 02:51:52" runUser="ASTER-SURFACE\Administrator" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-04-26T02:51:52.9675225+08:00" queuing="2026-04-26T02:51:52.9675226+08:00" start="2026-04-26T02:51:52.1861637+08:00" finish="2026-04-26T02:51:53.0203561+08:00" />
+  <TestSettings name="default" id="105d6b60-1fea-4a75-afee-a01c1f1bdf70">
+    <Deployment runDeploymentRoot="Administrator_ASTER-SURFACE_2026-04-26_02_51_52" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="d719e38d-a8e1-4cd7-8f4b-5f525c2f0ba7" testId="41cf9ebe-1d28-e403-fe7a-32dfbc453191" testName="Acorn.Native.Tests.PeEncoderTests.Encode_32BitMachine_Is14C" computerName="ASTER-SURFACE" duration="00:00:00.0006474" startTime="2026-04-26T02:51:52.9444752+08:00" endTime="2026-04-26T02:51:52.9444753+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d719e38d-a8e1-4cd7-8f4b-5f525c2f0ba7">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 332&#xD;
+Actual:   0</Message>
+          <StackTrace>   at Acorn.Native.Tests.PeEncoderTests.Encode_32BitMachine_Is14C() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs:line 88&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="aed807c5-7849-4873-b174-4afe7e6389e4" testId="07a95f3e-54a7-7466-29c5-7948f8c7438a" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_ValidModuleWithImports_ReturnsTrue" computerName="ASTER-SURFACE" duration="00:00:00.0021428" startTime="2026-04-26T02:51:52.9363392+08:00" endTime="2026-04-26T02:51:52.9363392+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aed807c5-7849-4873-b174-4afe7e6389e4" />
+    <UnitTestResult executionId="a1961ef5-a364-43e4-a495-7f613112b8b2" testId="091955fd-19f5-449a-10bc-e1bb51846205" testName="Acorn.Native.Tests.PeEncoderTests.Encode_32BitMagic_Is10B" computerName="ASTER-SURFACE" duration="00:00:00.0002043" startTime="2026-04-26T02:51:52.9453978+08:00" endTime="2026-04-26T02:51:52.9453979+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a1961ef5-a364-43e4-a495-7f613112b8b2">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 267&#xD;
+Actual:   0</Message>
+          <StackTrace>   at Acorn.Native.Tests.PeEncoderTests.Encode_32BitMagic_Is10B() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs:line 252&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="c18988ef-fcc1-426b-8915-39e27beb20b3" testId="a8a726fe-f517-8ff8-c8ea-f3bf98ff0066" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Return, expectedValue: 5)" computerName="ASTER-SURFACE" duration="00:00:00.0000065" startTime="2026-04-26T02:51:52.9336518+08:00" endTime="2026-04-26T02:51:52.9336519+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c18988ef-fcc1-426b-8915-39e27beb20b3" />
+    <UnitTestResult executionId="723861ab-0dcd-460c-9366-a61a9c869d43" testId="6100aece-8899-bc6c-7125-cd50e83ee6b4" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Const, expectedValue: 16)" computerName="ASTER-SURFACE" duration="00:00:00.0000060" startTime="2026-04-26T02:51:52.9335523+08:00" endTime="2026-04-26T02:51:52.9335524+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="723861ab-0dcd-460c-9366-a61a9c869d43" />
+    <UnitTestResult executionId="ec37d0a7-c326-4f39-8f76-7af81cde6a3c" testId="0b6cbc9d-4a7c-61d3-2971-cafeff076fb5" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_DifferentArchitectures_ProducesValidMachO(cpuType: 16777223, is64: True)" computerName="ASTER-SURFACE" duration="00:00:00.0004140" startTime="2026-04-26T02:51:52.9355342+08:00" endTime="2026-04-26T02:51:52.9355343+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ec37d0a7-c326-4f39-8f76-7af81cde6a3c" />
+    <UnitTestResult executionId="7b792673-5d7c-450e-af15-54c84b6ba13b" testId="d139f465-1d56-47cb-61d5-b94627711e3f" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_UndefinedOpcode_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0005403" startTime="2026-04-26T02:51:52.9367597+08:00" endTime="2026-04-26T02:51:52.9367597+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7b792673-5d7c-450e-af15-54c84b6ba13b" />
+    <UnitTestResult executionId="219cf3fb-5cfe-4ab8-a788-c6e8fcdc0f4d" testId="6a7e64cc-ef7e-b9ee-7d58-bb868024c529" testName="Acorn.Native.Tests.PeEncoderTests.Encode_DifferentArchitectures_ProducesValidPe(machine: 34404, is64: True)" computerName="ASTER-SURFACE" duration="00:00:00.0035392" startTime="2026-04-26T02:51:52.9035440+08:00" endTime="2026-04-26T02:51:52.9035441+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="219cf3fb-5cfe-4ab8-a788-c6e8fcdc0f4d" />
+    <UnitTestResult executionId="30cfbe31-93a7-4023-8c01-a1e23a0780a9" testId="ce19a19c-78e3-3106-bf08-ddb0ca2e16ba" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_NegativeArity_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0005852" startTime="2026-04-26T02:51:52.9363166+08:00" endTime="2026-04-26T02:51:52.9363167+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="30cfbe31-93a7-4023-8c01-a1e23a0780a9" />
+    <UnitTestResult executionId="8c9f6cff-489f-49a0-9d88-3f78a686f600" testId="e7d0ac54-b0cc-9541-7e53-47eea4ae9bd7" testName="Acorn.Native.Tests.PeEncoderTests.Encode_EmptyDataDirectories_WritesZero" computerName="ASTER-SURFACE" duration="00:00:00.0049220" startTime="2026-04-26T02:51:52.9439686+08:00" endTime="2026-04-26T02:51:52.9439687+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8c9f6cff-489f-49a0-9d88-3f78a686f600">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 0&#xD;
+Actual:   15728640</Message>
+          <StackTrace>   at Acorn.Native.Tests.PeEncoderTests.Encode_EmptyDataDirectories_WritesZero() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs:line 224&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d385adbe-af8b-4b99-9877-2fc8165f9b45" testId="e99e472e-c6ae-79fe-1000-07da391e21b0" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_DifferentArchitectures_ProducesValidElf(machine: 40, is64: False)" computerName="ASTER-SURFACE" duration="00:00:00.0000115" startTime="2026-04-26T02:51:52.9427782+08:00" endTime="2026-04-26T02:51:52.9427782+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d385adbe-af8b-4b99-9877-2fc8165f9b45" />
+    <UnitTestResult executionId="b09ea8c4-5579-40e2-8fd8-10cea1d49457" testId="eaa87623-0ef4-aa57-2754-fc8642a0b507" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: LoadLocal, expectedValue: 32)" computerName="ASTER-SURFACE" duration="00:00:00.0000156" startTime="2026-04-26T02:51:52.9334812+08:00" endTime="2026-04-26T02:51:52.9334813+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b09ea8c4-5579-40e2-8fd8-10cea1d49457" />
+    <UnitTestResult executionId="baffaff9-d466-4297-88e7-e1c6656d2e94" testId="c1bf6f09-5f55-8658-e0f7-229b38276b09" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal64Bit_ProducesValidMachO" computerName="ASTER-SURFACE" duration="00:00:00.0002321" startTime="2026-04-26T02:51:52.9503326+08:00" endTime="2026-04-26T02:51:52.9503326+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="baffaff9-d466-4297-88e7-e1c6656d2e94">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.True() Failure&#xD;
+Expected: True&#xD;
+Actual:   False</Message>
+          <StackTrace>   at Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal64Bit_ProducesValidMachO() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\MachOEncoderTests.cs:line 18&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e1bdb313-6546-4b57-a57c-dbddd2090934" testId="ef29b110-a945-37c4-7ed5-dd88a039c8f4" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_WithSectionContent_IncludesContentBytes" computerName="ASTER-SURFACE" duration="00:00:00.0001876" startTime="2026-04-26T02:51:52.9482224+08:00" endTime="2026-04-26T02:51:52.9482224+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e1bdb313-6546-4b57-a57c-dbddd2090934" />
+    <UnitTestResult executionId="efd3f269-e929-4de0-8a2c-fb57f3132d26" testId="c4ef1bd6-db11-1499-0aa1-be5e244a74e7" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: I32Eq, expectedValue: 64)" computerName="ASTER-SURFACE" duration="00:00:00.0000056" startTime="2026-04-26T02:51:52.9350020+08:00" endTime="2026-04-26T02:51:52.9350021+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="efd3f269-e929-4de0-8a2c-fb57f3132d26" />
+    <UnitTestResult executionId="44babf18-639c-4dc9-be70-ccc0020e3dc3" testId="2d898da6-efd2-3b45-d621-072b7eab934f" testName="Acorn.Native.Tests.PeEncoderTests.Encode_DifferentArchitectures_ProducesValidPe(machine: 43620, is64: True)" computerName="ASTER-SURFACE" duration="00:00:00.0005682" startTime="2026-04-26T02:51:52.9334629+08:00" endTime="2026-04-26T02:51:52.9334629+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="44babf18-639c-4dc9-be70-ccc0020e3dc3" />
+    <UnitTestResult executionId="04afaab3-9233-49b6-88da-04258933b86e" testId="d3d73152-c511-682c-5433-c625c3862947" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: F32Add, expectedValue: 96)" computerName="ASTER-SURFACE" duration="00:00:00.0000053" startTime="2026-04-26T02:51:52.9353972+08:00" endTime="2026-04-26T02:51:52.9353973+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="04afaab3-9233-49b6-88da-04258933b86e" />
+    <UnitTestResult executionId="491271b1-2330-4757-aa8b-e2c857468838" testId="d799cfda-4dc2-f966-5fad-b0261656663e" testName="Acorn.Native.Tests.PeEncoderTests.Encode_DosMagic_Is5A4D" computerName="ASTER-SURFACE" duration="00:00:00.0044627" startTime="2026-04-26T02:51:52.9361934+08:00" endTime="2026-04-26T02:51:52.9361934+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="491271b1-2330-4757-aa8b-e2c857468838" />
+    <UnitTestResult executionId="1572e1cd-d4dc-47e3-8a2f-ef7bb8337856" testId="f32593ab-007a-f44b-58eb-c86ea47a6cf3" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_SegmentLoadCommand_CommandTypeIsCorrect" computerName="ASTER-SURFACE" duration="00:00:00.0004283" startTime="2026-04-26T02:51:52.9481190+08:00" endTime="2026-04-26T02:51:52.9481191+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1572e1cd-d4dc-47e3-8a2f-ef7bb8337856" />
+    <UnitTestResult executionId="975ed6f0-8d93-422e-9b74-0e43b1dabb9c" testId="2626300e-50e0-d273-0945-93aff6b9a5ef" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_DifferentArchitectures_ProducesValidElf(machine: 62, is64: True)" computerName="ASTER-SURFACE" duration="00:00:00.0004092" startTime="2026-04-26T02:51:52.9427404+08:00" endTime="2026-04-26T02:51:52.9427404+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="975ed6f0-8d93-422e-9b74-0e43b1dabb9c" />
+    <UnitTestResult executionId="5df70a48-42e1-423a-8476-2cb6f7901c3f" testId="22a27795-27af-2fb6-95df-9d7fc877ed3a" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: I32Add, expectedValue: 48)" computerName="ASTER-SURFACE" duration="00:00:00.0000056" startTime="2026-04-26T02:51:52.9354406+08:00" endTime="2026-04-26T02:51:52.9354407+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5df70a48-42e1-423a-8476-2cb6f7901c3f" />
+    <UnitTestResult executionId="47db90fa-a26c-4816-971b-0a2a0763ea26" testId="4d823eee-f079-b6c4-1785-244f434485a8" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_64Bit_ClassFieldIs2" computerName="ASTER-SURFACE" duration="00:00:00.0001299" startTime="2026-04-26T02:51:52.9480836+08:00" endTime="2026-04-26T02:51:52.9480837+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="47db90fa-a26c-4816-971b-0a2a0763ea26" />
+    <UnitTestResult executionId="32faddfa-379f-4965-b6ac-33cb0ee50cd2" testId="f8fed1ad-311d-7418-3b6a-f114586b61f6" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: StoreLocal, expectedValue: 33)" computerName="ASTER-SURFACE" duration="00:00:00.0000076" startTime="2026-04-26T02:51:52.9350197+08:00" endTime="2026-04-26T02:51:52.9350197+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="32faddfa-379f-4965-b6ac-33cb0ee50cd2" />
+    <UnitTestResult executionId="a4f51d3b-fee5-423a-ac7b-a629f7478132" testId="72f29312-3067-4690-cb7e-1f3502a3058c" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: F64Add, expectedValue: 112)" computerName="ASTER-SURFACE" duration="00:00:00.0004746" startTime="2026-04-26T02:51:52.9333116+08:00" endTime="2026-04-26T02:51:52.9333116+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a4f51d3b-fee5-423a-ac7b-a629f7478132" />
+    <UnitTestResult executionId="9f7d9b82-29b6-4ca4-8f09-89b9b85c0a66" testId="a22861fc-9bb6-ae25-1302-c2ff352c97f7" testName="Acorn.Native.Tests.PeEncoderTests.Encode_64BitMachine_Is8664" computerName="ASTER-SURFACE" duration="00:00:00.0002347" startTime="2026-04-26T02:51:52.9465071+08:00" endTime="2026-04-26T02:51:52.9465072+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9f7d9b82-29b6-4ca4-8f09-89b9b85c0a66">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 34404&#xD;
+Actual:   0</Message>
+          <StackTrace>   at Acorn.Native.Tests.PeEncoderTests.Encode_64BitMachine_Is8664() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs:line 76&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d5576624-a90e-46de-8ecd-a0625694b92b" testId="f7671051-4180-626f-0cd2-f8ff5313e574" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_WithNamedSections_StringTableContainsNames" computerName="ASTER-SURFACE" duration="00:00:00.0002512" startTime="2026-04-26T02:51:52.9483218+08:00" endTime="2026-04-26T02:51:52.9483219+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d5576624-a90e-46de-8ecd-a0625694b92b" />
+    <UnitTestResult executionId="d3aa3183-583d-4667-af6a-30a59ea56562" testId="21838b1d-8ba7-113a-3bfd-2649b54696b4" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_JumpTargetOutOfRange_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0023844" startTime="2026-04-26T02:51:52.9354877+08:00" endTime="2026-04-26T02:51:52.9354878+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d3aa3183-583d-4667-af6a-30a59ea56562" />
+    <UnitTestResult executionId="6de8a363-389e-48e0-adcf-271e8315e05a" testId="7b0eca84-6b69-5816-d9ba-3c30d9a8b967" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_NegativeCodeOffset_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0005301" startTime="2026-04-26T02:51:52.9362213+08:00" endTime="2026-04-26T02:51:52.9362214+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6de8a363-389e-48e0-adcf-271e8315e05a" />
+    <UnitTestResult executionId="676e0e57-61f1-4bb5-b79f-d1fcef98d924" testId="42705cc3-a6b4-a9ee-172c-eccfd4b4705b" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_CodeOffsetExceedsBytecodeLength_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0003995" startTime="2026-04-26T02:51:52.9367933+08:00" endTime="2026-04-26T02:51:52.9367934+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="676e0e57-61f1-4bb5-b79f-d1fcef98d924" />
+    <UnitTestResult executionId="d123fd5d-5429-421f-a17f-b5309c79ff14" testId="3cf1c5f7-5e91-56bb-ef92-e642033d21f6" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_EmptySectionContent_NoContentBytes" computerName="ASTER-SURFACE" duration="00:00:00.0001017" startTime="2026-04-26T02:51:52.9481917+08:00" endTime="2026-04-26T02:51:52.9481917+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d123fd5d-5429-421f-a17f-b5309c79ff14" />
+    <UnitTestResult executionId="ff06525c-427b-4370-b6ad-9bf95b9e5167" testId="e533dbc5-caae-c900-c25d-b01fb240fc39" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: NewObject, expectedValue: 160)" computerName="ASTER-SURFACE" duration="00:00:00.0000051" startTime="2026-04-26T02:51:52.9350754+08:00" endTime="2026-04-26T02:51:52.9350754+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ff06525c-427b-4370-b6ad-9bf95b9e5167" />
+    <UnitTestResult executionId="e5662b55-1836-4695-a7da-29b552669193" testId="497b1911-1179-212f-aa92-4a19cefbb07c" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_FileType_PreservesValue" computerName="ASTER-SURFACE" duration="00:00:00.0001167" startTime="2026-04-26T02:51:52.9493930+08:00" endTime="2026-04-26T02:51:52.9493931+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e5662b55-1836-4695-a7da-29b552669193" />
+    <UnitTestResult executionId="426a8b66-de9f-448d-a375-37c6f4cafdf5" testId="9d5df307-a132-6424-7932-85f475916c40" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_EmptySymbolName_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0015270" startTime="2026-04-26T02:51:52.9362937+08:00" endTime="2026-04-26T02:51:52.9362937+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="426a8b66-de9f-448d-a375-37c6f4cafdf5" />
+    <UnitTestResult executionId="f88f64b0-adcd-4b4c-8aa3-f9904f115af1" testId="4317d423-cf11-e19f-adb3-6ed1efed69cd" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian64Bit_MagicIsCFFAEDFE" computerName="ASTER-SURFACE" duration="00:00:00.0004517" startTime="2026-04-26T02:51:52.9488790+08:00" endTime="2026-04-26T02:51:52.9488791+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f88f64b0-adcd-4b4c-8aa3-f9904f115af1">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 3489328638&#xD;
+Actual:   4277009103</Message>
+          <StackTrace>   at Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian64Bit_MagicIsCFFAEDFE() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\MachOEncoderTests.cs:line 224&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="92374b54-21e4-4bc7-8f0b-da44eb5e6ac7" testId="3ed45d2c-7ca4-1c9a-f656-c44f8126db45" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Print, expectedValue: 208)" computerName="ASTER-SURFACE" duration="00:00:00.0000070" startTime="2026-04-26T02:51:52.9335050+08:00" endTime="2026-04-26T02:51:52.9335050+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="92374b54-21e4-4bc7-8f0b-da44eb5e6ac7" />
+    <UnitTestResult executionId="dff5ab41-0620-4c67-b1b9-21c42d0a5b8f" testId="1aa1021c-6a39-f003-90a7-8bc262cae783" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_ValidModule_ReturnsTrue" computerName="ASTER-SURFACE" duration="00:00:00.0007136" startTime="2026-04-26T02:51:52.9363616+08:00" endTime="2026-04-26T02:51:52.9363616+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dff5ab41-0620-4c67-b1b9-21c42d0a5b8f" />
+    <UnitTestResult executionId="edf2ee6d-a16a-4a5d-97b9-c66a912181bc" testId="2138f760-b617-1a62-38aa-eb3029f72338" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian32Bit_MagicIsCEFAEDFE" computerName="ASTER-SURFACE" duration="00:00:00.0002224" startTime="2026-04-26T02:51:52.9498648+08:00" endTime="2026-04-26T02:51:52.9498649+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="edf2ee6d-a16a-4a5d-97b9-c66a912181bc">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 3472551422&#xD;
+Actual:   4277009102</Message>
+          <StackTrace>   at Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian32Bit_MagicIsCEFAEDFE() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\MachOEncoderTests.cs:line 236&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0c0ec819-56a3-4d64-bb96-42678f7cfaec" testId="0352515d-ba2c-9098-b76c-eaccd77848a0" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_ProgramHeaderFlags_PreservesValue" computerName="ASTER-SURFACE" duration="00:00:00.0209003" startTime="2026-04-26T02:51:52.9031063+08:00" endTime="2026-04-26T02:51:52.9031064+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0c0ec819-56a3-4d64-bb96-42678f7cfaec" />
+    <UnitTestResult executionId="4687dee5-8361-4774-be44-546be8af7d98" testId="9fb6c2cf-15e6-f395-1e1f-028ddea61a2a" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_DifferentArchitectures_ProducesValidMachO(cpuType: 16777228, is64: True)" computerName="ASTER-SURFACE" duration="00:00:00.0000083" startTime="2026-04-26T02:51:52.9358882+08:00" endTime="2026-04-26T02:51:52.9358882+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4687dee5-8361-4774-be44-546be8af7d98" />
+    <UnitTestResult executionId="8f00eda2-ccdb-429d-944e-ac79ae6663e0" testId="aa82bd49-2035-d314-8c4c-845101b2cc65" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_JumpIfTrueTargetOutOfRange_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0003354" startTime="2026-04-26T02:51:52.9362461+08:00" endTime="2026-04-26T02:51:52.9362462+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f00eda2-ccdb-429d-944e-ac79ae6663e0" />
+    <UnitTestResult executionId="405204f3-ba78-419b-9661-1788f5c7c90a" testId="ce4e51b5-0283-69a1-6b76-51ca222c1a10" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_EntryPoint_PreservesValue" computerName="ASTER-SURFACE" duration="00:00:00.0028051" startTime="2026-04-26T02:51:52.9465448+08:00" endTime="2026-04-26T02:51:52.9465449+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="405204f3-ba78-419b-9661-1788f5c7c90a" />
+    <UnitTestResult executionId="563c30aa-8ee2-4b9d-89b2-5f6af932baef" testId="c8c9cc1d-3930-093a-83c3-655206fd0c10" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_JumpIfFalseTargetOutOfRange_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0003082" startTime="2026-04-26T02:51:52.9357988+08:00" endTime="2026-04-26T02:51:52.9357989+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="563c30aa-8ee2-4b9d-89b2-5f6af932baef" />
+    <UnitTestResult executionId="b7bcafb0-6c0f-4bd4-a6a5-94a54cf6a33d" testId="bd0f3255-66e7-e28d-d3b2-10894a31fec1" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_EmptySectionContent_Succeeds" computerName="ASTER-SURFACE" duration="00:00:00.0134446" startTime="2026-04-26T02:51:52.9001366+08:00" endTime="2026-04-26T02:51:52.9001368+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b7bcafb0-6c0f-4bd4-a6a5-94a54cf6a33d" />
+    <UnitTestResult executionId="b048ece1-4e12-4815-bd0b-7d2afc2e600b" testId="898b2f9f-37d8-f39a-4af7-f8f425237e4f" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Jump, expectedValue: 1)" computerName="ASTER-SURFACE" duration="00:00:00.0034930" startTime="2026-04-26T02:51:52.9034960+08:00" endTime="2026-04-26T02:51:52.9034962+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b048ece1-4e12-4815-bd0b-7d2afc2e600b" />
+    <UnitTestResult executionId="dd1ab4b4-40aa-4267-a527-a33df53bd79d" testId="d8b00eb9-1982-71a5-8c65-2949c84109aa" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_Flags_PreservesValue" computerName="ASTER-SURFACE" duration="00:00:00.0001726" startTime="2026-04-26T02:51:52.9493536+08:00" endTime="2026-04-26T02:51:52.9493537+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dd1ab4b4-40aa-4267-a527-a33df53bd79d" />
+    <UnitTestResult executionId="caa7ce9e-3eb1-441e-909d-013df49051f8" testId="731557f1-4a4c-6ce6-2c97-38272efdb59a" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: I64Add, expectedValue: 80)" computerName="ASTER-SURFACE" duration="00:00:00.0000049" startTime="2026-04-26T02:51:52.9350570+08:00" endTime="2026-04-26T02:51:52.9350571+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="caa7ce9e-3eb1-441e-909d-013df49051f8" />
+    <UnitTestResult executionId="c188da2d-5024-4328-ac3d-18d3ea5e9d03" testId="86ee2a6d-b4c7-9e48-110b-d0abc08db994" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_EmptyModuleName_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0004371" startTime="2026-04-26T02:51:52.9368176+08:00" endTime="2026-04-26T02:51:52.9368176+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c188da2d-5024-4328-ac3d-18d3ea5e9d03" />
+    <UnitTestResult executionId="5a717817-cc84-4c2c-8095-eb7cb3887f12" testId="514a729b-8237-4683-fa30-30f3a2d8f8dc" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_Minimal64Bit_ProducesValidElf" computerName="ASTER-SURFACE" duration="00:00:00.0002188" startTime="2026-04-26T02:51:52.9440473+08:00" endTime="2026-04-26T02:51:52.9440473+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5a717817-cc84-4c2c-8095-eb7cb3887f12" />
+    <UnitTestResult executionId="a316ca59-ed1a-4f77-b516-26aed6bad103" testId="c006c0b0-4d59-3a16-df21-75175963a0b9" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Nop, expectedValue: 0)" computerName="ASTER-SURFACE" duration="00:00:00.0000065" startTime="2026-04-26T02:51:52.9349295+08:00" endTime="2026-04-26T02:51:52.9349296+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a316ca59-ed1a-4f77-b516-26aed6bad103" />
+    <UnitTestResult executionId="57a558d7-ec2a-452b-97fd-2ba88d5d55b5" testId="c4013a33-ae6f-9b35-9dca-f08741977673" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_DifferentArchitectures_ProducesValidMachO(cpuType: 12, is64: False)" computerName="ASTER-SURFACE" duration="00:00:00.0000360" startTime="2026-04-26T02:51:52.9358636+08:00" endTime="2026-04-26T02:51:52.9358637+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="57a558d7-ec2a-452b-97fd-2ba88d5d55b5" />
+    <UnitTestResult executionId="72059466-adef-4ead-b73d-9f35741dafa0" testId="0901b962-1aa5-484f-985b-4852afc74503" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: StringConcat, expectedValue: 176)" computerName="ASTER-SURFACE" duration="00:00:00.0000062" startTime="2026-04-26T02:51:52.9335229+08:00" endTime="2026-04-26T02:51:52.9335230+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="72059466-adef-4ead-b73d-9f35741dafa0" />
+    <UnitTestResult executionId="c50ff541-72b8-46f0-b875-84212c293a80" testId="3624602d-0582-b11f-7936-85215f7ed367" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal32Bit_ProducesValidMachO" computerName="ASTER-SURFACE" duration="00:00:00.0016769" startTime="2026-04-26T02:51:52.9432259+08:00" endTime="2026-04-26T02:51:52.9432260+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c50ff541-72b8-46f0-b875-84212c293a80">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.True() Failure&#xD;
+Expected: True&#xD;
+Actual:   False</Message>
+          <StackTrace>   at Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal32Bit_ProducesValidMachO() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\MachOEncoderTests.cs:line 30&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="64b00ae3-7008-4d19-bfb4-c3d7ae6bb18b" testId="71f1811b-489f-a301-90ca-24ce8ad63b72" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_32Bit_ClassFieldIs1" computerName="ASTER-SURFACE" duration="00:00:00.0008025" startTime="2026-04-26T02:51:52.9358429+08:00" endTime="2026-04-26T02:51:52.9358429+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="64b00ae3-7008-4d19-bfb4-c3d7ae6bb18b" />
+    <UnitTestResult executionId="ab0ef3ea-b05a-490c-9cec-9828ab91ec7e" testId="298e4079-cdb4-d9ff-8867-3eba959e982b" testName="Acorn.Native.Tests.PeEncoderTests.Encode_DataDirectories_WritesRvaAndSize" computerName="ASTER-SURFACE" duration="00:00:00.0007276" startTime="2026-04-26T02:51:52.9460983+08:00" endTime="2026-04-26T02:51:52.9460983+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ab0ef3ea-b05a-490c-9cec-9828ab91ec7e">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 4096&#xD;
+Actual:   0</Message>
+          <StackTrace>   at Acorn.Native.Tests.PeEncoderTests.Encode_DataDirectories_WritesRvaAndSize() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs:line 181&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0331dcde-33e1-413b-afd8-e974c3e36a86" testId="1267951c-9bed-1069-540c-32297c7bc06a" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_LittleEndian_DataEncodingIs1" computerName="ASTER-SURFACE" duration="00:00:00.0002826" startTime="2026-04-26T02:51:52.9359113+08:00" endTime="2026-04-26T02:51:52.9359114+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0331dcde-33e1-413b-afd8-e974c3e36a86" />
+    <UnitTestResult executionId="35f54782-8a14-48f1-a111-95ac992e05d4" testId="41f9c413-9ad4-da49-de54-9d64cd58daca" testName="Acorn.Native.Tests.PeEncoderTests.Encode_DifferentArchitectures_ProducesValidPe(machine: 332, is64: False)" computerName="ASTER-SURFACE" duration="00:00:00.0000181" startTime="2026-04-26T02:51:52.9336640+08:00" endTime="2026-04-26T02:51:52.9336640+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="35f54782-8a14-48f1-a111-95ac992e05d4" />
+    <UnitTestResult executionId="aef7fa43-47b3-4d81-abd3-cde5ea21cfae" testId="e0b228f5-49ee-a8ac-b14a-911bae0c5d60" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_32BitMagic_IsFEEDFACE" computerName="ASTER-SURFACE" duration="00:00:00.0001406" startTime="2026-04-26T02:51:52.9470932+08:00" endTime="2026-04-26T02:51:52.9470933+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aef7fa43-47b3-4d81-abd3-cde5ea21cfae" />
+    <UnitTestResult executionId="cd23b5e8-8ed7-492a-b75c-9b336baa6f2d" testId="dd72e96a-6116-53dc-7ed6-4be16779f87f" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_MultipleSectionContents_AllPresent" computerName="ASTER-SURFACE" duration="00:00:00.0034091" startTime="2026-04-26T02:51:52.9470380+08:00" endTime="2026-04-26T02:51:52.9470381+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cd23b5e8-8ed7-492a-b75c-9b336baa6f2d" />
+    <UnitTestResult executionId="233d125b-dbcb-490a-8b20-24e717482518" testId="e3e79adf-69d1-1c2c-628e-fc829dc631f0" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: BuiltinCall, expectedValue: 224)" computerName="ASTER-SURFACE" duration="00:00:00.0000058" startTime="2026-04-26T02:51:52.9349640+08:00" endTime="2026-04-26T02:51:52.9349641+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="233d125b-dbcb-490a-8b20-24e717482518" />
+    <UnitTestResult executionId="a93e25a5-de89-466a-85e5-4296d7d88501" testId="f1e5389b-29b0-efa0-f984-cb424dcf44aa" testName="Acorn.Native.Tests.PeEncoderTests.Encode_Subsystem_PreservesValue" computerName="ASTER-SURFACE" duration="00:00:00.0002987" startTime="2026-04-26T02:51:52.9449508+08:00" endTime="2026-04-26T02:51:52.9449509+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a93e25a5-de89-466a-85e5-4296d7d88501">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 3&#xD;
+Actual:   0</Message>
+          <StackTrace>   at Acorn.Native.Tests.PeEncoderTests.Encode_Subsystem_PreservesValue() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs:line 284&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="9f8b581c-8242-438c-b5c2-800d880a6a94" testId="2a696b18-3fd9-e980-e9ce-e15257b6d46c" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_WithProgramHeader_PreservesType" computerName="ASTER-SURFACE" duration="00:00:00.0016469" startTime="2026-04-26T02:51:52.9424920+08:00" endTime="2026-04-26T02:51:52.9424922+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9f8b581c-8242-438c-b5c2-800d880a6a94">
+      <Output>
+        <ErrorInfo>
+          <Message>System.ArgumentException : The array starting from the specified index is not long enough to read a value of the specified type. (Parameter 'value')</Message>
+          <StackTrace>   at System.BitConverter.ToInt32(Byte[] value, Int32 startIndex)&#xD;
+   at Acorn.Native.Tests.ElfEncoderTests.Encode_WithProgramHeader_PreservesType() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\ElfEncoderTests.cs:line 205&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="df0a98ac-602d-4ff3-9ba1-6d09b40d0b06" testId="86eebd29-134b-b409-5716-fcbbf48aa642" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_DifferentArchitectures_ProducesValidElf(machine: 3, is64: False)" computerName="ASTER-SURFACE" duration="00:00:00.0000160" startTime="2026-04-26T02:51:52.9427596+08:00" endTime="2026-04-26T02:51:52.9427596+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="df0a98ac-602d-4ff3-9ba1-6d09b40d0b06" />
+    <UnitTestResult executionId="1f476cb8-e546-4e20-a0fd-76807e21ceb0" testId="4682094d-323c-015c-2ce6-e0635326c711" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_Minimal32Bit_ProducesValidElf" computerName="ASTER-SURFACE" duration="00:00:00.0001577" startTime="2026-04-26T02:51:52.9482592+08:00" endTime="2026-04-26T02:51:52.9482592+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1f476cb8-e546-4e20-a0fd-76807e21ceb0" />
+    <UnitTestResult executionId="5e2a8eb8-13ee-4e14-a2ec-28b4ebccec89" testId="f6a5f5f7-94b9-ee40-db32-4aec9d131d0a" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Alloc, expectedValue: 144)" computerName="ASTER-SURFACE" duration="00:00:00.0000056" startTime="2026-04-26T02:51:52.9349832+08:00" endTime="2026-04-26T02:51:52.9349833+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5e2a8eb8-13ee-4e14-a2ec-28b4ebccec89" />
+    <UnitTestResult executionId="1ae355cb-8706-40e6-a1bb-5fb1d9a00d42" testId="23011dd2-c858-a8c8-b3a5-9e93c7f35d0e" testName="Acorn.Native.Tests.PeEncoderTests.Encode_64BitMagic_Is20B" computerName="ASTER-SURFACE" duration="00:00:00.0002100" startTime="2026-04-26T02:51:52.9469615+08:00" endTime="2026-04-26T02:51:52.9469616+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1ae355cb-8706-40e6-a1bb-5fb1d9a00d42">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 523&#xD;
+Actual:   0</Message>
+          <StackTrace>   at Acorn.Native.Tests.PeEncoderTests.Encode_64BitMagic_Is20B() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs:line 240&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ed1549b8-df64-4640-b4ac-20894e63d17b" testId="202a8d5d-7a05-6f1a-7480-61ca62cce12d" testName="Acorn.Native.Tests.PeEncoderTests.Encode_MultipleSectionContents_AllPresent" computerName="ASTER-SURFACE" duration="00:00:00.0018861" startTime="2026-04-26T02:51:52.9362698+08:00" endTime="2026-04-26T02:51:52.9362699+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ed1549b8-df64-4640-b4ac-20894e63d17b" />
+    <UnitTestResult executionId="050a625c-7f79-492d-bfb8-74edb87f2a50" testId="6c718b4e-f20e-c000-bfb8-49e852a8adbe" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_NegativeLocalCount_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0009640" startTime="2026-04-26T02:51:52.9359211+08:00" endTime="2026-04-26T02:51:52.9359212+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="050a625c-7f79-492d-bfb8-74edb87f2a50" />
+    <UnitTestResult executionId="9922f0b9-08fe-4c5e-9393-386aaac0a92f" testId="8e0dd0b3-fc2e-a815-2e6c-fac9987302f8" testName="Acorn.Native.Tests.PeEncoderTests.Encode_Minimal32Bit_ProducesValidPe" computerName="ASTER-SURFACE" duration="00:00:00.0001550" startTime="2026-04-26T02:51:52.9454335+08:00" endTime="2026-04-26T02:51:52.9454335+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9922f0b9-08fe-4c5e-9393-386aaac0a92f" />
+    <UnitTestResult executionId="3bd766fa-eb47-4e3e-b6a9-d87666405974" testId="f7fe03e7-18a2-c206-de69-d641e4959ccb" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_DifferentArchitectures_ProducesValidMachO(cpuType: 7, is64: False)" computerName="ASTER-SURFACE" duration="00:00:00.0005731" startTime="2026-04-26T02:51:52.9358263+08:00" endTime="2026-04-26T02:51:52.9358263+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3bd766fa-eb47-4e3e-b6a9-d87666405974" />
+    <UnitTestResult executionId="98767493-87af-4391-91a6-b704649a7358" testId="28399a39-617f-d152-fd46-3e6964549321" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: BigIntAdd, expectedValue: 192)" computerName="ASTER-SURFACE" duration="00:00:00.0000082" startTime="2026-04-26T02:51:52.9354216+08:00" endTime="2026-04-26T02:51:52.9354216+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="98767493-87af-4391-91a6-b704649a7358" />
+    <UnitTestResult executionId="e6dffe23-d100-4bbb-b0f7-382059a09408" testId="22e3ddf2-9368-8037-b930-85c062c0cc9e" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_CpuType_PreservesValue" computerName="ASTER-SURFACE" duration="00:00:00.0045450" startTime="2026-04-26T02:51:52.9354641+08:00" endTime="2026-04-26T02:51:52.9354641+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e6dffe23-d100-4bbb-b0f7-382059a09408" />
+    <UnitTestResult executionId="82dad725-cece-43a3-bb9f-ff46397d2ecc" testId="ec99120d-b12b-d6e7-ae8f-71f568626750" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_MultipleSections_AllContentPresent" computerName="ASTER-SURFACE" duration="00:00:00.0049791" startTime="2026-04-26T02:51:52.9355102+08:00" endTime="2026-04-26T02:51:52.9355103+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="82dad725-cece-43a3-bb9f-ff46397d2ecc" />
+    <UnitTestResult executionId="011a9e26-3dea-4888-966d-648cb562da94" testId="05a4f1e7-5809-2876-7584-70a87c8dda10" testName="Acorn.Native.Tests.PeEncoderTests.Encode_Minimal64Bit_ProducesValidPe" computerName="ASTER-SURFACE" duration="00:00:00.0001871" startTime="2026-04-26T02:51:52.9445135+08:00" endTime="2026-04-26T02:51:52.9445136+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="011a9e26-3dea-4888-966d-648cb562da94" />
+    <UnitTestResult executionId="405617be-67b1-4828-90d0-cc00beb37355" testId="801a4a96-fdc8-57ad-7190-795d3d30762a" testName="Acorn.Native.Tests.PeEncoderTests.Encode_PeSignature_Is4550" computerName="ASTER-SURFACE" duration="00:00:00.0002220" startTime="2026-04-26T02:51:52.9476044+08:00" endTime="2026-04-26T02:51:52.9476045+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="405617be-67b1-4828-90d0-cc00beb37355">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 17744&#xD;
+Actual:   23117</Message>
+          <StackTrace>   at Acorn.Native.Tests.PeEncoderTests.Encode_PeSignature_Is4550() in d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs:line 60&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1dd39d00-7f9c-4059-ab05-0e1844acb810" testId="84532aa0-9777-803e-1a46-b22bae10688c" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_DifferentArchitectures_ProducesValidElf(machine: 183, is64: True)" computerName="ASTER-SURFACE" duration="00:00:00.0003298" startTime="2026-04-26T02:51:52.9426921+08:00" endTime="2026-04-26T02:51:52.9426922+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1dd39d00-7f9c-4059-ab05-0e1844acb810" />
+    <UnitTestResult executionId="8aea5ce7-71c4-400e-b594-ae52f168e001" testId="ade20177-565a-2bbb-5bfb-4a05241a3e2e" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_LoadCommandCount_PreservesValue" computerName="ASTER-SURFACE" duration="00:00:00.0001262" startTime="2026-04-26T02:51:52.9482934+08:00" endTime="2026-04-26T02:51:52.9482934+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8aea5ce7-71c4-400e-b594-ae52f168e001" />
+    <UnitTestResult executionId="a983df2a-5cd3-419e-ac63-cfe6a20d1f74" testId="165a2ab0-71b8-5c26-af1c-0928e4f35978" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_MachineType_PreservesValue" computerName="ASTER-SURFACE" duration="00:00:00.0001257" startTime="2026-04-26T02:51:52.9481415+08:00" endTime="2026-04-26T02:51:52.9481415+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a983df2a-5cd3-419e-ac63-cfe6a20d1f74" />
+    <UnitTestResult executionId="2a07536e-de41-4686-9d82-de4e41bc0c59" testId="b02d2e58-f711-acae-8ad4-f08ca906409c" testName="Acorn.Native.Tests.ElfEncoderTests.Encode_WithSectionContent_IncludesContentBytes" computerName="ASTER-SURFACE" duration="00:00:00.0006755" startTime="2026-04-26T02:51:52.9476664+08:00" endTime="2026-04-26T02:51:52.9476664+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2a07536e-de41-4686-9d82-de4e41bc0c59" />
+    <UnitTestResult executionId="26cbb7a9-b298-4758-a61b-9dabcbb99b91" testId="523aafb9-cf30-7d1d-ccbb-745798f2d0b7" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_CodeRangeExceedsBytecodeLength_ReturnsFalse" computerName="ASTER-SURFACE" duration="00:00:00.0134291" startTime="2026-04-26T02:51:52.8955558+08:00" endTime="2026-04-26T02:51:52.8956147+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="26cbb7a9-b298-4758-a61b-9dabcbb99b91" />
+    <UnitTestResult executionId="76e719e6-0a32-4c70-9916-6fc96403d501" testId="d2462119-3fb1-a03d-48d4-2942a3d87194" testName="Acorn.Native.Tests.PeEncoderTests.Encode_DifferentArchitectures_ProducesValidPe(machine: 448, is64: False)" computerName="ASTER-SURFACE" duration="00:00:00.0001117" startTime="2026-04-26T02:51:52.9335458+08:00" endTime="2026-04-26T02:51:52.9335459+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="76e719e6-0a32-4c70-9916-6fc96403d501" />
+    <UnitTestResult executionId="673ba4b9-875d-4ad8-8301-3a1ccc35c159" testId="95fbcdab-a082-eee0-021c-99c901ad7f15" testName="Acorn.Native.Tests.PeEncoderTests.Encode_WithSectionContent_IncludesContentBytes" computerName="ASTER-SURFACE" duration="00:00:00.0173422" startTime="2026-04-26T02:51:52.9008334+08:00" endTime="2026-04-26T02:51:52.9008335+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="673ba4b9-875d-4ad8-8301-3a1ccc35c159" />
+    <UnitTestResult executionId="fd32366e-9beb-41dd-a457-ef509965a55c" testId="1a08bda5-da5c-1467-4900-5174e6d56156" testName="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: I32ExtendI64S, expectedValue: 128)" computerName="ASTER-SURFACE" duration="00:00:00.0000052" startTime="2026-04-26T02:51:52.9350385+08:00" endTime="2026-04-26T02:51:52.9350385+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fd32366e-9beb-41dd-a457-ef509965a55c" />
+    <UnitTestResult executionId="79a0b3ba-7976-4d3b-85bb-8c7a733fa083" testId="3fab12ae-8d57-da04-a1e4-a70ffc18e119" testName="Acorn.Native.Tests.NyarValidatorTests.Validate_JumpTargetInSameFunction_ReturnsTrue" computerName="ASTER-SURFACE" duration="00:00:00.0002045" startTime="2026-04-26T02:51:52.9368404+08:00" endTime="2026-04-26T02:51:52.9368404+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="79a0b3ba-7976-4d3b-85bb-8c7a733fa083" />
+    <UnitTestResult executionId="def7e5d3-5d4a-455b-8e61-0b60571e4b74" testId="698973f7-4fb5-1703-7cb5-99d7cb88989a" testName="Acorn.Native.Tests.MachOEncoderTests.Encode_64BitMagic_IsFEEDFACF" computerName="ASTER-SURFACE" duration="00:00:00.0024580" startTime="2026-04-26T02:51:52.9032211+08:00" endTime="2026-04-26T02:51:52.9032211+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="def7e5d3-5d4a-455b-8e61-0b60571e4b74" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_NegativeArity_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="ce19a19c-78e3-3106-bf08-ddb0ca2e16ba">
+      <Execution id="30cfbe31-93a7-4023-8c01-a1e23a0780a9" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_NegativeArity_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_ProgramHeaderFlags_PreservesValue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="0352515d-ba2c-9098-b76c-eaccd77848a0">
+      <Execution id="0c0ec819-56a3-4d64-bb96-42678f7cfaec" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_ProgramHeaderFlags_PreservesValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_EmptySectionContent_NoContentBytes" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="3cf1c5f7-5e91-56bb-ef92-e642033d21f6">
+      <Execution id="d123fd5d-5429-421f-a17f-b5309c79ff14" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_EmptySectionContent_NoContentBytes" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal32Bit_ProducesValidMachO" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="3624602d-0582-b11f-7936-85215f7ed367">
+      <Execution id="c50ff541-72b8-46f0-b875-84212c293a80" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_Minimal32Bit_ProducesValidMachO" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_DifferentArchitectures_ProducesValidElf(machine: 62, is64: True)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="2626300e-50e0-d273-0945-93aff6b9a5ef">
+      <Execution id="975ed6f0-8d93-422e-9b74-0e43b1dabb9c" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_DifferentArchitectures_ProducesValidElf" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_WithProgramHeader_PreservesType" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="2a696b18-3fd9-e980-e9ce-e15257b6d46c">
+      <Execution id="9f8b581c-8242-438c-b5c2-800d880a6a94" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_WithProgramHeader_PreservesType" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_JumpTargetInSameFunction_ReturnsTrue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="3fab12ae-8d57-da04-a1e4-a70ffc18e119">
+      <Execution id="79a0b3ba-7976-4d3b-85bb-8c7a733fa083" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_JumpTargetInSameFunction_ReturnsTrue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_64BitMachine_Is8664" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="a22861fc-9bb6-ae25-1302-c2ff352c97f7">
+      <Execution id="9f7d9b82-29b6-4ca4-8f09-89b9b85c0a66" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_64BitMachine_Is8664" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Print, expectedValue: 208)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="3ed45d2c-7ca4-1c9a-f656-c44f8126db45">
+      <Execution id="92374b54-21e4-4bc7-8f0b-da44eb5e6ac7" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_MultipleSectionContents_AllPresent" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="dd72e96a-6116-53dc-7ed6-4be16779f87f">
+      <Execution id="cd23b5e8-8ed7-492a-b75c-9b336baa6f2d" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_MultipleSectionContents_AllPresent" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: StoreLocal, expectedValue: 33)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="f8fed1ad-311d-7418-3b6a-f114586b61f6">
+      <Execution id="32faddfa-379f-4965-b6ac-33cb0ee50cd2" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: NewObject, expectedValue: 160)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="e533dbc5-caae-c900-c25d-b01fb240fc39">
+      <Execution id="ff06525c-427b-4370-b6ad-9bf95b9e5167" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: I32Add, expectedValue: 48)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="22a27795-27af-2fb6-95df-9d7fc877ed3a">
+      <Execution id="5df70a48-42e1-423a-8476-2cb6f7901c3f" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_64Bit_ClassFieldIs2" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="4d823eee-f079-b6c4-1785-244f434485a8">
+      <Execution id="47db90fa-a26c-4816-971b-0a2a0763ea26" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_64Bit_ClassFieldIs2" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_Subsystem_PreservesValue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="f1e5389b-29b0-efa0-f984-cb424dcf44aa">
+      <Execution id="a93e25a5-de89-466a-85e5-4296d7d88501" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_Subsystem_PreservesValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_EmptySectionContent_Succeeds" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="bd0f3255-66e7-e28d-d3b2-10894a31fec1">
+      <Execution id="b7bcafb0-6c0f-4bd4-a6a5-94a54cf6a33d" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_EmptySectionContent_Succeeds" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: F64Add, expectedValue: 112)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="72f29312-3067-4690-cb7e-1f3502a3058c">
+      <Execution id="a4f51d3b-fee5-423a-ac7b-a629f7478132" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_SegmentLoadCommand_CommandTypeIsCorrect" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="f32593ab-007a-f44b-58eb-c86ea47a6cf3">
+      <Execution id="1572e1cd-d4dc-47e3-8a2f-ef7bb8337856" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_SegmentLoadCommand_CommandTypeIsCorrect" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_DifferentArchitectures_ProducesValidMachO(cpuType: 12, is64: False)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="c4013a33-ae6f-9b35-9dca-f08741977673">
+      <Execution id="57a558d7-ec2a-452b-97fd-2ba88d5d55b5" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_DifferentArchitectures_ProducesValidMachO" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Const, expectedValue: 16)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="6100aece-8899-bc6c-7125-cd50e83ee6b4">
+      <Execution id="723861ab-0dcd-460c-9366-a61a9c869d43" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_LoadCommandCount_PreservesValue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="ade20177-565a-2bbb-5bfb-4a05241a3e2e">
+      <Execution id="8aea5ce7-71c4-400e-b594-ae52f168e001" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_LoadCommandCount_PreservesValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_EmptyDataDirectories_WritesZero" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="e7d0ac54-b0cc-9541-7e53-47eea4ae9bd7">
+      <Execution id="8c9f6cff-489f-49a0-9d88-3f78a686f600" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_EmptyDataDirectories_WritesZero" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_CodeOffsetExceedsBytecodeLength_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="42705cc3-a6b4-a9ee-172c-eccfd4b4705b">
+      <Execution id="676e0e57-61f1-4bb5-b79f-d1fcef98d924" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_CodeOffsetExceedsBytecodeLength_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_EmptyModuleName_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="86ee2a6d-b4c7-9e48-110b-d0abc08db994">
+      <Execution id="c188da2d-5024-4328-ac3d-18d3ea5e9d03" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_EmptyModuleName_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian64Bit_MagicIsCFFAEDFE" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="4317d423-cf11-e19f-adb3-6ed1efed69cd">
+      <Execution id="f88f64b0-adcd-4b4c-8aa3-f9904f115af1" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_BigEndian64Bit_MagicIsCFFAEDFE" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_DifferentArchitectures_ProducesValidPe(machine: 43620, is64: True)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="2d898da6-efd2-3b45-d621-072b7eab934f">
+      <Execution id="44babf18-639c-4dc9-be70-ccc0020e3dc3" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_DifferentArchitectures_ProducesValidPe" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Nop, expectedValue: 0)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="c006c0b0-4d59-3a16-df21-75175963a0b9">
+      <Execution id="a316ca59-ed1a-4f77-b516-26aed6bad103" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_Minimal32Bit_ProducesValidElf" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="4682094d-323c-015c-2ce6-e0635326c711">
+      <Execution id="1f476cb8-e546-4e20-a0fd-76807e21ceb0" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_Minimal32Bit_ProducesValidElf" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_32BitMachine_Is14C" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="41cf9ebe-1d28-e403-fe7a-32dfbc453191">
+      <Execution id="d719e38d-a8e1-4cd7-8f4b-5f525c2f0ba7" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_32BitMachine_Is14C" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Jump, expectedValue: 1)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="898b2f9f-37d8-f39a-4af7-f8f425237e4f">
+      <Execution id="b048ece1-4e12-4815-bd0b-7d2afc2e600b" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_WithSectionContent_IncludesContentBytes" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="ef29b110-a945-37c4-7ed5-dd88a039c8f4">
+      <Execution id="e1bdb313-6546-4b57-a57c-dbddd2090934" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_WithSectionContent_IncludesContentBytes" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_32Bit_ClassFieldIs1" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="71f1811b-489f-a301-90ca-24ce8ad63b72">
+      <Execution id="64b00ae3-7008-4d19-bfb4-c3d7ae6bb18b" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_32Bit_ClassFieldIs1" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_DifferentArchitectures_ProducesValidElf(machine: 183, is64: True)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="84532aa0-9777-803e-1a46-b22bae10688c">
+      <Execution id="1dd39d00-7f9c-4059-ab05-0e1844acb810" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_DifferentArchitectures_ProducesValidElf" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: I64Add, expectedValue: 80)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="731557f1-4a4c-6ce6-2c97-38272efdb59a">
+      <Execution id="caa7ce9e-3eb1-441e-909d-013df49051f8" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_DifferentArchitectures_ProducesValidPe(machine: 332, is64: False)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="41f9c413-9ad4-da49-de54-9d64cd58daca">
+      <Execution id="35f54782-8a14-48f1-a111-95ac992e05d4" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_DifferentArchitectures_ProducesValidPe" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_WithSectionContent_IncludesContentBytes" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="b02d2e58-f711-acae-8ad4-f08ca906409c">
+      <Execution id="2a07536e-de41-4686-9d82-de4e41bc0c59" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_WithSectionContent_IncludesContentBytes" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: BuiltinCall, expectedValue: 224)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="e3e79adf-69d1-1c2c-628e-fc829dc631f0">
+      <Execution id="233d125b-dbcb-490a-8b20-24e717482518" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_NegativeLocalCount_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="6c718b4e-f20e-c000-bfb8-49e852a8adbe">
+      <Execution id="050a625c-7f79-492d-bfb8-74edb87f2a50" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_NegativeLocalCount_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_CodeRangeExceedsBytecodeLength_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="523aafb9-cf30-7d1d-ccbb-745798f2d0b7">
+      <Execution id="26cbb7a9-b298-4758-a61b-9dabcbb99b91" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_CodeRangeExceedsBytecodeLength_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: StringConcat, expectedValue: 176)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="0901b962-1aa5-484f-985b-4852afc74503">
+      <Execution id="72059466-adef-4ead-b73d-9f35741dafa0" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_PeSignature_Is4550" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="801a4a96-fdc8-57ad-7190-795d3d30762a">
+      <Execution id="405617be-67b1-4828-90d0-cc00beb37355" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_PeSignature_Is4550" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_DataDirectories_WritesRvaAndSize" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="298e4079-cdb4-d9ff-8867-3eba959e982b">
+      <Execution id="ab0ef3ea-b05a-490c-9cec-9828ab91ec7e" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_DataDirectories_WritesRvaAndSize" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_ValidModuleWithImports_ReturnsTrue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="07a95f3e-54a7-7466-29c5-7948f8c7438a">
+      <Execution id="aed807c5-7849-4873-b174-4afe7e6389e4" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_ValidModuleWithImports_ReturnsTrue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_JumpTargetOutOfRange_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="21838b1d-8ba7-113a-3bfd-2649b54696b4">
+      <Execution id="d3aa3183-583d-4667-af6a-30a59ea56562" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_JumpTargetOutOfRange_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_MachineType_PreservesValue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="165a2ab0-71b8-5c26-af1c-0928e4f35978">
+      <Execution id="a983df2a-5cd3-419e-ac63-cfe6a20d1f74" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_MachineType_PreservesValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_32BitMagic_IsFEEDFACE" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="e0b228f5-49ee-a8ac-b14a-911bae0c5d60">
+      <Execution id="aef7fa43-47b3-4d81-abd3-cde5ea21cfae" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_32BitMagic_IsFEEDFACE" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_DifferentArchitectures_ProducesValidPe(machine: 448, is64: False)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="d2462119-3fb1-a03d-48d4-2942a3d87194">
+      <Execution id="76e719e6-0a32-4c70-9916-6fc96403d501" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_DifferentArchitectures_ProducesValidPe" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: F32Add, expectedValue: 96)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="d3d73152-c511-682c-5433-c625c3862947">
+      <Execution id="04afaab3-9233-49b6-88da-04258933b86e" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_DifferentArchitectures_ProducesValidMachO(cpuType: 16777223, is64: True)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="0b6cbc9d-4a7c-61d3-2971-cafeff076fb5">
+      <Execution id="ec37d0a7-c326-4f39-8f76-7af81cde6a3c" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_DifferentArchitectures_ProducesValidMachO" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_FileType_PreservesValue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="497b1911-1179-212f-aa92-4a19cefbb07c">
+      <Execution id="e5662b55-1836-4695-a7da-29b552669193" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_FileType_PreservesValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_32BitMagic_Is10B" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="091955fd-19f5-449a-10bc-e1bb51846205">
+      <Execution id="a1961ef5-a364-43e4-a495-7f613112b8b2" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_32BitMagic_Is10B" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_DifferentArchitectures_ProducesValidElf(machine: 40, is64: False)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="e99e472e-c6ae-79fe-1000-07da391e21b0">
+      <Execution id="d385adbe-af8b-4b99-9877-2fc8165f9b45" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_DifferentArchitectures_ProducesValidElf" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_WithSectionContent_IncludesContentBytes" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="95fbcdab-a082-eee0-021c-99c901ad7f15">
+      <Execution id="673ba4b9-875d-4ad8-8301-3a1ccc35c159" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_WithSectionContent_IncludesContentBytes" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: LoadLocal, expectedValue: 32)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="eaa87623-0ef4-aa57-2754-fc8642a0b507">
+      <Execution id="b09ea8c4-5579-40e2-8fd8-10cea1d49457" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_JumpIfFalseTargetOutOfRange_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="c8c9cc1d-3930-093a-83c3-655206fd0c10">
+      <Execution id="563c30aa-8ee2-4b9d-89b2-5f6af932baef" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_JumpIfFalseTargetOutOfRange_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_JumpIfTrueTargetOutOfRange_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="aa82bd49-2035-d314-8c4c-845101b2cc65">
+      <Execution id="8f00eda2-ccdb-429d-944e-ac79ae6663e0" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_JumpIfTrueTargetOutOfRange_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_CpuType_PreservesValue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="22e3ddf2-9368-8037-b930-85c062c0cc9e">
+      <Execution id="e6dffe23-d100-4bbb-b0f7-382059a09408" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_CpuType_PreservesValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_ValidModule_ReturnsTrue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="1aa1021c-6a39-f003-90a7-8bc262cae783">
+      <Execution id="dff5ab41-0620-4c67-b1b9-21c42d0a5b8f" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_ValidModule_ReturnsTrue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_DifferentArchitectures_ProducesValidElf(machine: 3, is64: False)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="86eebd29-134b-b409-5716-fcbbf48aa642">
+      <Execution id="df0a98ac-602d-4ff3-9ba1-6d09b40d0b06" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_DifferentArchitectures_ProducesValidElf" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_NegativeCodeOffset_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="7b0eca84-6b69-5816-d9ba-3c30d9a8b967">
+      <Execution id="6de8a363-389e-48e0-adcf-271e8315e05a" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_NegativeCodeOffset_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_LittleEndian_DataEncodingIs1" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="1267951c-9bed-1069-540c-32297c7bc06a">
+      <Execution id="0331dcde-33e1-413b-afd8-e974c3e36a86" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_LittleEndian_DataEncodingIs1" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_Minimal32Bit_ProducesValidPe" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="8e0dd0b3-fc2e-a815-2e6c-fac9987302f8">
+      <Execution id="9922f0b9-08fe-4c5e-9393-386aaac0a92f" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_Minimal32Bit_ProducesValidPe" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_EntryPoint_PreservesValue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="ce4e51b5-0283-69a1-6b76-51ca222c1a10">
+      <Execution id="405204f3-ba78-419b-9661-1788f5c7c90a" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_EntryPoint_PreservesValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: I32ExtendI64S, expectedValue: 128)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="1a08bda5-da5c-1467-4900-5174e6d56156">
+      <Execution id="fd32366e-9beb-41dd-a457-ef509965a55c" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_DifferentArchitectures_ProducesValidMachO(cpuType: 16777228, is64: True)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="9fb6c2cf-15e6-f395-1e1f-028ddea61a2a">
+      <Execution id="4687dee5-8361-4774-be44-546be8af7d98" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_DifferentArchitectures_ProducesValidMachO" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Alloc, expectedValue: 144)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="f6a5f5f7-94b9-ee40-db32-4aec9d131d0a">
+      <Execution id="5e2a8eb8-13ee-4e14-a2ec-28b4ebccec89" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_64BitMagic_IsFEEDFACF" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="698973f7-4fb5-1703-7cb5-99d7cb88989a">
+      <Execution id="def7e5d3-5d4a-455b-8e61-0b60571e4b74" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_64BitMagic_IsFEEDFACF" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: Return, expectedValue: 5)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="a8a726fe-f517-8ff8-c8ea-f3bf98ff0066">
+      <Execution id="c18988ef-fcc1-426b-8915-39e27beb20b3" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal64Bit_ProducesValidMachO" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="c1bf6f09-5f55-8658-e0f7-229b38276b09">
+      <Execution id="baffaff9-d466-4297-88e7-e1c6656d2e94" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_Minimal64Bit_ProducesValidMachO" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_Flags_PreservesValue" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="d8b00eb9-1982-71a5-8c65-2949c84109aa">
+      <Execution id="dd1ab4b4-40aa-4267-a527-a33df53bd79d" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_Flags_PreservesValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_MultipleSectionContents_AllPresent" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="202a8d5d-7a05-6f1a-7480-61ca62cce12d">
+      <Execution id="ed1549b8-df64-4640-b4ac-20894e63d17b" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_MultipleSectionContents_AllPresent" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_DifferentArchitectures_ProducesValidMachO(cpuType: 7, is64: False)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="f7fe03e7-18a2-c206-de69-d641e4959ccb">
+      <Execution id="3bd766fa-eb47-4e3e-b6a9-d87666405974" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_DifferentArchitectures_ProducesValidMachO" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_DosMagic_Is5A4D" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="d799cfda-4dc2-f966-5fad-b0261656663e">
+      <Execution id="491271b1-2330-4757-aa8b-e2c857468838" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_DosMagic_Is5A4D" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_WithNamedSections_StringTableContainsNames" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="f7671051-4180-626f-0cd2-f8ff5313e574">
+      <Execution id="d5576624-a90e-46de-8ecd-a0625694b92b" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_WithNamedSections_StringTableContainsNames" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian32Bit_MagicIsCEFAEDFE" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="2138f760-b617-1a62-38aa-eb3029f72338">
+      <Execution id="edf2ee6d-a16a-4a5d-97b9-c66a912181bc" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.MachOEncoderTests" name="Encode_BigEndian32Bit_MagicIsCEFAEDFE" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_Minimal64Bit_ProducesValidPe" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="05a4f1e7-5809-2876-7584-70a87c8dda10">
+      <Execution id="011a9e26-3dea-4888-966d-648cb562da94" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_Minimal64Bit_ProducesValidPe" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: BigIntAdd, expectedValue: 192)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="28399a39-617f-d152-fd46-3e6964549321">
+      <Execution id="98767493-87af-4391-91a6-b704649a7358" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_MultipleSections_AllContentPresent" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="ec99120d-b12b-d6e7-ae8f-71f568626750">
+      <Execution id="82dad725-cece-43a3-bb9f-ff46397d2ecc" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_MultipleSections_AllContentPresent" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_DifferentArchitectures_ProducesValidPe(machine: 34404, is64: True)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="6a7e64cc-ef7e-b9ee-7d58-bb868024c529">
+      <Execution id="219cf3fb-5cfe-4ab8-a788-c6e8fcdc0f4d" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_DifferentArchitectures_ProducesValidPe" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.ElfEncoderTests.Encode_Minimal64Bit_ProducesValidElf" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="514a729b-8237-4683-fa30-30f3a2d8f8dc">
+      <Execution id="5a717817-cc84-4c2c-8095-eb7cb3887f12" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.ElfEncoderTests" name="Encode_Minimal64Bit_ProducesValidElf" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.PeEncoderTests.Encode_64BitMagic_Is20B" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="23011dd2-c858-a8c8-b3a5-9e93c7f35d0e">
+      <Execution id="1ae355cb-8706-40e6-a1bb-5fb1d9a00d42" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.PeEncoderTests" name="Encode_64BitMagic_Is20B" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_UndefinedOpcode_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="d139f465-1d56-47cb-61d5-b94627711e3f">
+      <Execution id="7b792673-5d7c-450e-af15-54c84b6ba13b" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_UndefinedOpcode_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.Validate_EmptySymbolName_ReturnsFalse" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="9d5df307-a132-6424-7932-85f475916c40">
+      <Execution id="426a8b66-de9f-448d-a375-37c6f4cafdf5" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="Validate_EmptySymbolName_ReturnsFalse" />
+    </UnitTest>
+    <UnitTest name="Acorn.Native.Tests.NyarValidatorTests.NyarOpcode_HasCorrectValue(opcode: I32Eq, expectedValue: 64)" storage="d:\riderprojects\acorn.cs\examples\acorn.native.tests\bin\debug\net11.0\acorn.native.tests.dll" id="c4ef1bd6-db11-1499-0aa1-be5e244a74e7">
+      <Execution id="efd3f269-e929-4de0-8a2c-fb57f3132d26" />
+      <TestMethod codeBase="d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\bin\Debug\net11.0\Acorn.Native.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Acorn.Native.Tests.NyarValidatorTests" name="NyarOpcode_HasCorrectValue" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="41cf9ebe-1d28-e403-fe7a-32dfbc453191" executionId="d719e38d-a8e1-4cd7-8f4b-5f525c2f0ba7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="07a95f3e-54a7-7466-29c5-7948f8c7438a" executionId="aed807c5-7849-4873-b174-4afe7e6389e4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="091955fd-19f5-449a-10bc-e1bb51846205" executionId="a1961ef5-a364-43e4-a495-7f613112b8b2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a8a726fe-f517-8ff8-c8ea-f3bf98ff0066" executionId="c18988ef-fcc1-426b-8915-39e27beb20b3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6100aece-8899-bc6c-7125-cd50e83ee6b4" executionId="723861ab-0dcd-460c-9366-a61a9c869d43" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0b6cbc9d-4a7c-61d3-2971-cafeff076fb5" executionId="ec37d0a7-c326-4f39-8f76-7af81cde6a3c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d139f465-1d56-47cb-61d5-b94627711e3f" executionId="7b792673-5d7c-450e-af15-54c84b6ba13b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6a7e64cc-ef7e-b9ee-7d58-bb868024c529" executionId="219cf3fb-5cfe-4ab8-a788-c6e8fcdc0f4d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ce19a19c-78e3-3106-bf08-ddb0ca2e16ba" executionId="30cfbe31-93a7-4023-8c01-a1e23a0780a9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e7d0ac54-b0cc-9541-7e53-47eea4ae9bd7" executionId="8c9f6cff-489f-49a0-9d88-3f78a686f600" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e99e472e-c6ae-79fe-1000-07da391e21b0" executionId="d385adbe-af8b-4b99-9877-2fc8165f9b45" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="eaa87623-0ef4-aa57-2754-fc8642a0b507" executionId="b09ea8c4-5579-40e2-8fd8-10cea1d49457" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c1bf6f09-5f55-8658-e0f7-229b38276b09" executionId="baffaff9-d466-4297-88e7-e1c6656d2e94" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ef29b110-a945-37c4-7ed5-dd88a039c8f4" executionId="e1bdb313-6546-4b57-a57c-dbddd2090934" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c4ef1bd6-db11-1499-0aa1-be5e244a74e7" executionId="efd3f269-e929-4de0-8a2c-fb57f3132d26" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2d898da6-efd2-3b45-d621-072b7eab934f" executionId="44babf18-639c-4dc9-be70-ccc0020e3dc3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d3d73152-c511-682c-5433-c625c3862947" executionId="04afaab3-9233-49b6-88da-04258933b86e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d799cfda-4dc2-f966-5fad-b0261656663e" executionId="491271b1-2330-4757-aa8b-e2c857468838" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f32593ab-007a-f44b-58eb-c86ea47a6cf3" executionId="1572e1cd-d4dc-47e3-8a2f-ef7bb8337856" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2626300e-50e0-d273-0945-93aff6b9a5ef" executionId="975ed6f0-8d93-422e-9b74-0e43b1dabb9c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="22a27795-27af-2fb6-95df-9d7fc877ed3a" executionId="5df70a48-42e1-423a-8476-2cb6f7901c3f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4d823eee-f079-b6c4-1785-244f434485a8" executionId="47db90fa-a26c-4816-971b-0a2a0763ea26" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f8fed1ad-311d-7418-3b6a-f114586b61f6" executionId="32faddfa-379f-4965-b6ac-33cb0ee50cd2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="72f29312-3067-4690-cb7e-1f3502a3058c" executionId="a4f51d3b-fee5-423a-ac7b-a629f7478132" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a22861fc-9bb6-ae25-1302-c2ff352c97f7" executionId="9f7d9b82-29b6-4ca4-8f09-89b9b85c0a66" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f7671051-4180-626f-0cd2-f8ff5313e574" executionId="d5576624-a90e-46de-8ecd-a0625694b92b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="21838b1d-8ba7-113a-3bfd-2649b54696b4" executionId="d3aa3183-583d-4667-af6a-30a59ea56562" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7b0eca84-6b69-5816-d9ba-3c30d9a8b967" executionId="6de8a363-389e-48e0-adcf-271e8315e05a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="42705cc3-a6b4-a9ee-172c-eccfd4b4705b" executionId="676e0e57-61f1-4bb5-b79f-d1fcef98d924" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3cf1c5f7-5e91-56bb-ef92-e642033d21f6" executionId="d123fd5d-5429-421f-a17f-b5309c79ff14" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e533dbc5-caae-c900-c25d-b01fb240fc39" executionId="ff06525c-427b-4370-b6ad-9bf95b9e5167" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="497b1911-1179-212f-aa92-4a19cefbb07c" executionId="e5662b55-1836-4695-a7da-29b552669193" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9d5df307-a132-6424-7932-85f475916c40" executionId="426a8b66-de9f-448d-a375-37c6f4cafdf5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4317d423-cf11-e19f-adb3-6ed1efed69cd" executionId="f88f64b0-adcd-4b4c-8aa3-f9904f115af1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3ed45d2c-7ca4-1c9a-f656-c44f8126db45" executionId="92374b54-21e4-4bc7-8f0b-da44eb5e6ac7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1aa1021c-6a39-f003-90a7-8bc262cae783" executionId="dff5ab41-0620-4c67-b1b9-21c42d0a5b8f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2138f760-b617-1a62-38aa-eb3029f72338" executionId="edf2ee6d-a16a-4a5d-97b9-c66a912181bc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0352515d-ba2c-9098-b76c-eaccd77848a0" executionId="0c0ec819-56a3-4d64-bb96-42678f7cfaec" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9fb6c2cf-15e6-f395-1e1f-028ddea61a2a" executionId="4687dee5-8361-4774-be44-546be8af7d98" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="aa82bd49-2035-d314-8c4c-845101b2cc65" executionId="8f00eda2-ccdb-429d-944e-ac79ae6663e0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ce4e51b5-0283-69a1-6b76-51ca222c1a10" executionId="405204f3-ba78-419b-9661-1788f5c7c90a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c8c9cc1d-3930-093a-83c3-655206fd0c10" executionId="563c30aa-8ee2-4b9d-89b2-5f6af932baef" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bd0f3255-66e7-e28d-d3b2-10894a31fec1" executionId="b7bcafb0-6c0f-4bd4-a6a5-94a54cf6a33d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="898b2f9f-37d8-f39a-4af7-f8f425237e4f" executionId="b048ece1-4e12-4815-bd0b-7d2afc2e600b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d8b00eb9-1982-71a5-8c65-2949c84109aa" executionId="dd1ab4b4-40aa-4267-a527-a33df53bd79d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="731557f1-4a4c-6ce6-2c97-38272efdb59a" executionId="caa7ce9e-3eb1-441e-909d-013df49051f8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86ee2a6d-b4c7-9e48-110b-d0abc08db994" executionId="c188da2d-5024-4328-ac3d-18d3ea5e9d03" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="514a729b-8237-4683-fa30-30f3a2d8f8dc" executionId="5a717817-cc84-4c2c-8095-eb7cb3887f12" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c006c0b0-4d59-3a16-df21-75175963a0b9" executionId="a316ca59-ed1a-4f77-b516-26aed6bad103" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c4013a33-ae6f-9b35-9dca-f08741977673" executionId="57a558d7-ec2a-452b-97fd-2ba88d5d55b5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0901b962-1aa5-484f-985b-4852afc74503" executionId="72059466-adef-4ead-b73d-9f35741dafa0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3624602d-0582-b11f-7936-85215f7ed367" executionId="c50ff541-72b8-46f0-b875-84212c293a80" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="71f1811b-489f-a301-90ca-24ce8ad63b72" executionId="64b00ae3-7008-4d19-bfb4-c3d7ae6bb18b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="298e4079-cdb4-d9ff-8867-3eba959e982b" executionId="ab0ef3ea-b05a-490c-9cec-9828ab91ec7e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1267951c-9bed-1069-540c-32297c7bc06a" executionId="0331dcde-33e1-413b-afd8-e974c3e36a86" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="41f9c413-9ad4-da49-de54-9d64cd58daca" executionId="35f54782-8a14-48f1-a111-95ac992e05d4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e0b228f5-49ee-a8ac-b14a-911bae0c5d60" executionId="aef7fa43-47b3-4d81-abd3-cde5ea21cfae" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dd72e96a-6116-53dc-7ed6-4be16779f87f" executionId="cd23b5e8-8ed7-492a-b75c-9b336baa6f2d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e3e79adf-69d1-1c2c-628e-fc829dc631f0" executionId="233d125b-dbcb-490a-8b20-24e717482518" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f1e5389b-29b0-efa0-f984-cb424dcf44aa" executionId="a93e25a5-de89-466a-85e5-4296d7d88501" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2a696b18-3fd9-e980-e9ce-e15257b6d46c" executionId="9f8b581c-8242-438c-b5c2-800d880a6a94" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86eebd29-134b-b409-5716-fcbbf48aa642" executionId="df0a98ac-602d-4ff3-9ba1-6d09b40d0b06" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4682094d-323c-015c-2ce6-e0635326c711" executionId="1f476cb8-e546-4e20-a0fd-76807e21ceb0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f6a5f5f7-94b9-ee40-db32-4aec9d131d0a" executionId="5e2a8eb8-13ee-4e14-a2ec-28b4ebccec89" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="23011dd2-c858-a8c8-b3a5-9e93c7f35d0e" executionId="1ae355cb-8706-40e6-a1bb-5fb1d9a00d42" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="202a8d5d-7a05-6f1a-7480-61ca62cce12d" executionId="ed1549b8-df64-4640-b4ac-20894e63d17b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6c718b4e-f20e-c000-bfb8-49e852a8adbe" executionId="050a625c-7f79-492d-bfb8-74edb87f2a50" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8e0dd0b3-fc2e-a815-2e6c-fac9987302f8" executionId="9922f0b9-08fe-4c5e-9393-386aaac0a92f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f7fe03e7-18a2-c206-de69-d641e4959ccb" executionId="3bd766fa-eb47-4e3e-b6a9-d87666405974" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="28399a39-617f-d152-fd46-3e6964549321" executionId="98767493-87af-4391-91a6-b704649a7358" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="22e3ddf2-9368-8037-b930-85c062c0cc9e" executionId="e6dffe23-d100-4bbb-b0f7-382059a09408" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ec99120d-b12b-d6e7-ae8f-71f568626750" executionId="82dad725-cece-43a3-bb9f-ff46397d2ecc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="05a4f1e7-5809-2876-7584-70a87c8dda10" executionId="011a9e26-3dea-4888-966d-648cb562da94" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="801a4a96-fdc8-57ad-7190-795d3d30762a" executionId="405617be-67b1-4828-90d0-cc00beb37355" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="84532aa0-9777-803e-1a46-b22bae10688c" executionId="1dd39d00-7f9c-4059-ab05-0e1844acb810" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ade20177-565a-2bbb-5bfb-4a05241a3e2e" executionId="8aea5ce7-71c4-400e-b594-ae52f168e001" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="165a2ab0-71b8-5c26-af1c-0928e4f35978" executionId="a983df2a-5cd3-419e-ac63-cfe6a20d1f74" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b02d2e58-f711-acae-8ad4-f08ca906409c" executionId="2a07536e-de41-4686-9d82-de4e41bc0c59" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="523aafb9-cf30-7d1d-ccbb-745798f2d0b7" executionId="26cbb7a9-b298-4758-a61b-9dabcbb99b91" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d2462119-3fb1-a03d-48d4-2942a3d87194" executionId="76e719e6-0a32-4c70-9916-6fc96403d501" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="95fbcdab-a082-eee0-021c-99c901ad7f15" executionId="673ba4b9-875d-4ad8-8301-3a1ccc35c159" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1a08bda5-da5c-1467-4900-5174e6d56156" executionId="fd32366e-9beb-41dd-a457-ef509965a55c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3fab12ae-8d57-da04-a1e4-a70ffc18e119" executionId="79a0b3ba-7976-4d3b-85bb-8c7a733fa083" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="698973f7-4fb5-1703-7cb5-99d7cb88989a" executionId="def7e5d3-5d4a-455b-8e61-0b60571e4b74" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="列表中未列出的结果" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="所有已加载的结果" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="84" executed="84" passed="71" failed="13" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 11.0.0-preview.3.26207.106)&#xD;
+[xUnit.net 00:00:00.10]   Discovering: Acorn.Native.Tests&#xD;
+[xUnit.net 00:00:00.17]   Discovered:  Acorn.Native.Tests&#xD;
+[xUnit.net 00:00:00.17]   Starting:    Acorn.Native.Tests&#xD;
+[xUnit.net 00:00:00.28]       System.ArgumentException : The array starting from the specified index is not long enough to read a value of the specified type. (Parameter 'value')&#xD;
+[xUnit.net 00:00:00.28]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.28]            at System.BitConverter.ToInt32(Byte[] value, Int32 startIndex)&#xD;
+[xUnit.net 00:00:00.28]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\ElfEncoderTests.cs(205,0): at Acorn.Native.Tests.ElfEncoderTests.Encode_WithProgramHeader_PreservesType()&#xD;
+[xUnit.net 00:00:00.28]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.28]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.True() Failure&#xD;
+[xUnit.net 00:00:00.29]       Expected: True&#xD;
+[xUnit.net 00:00:00.29]       Actual:   False&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\MachOEncoderTests.cs(30,0): at Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal32Bit_ProducesValidMachO()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 0&#xD;
+[xUnit.net 00:00:00.29]       Actual:   15728640&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs(224,0): at Acorn.Native.Tests.PeEncoderTests.Encode_EmptyDataDirectories_WritesZero()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 332&#xD;
+[xUnit.net 00:00:00.29]       Actual:   0&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs(88,0): at Acorn.Native.Tests.PeEncoderTests.Encode_32BitMachine_Is14C()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 3&#xD;
+[xUnit.net 00:00:00.29]       Actual:   0&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs(284,0): at Acorn.Native.Tests.PeEncoderTests.Encode_Subsystem_PreservesValue()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 267&#xD;
+[xUnit.net 00:00:00.29]       Actual:   0&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs(252,0): at Acorn.Native.Tests.PeEncoderTests.Encode_32BitMagic_Is10B()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 4096&#xD;
+[xUnit.net 00:00:00.29]       Actual:   0&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs(181,0): at Acorn.Native.Tests.PeEncoderTests.Encode_DataDirectories_WritesRvaAndSize()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 34404&#xD;
+[xUnit.net 00:00:00.29]       Actual:   0&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs(76,0): at Acorn.Native.Tests.PeEncoderTests.Encode_64BitMachine_Is8664()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 523&#xD;
+[xUnit.net 00:00:00.29]       Actual:   0&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs(240,0): at Acorn.Native.Tests.PeEncoderTests.Encode_64BitMagic_Is20B()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 17744&#xD;
+[xUnit.net 00:00:00.29]       Actual:   23117&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\PeEncoderTests.cs(60,0): at Acorn.Native.Tests.PeEncoderTests.Encode_PeSignature_Is4550()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 3489328638&#xD;
+[xUnit.net 00:00:00.29]       Actual:   4277009103&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\MachOEncoderTests.cs(224,0): at Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian64Bit_MagicIsCFFAEDFE()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.29]       Expected: 3472551422&#xD;
+[xUnit.net 00:00:00.29]       Actual:   4277009102&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\MachOEncoderTests.cs(236,0): at Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian32Bit_MagicIsCEFAEDFE()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.29]       Assert.True() Failure&#xD;
+[xUnit.net 00:00:00.29]       Expected: True&#xD;
+[xUnit.net 00:00:00.29]       Actual:   False&#xD;
+[xUnit.net 00:00:00.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.29]         d:\RiderProjects\Acorn.cs\examples\Acorn.Native.Tests\MachOEncoderTests.cs(18,0): at Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal64Bit_ProducesValidMachO()&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.30]   Finished:    Acorn.Native.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9748749+08:00">
+        <Text>[xUnit.net 00:00:00.28]     Acorn.Native.Tests.ElfEncoderTests.Encode_WithProgramHeader_PreservesType [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9753852+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal32Bit_ProducesValidMachO [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9896981+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.PeEncoderTests.Encode_EmptyDataDirectories_WritesZero [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9899078+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.PeEncoderTests.Encode_32BitMachine_Is14C [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9901160+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.PeEncoderTests.Encode_Subsystem_PreservesValue [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9903620+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.PeEncoderTests.Encode_32BitMagic_Is10B [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9910125+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.PeEncoderTests.Encode_DataDirectories_WritesRvaAndSize [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9914196+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.PeEncoderTests.Encode_64BitMachine_Is8664 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9920003+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.PeEncoderTests.Encode_64BitMagic_Is20B [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9925686+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.PeEncoderTests.Encode_PeSignature_Is4550 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9938877+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian64Bit_MagicIsCFFAEDFE [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9946026+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.MachOEncoderTests.Encode_BigEndian32Bit_MagicIsCEFAEDFE [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="ASTER-SURFACE" outcome="Error" timestamp="2026-04-26T02:51:52.9950174+08:00">
+        <Text>[xUnit.net 00:00:00.29]     Acorn.Native.Tests.MachOEncoderTests.Encode_Minimal64Bit_ProducesValidMachO [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

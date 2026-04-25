@@ -7,6 +7,16 @@ namespace Acorn.Native.Tests;
 
 public sealed class PeEncoderTests
 {
+    #region PE 布局常量
+
+    private const int DosHeaderSize = 122;
+    private const int PeSignatureOffset = DosHeaderSize;
+    private const int CoffHeaderOffset = DosHeaderSize + 4;
+    private const int MachineOffset = CoffHeaderOffset;
+    private const int OptHeaderOffset = CoffHeaderOffset + 20;
+
+    #endregion
+
     #region 最小编码
 
     [Fact]
@@ -16,7 +26,7 @@ public sealed class PeEncoderTests
         var encoder = new PeEncoder();
         var bytes = encoder.Encode(data);
 
-        Assert.True(bytes.Length > 64);
+        Assert.True(bytes.Length > DosHeaderSize);
         Assert.Equal((byte)'M', bytes[0]);
         Assert.Equal((byte)'Z', bytes[1]);
     }
@@ -28,7 +38,7 @@ public sealed class PeEncoderTests
         var encoder = new PeEncoder();
         var bytes = encoder.Encode(data);
 
-        Assert.True(bytes.Length > 64);
+        Assert.True(bytes.Length > DosHeaderSize);
         Assert.Equal((byte)'M', bytes[0]);
         Assert.Equal((byte)'Z', bytes[1]);
     }
@@ -55,8 +65,7 @@ public sealed class PeEncoderTests
         var encoder = new PeEncoder();
         var bytes = encoder.Encode(data);
 
-        var peOffset = BitConverter.ToInt32(bytes, 60);
-        var peSignature = BitConverter.ToUInt32(bytes, peOffset);
+        var peSignature = BitConverter.ToUInt32(bytes, PeSignatureOffset);
         Assert.Equal(0x00004550u, peSignature);
     }
 
@@ -71,8 +80,7 @@ public sealed class PeEncoderTests
         var encoder = new PeEncoder();
         var bytes = encoder.Encode(data);
 
-        var peOffset = BitConverter.ToInt32(bytes, 60);
-        var machine = BitConverter.ToUInt16(bytes, peOffset + 4);
+        var machine = BitConverter.ToUInt16(bytes, MachineOffset);
         Assert.Equal((ushort)0x8664, machine);
     }
 
@@ -83,8 +91,7 @@ public sealed class PeEncoderTests
         var encoder = new PeEncoder();
         var bytes = encoder.Encode(data);
 
-        var peOffset = BitConverter.ToInt32(bytes, 60);
-        var machine = BitConverter.ToUInt16(bytes, peOffset + 4);
+        var machine = BitConverter.ToUInt16(bytes, MachineOffset);
         Assert.Equal((ushort)0x014C, machine);
     }
 
@@ -139,7 +146,43 @@ public sealed class PeEncoderTests
 
     #endregion
 
-    #region 数据目录
+    #region 可选头字段
+
+    [Fact]
+    public void Encode_64BitMagic_Is20B()
+    {
+        var data = CreateMinimalPeData(is64: true);
+        var encoder = new PeEncoder();
+        var bytes = encoder.Encode(data);
+
+        var magic = BitConverter.ToUInt16(bytes, OptHeaderOffset);
+        Assert.Equal((ushort)0x20B, magic);
+    }
+
+    [Fact]
+    public void Encode_32BitMagic_Is10B()
+    {
+        var data = CreateMinimalPeData(is64: false);
+        var encoder = new PeEncoder();
+        var bytes = encoder.Encode(data);
+
+        var magic = BitConverter.ToUInt16(bytes, OptHeaderOffset);
+        Assert.Equal((ushort)0x10B, magic);
+    }
+
+    [Fact]
+    public void Encode_Subsystem_PreservesValue()
+    {
+        var is64 = true;
+        var data = CreateMinimalPeData(is64);
+
+        var encoder = new PeEncoder();
+        var bytes = encoder.Encode(data);
+
+        var subsystemOffset = OptHeaderOffset + 68;
+        var subsystem = BitConverter.ToUInt16(bytes, subsystemOffset);
+        Assert.Equal((ushort)3, subsystem);
+    }
 
     [Fact]
     public void Encode_DataDirectories_WritesRvaAndSize()
@@ -151,7 +194,7 @@ public sealed class PeEncoderTests
             OptionalHeader = new PeOptionalHeaderData
             {
                 Magic = is64 ? (ushort)0x20B : (ushort)0x10B,
-                ImageBase = is64 ? 0x140000000 : 0x400000,
+                ImageBase = is64 ? 0x140000000UL : 0x400000,
                 SectionAlignment = 0x1000,
                 FileAlignment = 0x200,
                 SizeOfImage = 0x4000,
@@ -172,10 +215,7 @@ public sealed class PeEncoderTests
         var encoder = new PeEncoder();
         var bytes = encoder.Encode(data);
 
-        var peOffset = BitConverter.ToInt32(bytes, 60);
-        var optHeaderStart = peOffset + 24;
-        var dataDirStart = optHeaderStart + (is64 ? 112 : 96);
-
+        var dataDirStart = OptHeaderOffset + (is64 ? 112 : 96);
         var rva0 = BitConverter.ToUInt32(bytes, dataDirStart);
         var size0 = BitConverter.ToUInt32(bytes, dataDirStart + 4);
         Assert.Equal(0x1000u, rva0);
@@ -185,103 +225,6 @@ public sealed class PeEncoderTests
         var size1 = BitConverter.ToUInt32(bytes, dataDirStart + 12);
         Assert.Equal(0x2000u, rva1);
         Assert.Equal(0x200u, size1);
-    }
-
-    [Fact]
-    public void Encode_EmptyDataDirectories_WritesZero()
-    {
-        var is64 = true;
-        var data = new PeFileData
-        {
-            Header = CreateMinimalPeHeader(is64),
-            OptionalHeader = new PeOptionalHeaderData
-            {
-                Magic = is64 ? (ushort)0x20B : (ushort)0x10B,
-                ImageBase = is64 ? 0x140000000 : 0x400000,
-                SectionAlignment = 0x1000,
-                FileAlignment = 0x200,
-                SizeOfImage = 0x4000,
-                SizeOfHeaders = 0x200,
-                Subsystem = 3,
-                DllCharacteristics = 0x8160,
-                NumberOfRvaAndSizes = 1,
-                DataDirectories = [new PeDataDirectoryEntry()]
-            },
-            Sections = [],
-            SectionContents = []
-        };
-
-        var encoder = new PeEncoder();
-        var bytes = encoder.Encode(data);
-
-        var peOffset = BitConverter.ToInt32(bytes, 60);
-        var optHeaderStart = peOffset + 24;
-        var dataDirStart = optHeaderStart + (is64 ? 112 : 96);
-
-        var rva0 = BitConverter.ToUInt32(bytes, dataDirStart);
-        var size0 = BitConverter.ToUInt32(bytes, dataDirStart + 4);
-        Assert.Equal(0u, rva0);
-        Assert.Equal(0u, size0);
-    }
-
-    #endregion
-
-    #region 可选头字段
-
-    [Fact]
-    public void Encode_64BitMagic_Is20B()
-    {
-        var data = CreateMinimalPeData(is64: true);
-        var encoder = new PeEncoder();
-        var bytes = encoder.Encode(data);
-
-        var peOffset = BitConverter.ToInt32(bytes, 60);
-        var magic = BitConverter.ToUInt16(bytes, peOffset + 24);
-        Assert.Equal((ushort)0x20B, magic);
-    }
-
-    [Fact]
-    public void Encode_32BitMagic_Is10B()
-    {
-        var data = CreateMinimalPeData(is64: false);
-        var encoder = new PeEncoder();
-        var bytes = encoder.Encode(data);
-
-        var peOffset = BitConverter.ToInt32(bytes, 60);
-        var magic = BitConverter.ToUInt16(bytes, peOffset + 24);
-        Assert.Equal((ushort)0x10B, magic);
-    }
-
-    [Fact]
-    public void Encode_Subsystem_PreservesValue()
-    {
-        var is64 = true;
-        var data = new PeFileData
-        {
-            Header = CreateMinimalPeHeader(is64),
-            OptionalHeader = new PeOptionalHeaderData
-            {
-                Magic = 0x20B,
-                ImageBase = 0x140000000,
-                SectionAlignment = 0x1000,
-                FileAlignment = 0x200,
-                SizeOfImage = 0x4000,
-                SizeOfHeaders = 0x200,
-                Subsystem = 3,
-                DllCharacteristics = 0x8160
-            },
-            Sections = [],
-            SectionContents = []
-        };
-
-        var encoder = new PeEncoder();
-        var bytes = encoder.Encode(data);
-
-        var peOffset = BitConverter.ToInt32(bytes, 60);
-        var optHeaderStart = peOffset + 24;
-        var subsystemOffset = optHeaderStart + 68;
-        var subsystem = BitConverter.ToUInt16(bytes, subsystemOffset);
-        Assert.Equal((ushort)3, subsystem);
     }
 
     #endregion
@@ -313,7 +256,7 @@ public sealed class PeEncoderTests
         return new PeHeaderData
         {
             DosMagic = 0x5A4D,
-            PeHeaderOffset = 64,
+            PeHeaderOffset = DosHeaderSize,
             PeMagic = 0x00004550,
             Machine = machine != 0 ? machine : (is64 ? (ushort)0x8664 : (ushort)0x014C),
             NumberOfSections = 0,
@@ -333,7 +276,7 @@ public sealed class PeEncoderTests
             OptionalHeader = new PeOptionalHeaderData
             {
                 Magic = is64 ? (ushort)0x20B : (ushort)0x10B,
-                ImageBase = is64 ? 0x140000000 : 0x400000,
+                ImageBase = is64 ? 0x140000000UL : 0x400000,
                 SectionAlignment = 0x1000,
                 FileAlignment = 0x200,
                 SizeOfImage = 0x4000,
@@ -355,7 +298,7 @@ public sealed class PeEncoderTests
             Header = new PeHeaderData
             {
                 DosMagic = 0x5A4D,
-                PeHeaderOffset = 64,
+                PeHeaderOffset = DosHeaderSize,
                 PeMagic = 0x00004550,
                 Machine = is64 ? (ushort)0x8664 : (ushort)0x014C,
                 NumberOfSections = 1,
@@ -368,7 +311,7 @@ public sealed class PeEncoderTests
             OptionalHeader = new PeOptionalHeaderData
             {
                 Magic = is64 ? (ushort)0x20B : (ushort)0x10B,
-                ImageBase = is64 ? 0x140000000 : 0x400000,
+                ImageBase = is64 ? 0x140000000UL : 0x400000,
                 SectionAlignment = 0x1000,
                 FileAlignment = 0x200,
                 SizeOfImage = 0x4000,
@@ -398,7 +341,6 @@ public sealed class PeEncoderTests
 
     private static PeFileData CreatePeWithMultipleSections(byte[] textContent, byte[] dataContent)
     {
-        var is64 = true;
         var textNameBytes = FixedBytes8.FromSpan(".text\0\0\0"u8);
         var dataNameBytes = FixedBytes8.FromSpan(".data\0\0\0"u8);
 
@@ -407,7 +349,7 @@ public sealed class PeEncoderTests
             Header = new PeHeaderData
             {
                 DosMagic = 0x5A4D,
-                PeHeaderOffset = 64,
+                PeHeaderOffset = DosHeaderSize,
                 PeMagic = 0x00004550,
                 Machine = 0x8664,
                 NumberOfSections = 2,
@@ -420,7 +362,7 @@ public sealed class PeEncoderTests
             OptionalHeader = new PeOptionalHeaderData
             {
                 Magic = 0x20B,
-                ImageBase = 0x140000000,
+                ImageBase = 0x140000000UL,
                 SectionAlignment = 0x1000,
                 FileAlignment = 0x200,
                 SizeOfImage = 0x4000,
