@@ -81,7 +81,7 @@ public sealed class MachOEncoder
         IReadOnlyList<MachOSectionData> sections, bool isLE)
     {
         var segmentName = ReadString(cmd.Data, 0, 16);
-        writer.Write(Encoding.UTF8.GetBytes(segmentName.PadRight(16, '\0').AsSpan(0, 16)));
+        WritePaddedName(ref writer, segmentName, 16);
 
         if (cmd.Data.Length >= 80)
         {
@@ -114,7 +114,7 @@ public sealed class MachOEncoder
         IReadOnlyList<MachOSectionData> sections, bool isLE)
     {
         var segmentName = ReadString(cmd.Data, 0, 16);
-        writer.Write(Encoding.UTF8.GetBytes(segmentName.PadRight(16, '\0').AsSpan(0, 16)));
+        WritePaddedName(ref writer, segmentName, 16);
 
         if (cmd.Data.Length >= 56)
         {
@@ -148,8 +148,8 @@ public sealed class MachOEncoder
         if (index < sections.Count)
         {
             var section = sections[index];
-            writer.Write(Encoding.UTF8.GetBytes(section.SectionName.PadRight(16, '\0').AsSpan(0, 16)));
-            writer.Write(Encoding.UTF8.GetBytes(section.SegmentName.PadRight(16, '\0').AsSpan(0, 16)));
+            WritePaddedName(ref writer, section.SectionName, 16);
+            WritePaddedName(ref writer, section.SegmentName, 16);
             WriteU64(ref writer, section.Address, isLE);
             WriteU64(ref writer, section.Size, isLE);
             WriteU32(ref writer, section.Offset, isLE);
@@ -171,8 +171,8 @@ public sealed class MachOEncoder
         if (index < sections.Count)
         {
             var section = sections[index];
-            writer.Write(Encoding.UTF8.GetBytes(section.SectionName.PadRight(16, '\0').AsSpan(0, 16)));
-            writer.Write(Encoding.UTF8.GetBytes(section.SegmentName.PadRight(16, '\0').AsSpan(0, 16)));
+            WritePaddedName(ref writer, section.SectionName, 16);
+            WritePaddedName(ref writer, section.SegmentName, 16);
             WriteU32(ref writer, (uint)section.Address, isLE);
             WriteU32(ref writer, (uint)section.Size, isLE);
             WriteU32(ref writer, section.Offset, isLE);
@@ -224,6 +224,17 @@ public sealed class MachOEncoder
     #endregion
 
     #region 辅助方法
+
+    private static void WritePaddedName(ref ByteBufferWriter writer, string name, int totalLength)
+    {
+        var nameBytes = Encoding.UTF8.GetBytes(name);
+        var writeLength = Math.Min(nameBytes.Length, totalLength);
+        writer.Write(nameBytes.AsSpan(0, writeLength));
+        for (var i = writeLength; i < totalLength; i++)
+        {
+            writer.WriteU8(0);
+        }
+    }
 
     private static void WritePadding(ref ByteBufferWriter writer, int count)
     {
