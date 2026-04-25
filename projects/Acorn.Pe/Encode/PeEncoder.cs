@@ -6,6 +6,7 @@ namespace Acorn.Pe.Encode;
 /// <summary>
 ///     PE 文件编码器，将 PeFileData 编码为 PE 二进制格式。
 ///     PE 格式固定使用小端序。
+///     支持节区内容编码和数据目录正确写入。
 /// </summary>
 public sealed class PeEncoder
 {
@@ -23,6 +24,8 @@ public sealed class PeEncoder
         WriteCoffHeader(ref writer, data.Header);
         WriteOptionalHeader(ref writer, data.OptionalHeader, is64);
         WriteSectionHeaders(ref writer, data.Sections);
+
+        WriteSectionContents(ref writer, data);
 
         return writer.ToArray();
     }
@@ -125,8 +128,16 @@ public sealed class PeEncoder
 
         for (var i = 0; i < opt.NumberOfRvaAndSizes; i++)
         {
-            writer.WriteU32LE(0);
-            writer.WriteU32LE(0);
+            if (i < opt.DataDirectories.Count)
+            {
+                writer.WriteU32LE(opt.DataDirectories[i].Rva);
+                writer.WriteU32LE(opt.DataDirectories[i].Size);
+            }
+            else
+            {
+                writer.WriteU32LE(0);
+                writer.WriteU32LE(0);
+            }
         }
     }
 
@@ -153,6 +164,52 @@ public sealed class PeEncoder
 
     #endregion
 
+    #region 节区内容
+
+    private static void WriteSectionContents(ref ByteBufferWriter writer, PeFileData data)
+    {
+        for (var i = 0; i < data.Sections.Count; i++)
+        {
+            if (!data.SectionContents.TryGetValue(i, out var content)) continue;
+            if (content.Length == 0) continue;
+
+            var section = data.Sections[i];
+            var targetOffset = (int)section.PointerToRawData;
+
+            var currentPos = writer.Position;
+            if (currentPos < targetOffset)
+            {
+                WritePadding(ref writer, targetOffset - currentPos);
+            }
+
+            writer.Write(content);
+
+            var fileAlignment = data.OptionalHeader.FileAlignment;
+            if (fileAlignment > 0)
+            {
+                var aligned = (writer.Position + (int)fileAlignment - 1) & ~((int)fileAlignment - 1);
+                if (aligned > writer.Position)
+                {
+                    WritePadding(ref writer, aligned - writer.Position);
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    #region 辅助方法
+
+    private static void WritePadding(ref ByteBufferWriter writer, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            writer.WriteU8(0);
+        }
+    }
+
+    #endregion
+
     #region 大小预估
 
     private static int EstimateSize(PeFileData data)
@@ -165,7 +222,18 @@ public sealed class PeEncoder
         var dataDirSize = (int)data.OptionalHeader.NumberOfRvaAndSizes * 8;
         var sectionHeaderSize = data.Sections.Count * 40;
 
-        return dosHeaderSize + peSignatureSize + coffHeaderSize + optionalHeaderSize + dataDirSize + sectionHeaderSize + 4096;
+        var sectionContentSize = 0;
+        foreach (var (index, content) in data.SectionContents)
+        {
+            sectionContentSize += content.Length;
+            var fileAlignment = (int)data.OptionalHeader.FileAlignment;
+            if (fileAlignment > 0)
+            {
+                sectionContentSize = (sectionContentSize + fileAlignment - 1) & ~(fileAlignment - 1);
+            }
+        }
+
+        return dosHeaderSize + peSignatureSize + coffHeaderSize + optionalHeaderSize + dataDirSize + sectionHeaderSize + sectionContentSize + 4096;
     }
 
     #endregion

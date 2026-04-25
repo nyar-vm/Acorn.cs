@@ -359,6 +359,11 @@ public sealed class PeFileData
     public IReadOnlyList<PeSectionData> Sections { get; init; } = [];
 
     /// <summary>
+    ///     节区内容数据，键为节区在 Sections 列表中的索引，值为原始字节数据。
+    /// </summary>
+    public Dictionary<int, byte[]> SectionContents { get; init; } = [];
+
+    /// <summary>
     ///     是否为 DLL。
     /// </summary>
     public bool IsDll => (Header.Characteristics & 0x2000) != 0;

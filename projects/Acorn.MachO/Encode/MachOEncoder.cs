@@ -7,14 +7,16 @@ namespace Acorn.MachO.Encode;
 /// <summary>
 ///     Mach-O 文件编码器，将 MachOFileData 编码为 Mach-O 二进制格式。
 ///     支持 32 位/64 位双模式和小端/大端双字节序。
+///     支持节区内容编码和 LC_SEGMENT/LC_SEGMENT_64 结构化编码。
 /// </summary>
 public sealed class MachOEncoder
 {
+    private const uint LC_SEGMENT = 0x1;
+    private const uint LC_SEGMENT_64 = 0x19;
+
     /// <summary>
     ///     编码 Mach-O 文件数据为字节数组。
     /// </summary>
-    /// <param name="data">Mach-O 文件数据。</param>
-    /// <returns>编码后的字节数组。</returns>
     public byte[] Encode(MachOFileData data)
     {
         var header = data.Header;
@@ -25,7 +27,8 @@ public sealed class MachOEncoder
         var writer = new ByteBufferWriter(size);
 
         WriteMachOHeader(ref writer, header, is64, isLE);
-        WriteLoadCommands(ref writer, data.LoadCommands, isLE);
+        WriteLoadCommands(ref writer, data, is64, isLE);
+        WriteSectionContents(ref writer, data, isLE);
 
         return writer.ToArray();
     }
@@ -52,19 +55,208 @@ public sealed class MachOEncoder
 
     #region 加载命令
 
-    private static void WriteLoadCommands(ref ByteBufferWriter writer, IReadOnlyList<MachOLoadCommandData> commands, bool isLE)
+    private static void WriteLoadCommands(ref ByteBufferWriter writer, MachOFileData data, bool is64, bool isLE)
     {
-        foreach (var cmd in commands)
+        foreach (var cmd in data.LoadCommands)
         {
             WriteU32(ref writer, cmd.Command, isLE);
             WriteU32(ref writer, cmd.Size, isLE);
-            writer.Write(cmd.Data);
+
+            if (cmd.Command == LC_SEGMENT_64 && is64)
+            {
+                WriteSegment64Command(ref writer, cmd, data.Sections, isLE);
+            }
+            else if (cmd.Command == LC_SEGMENT && !is64)
+            {
+                WriteSegmentCommand(ref writer, cmd, data.Sections, isLE);
+            }
+            else
+            {
+                writer.Write(cmd.Data);
+            }
+        }
+    }
+
+    private static void WriteSegment64Command(ref ByteBufferWriter writer, MachOLoadCommandData cmd,
+        IReadOnlyList<MachOSectionData> sections, bool isLE)
+    {
+        var segmentName = ReadString(cmd.Data, 0, 16);
+        writer.Write(Encoding.UTF8.GetBytes(segmentName.PadRight(16, '\0').AsSpan(0, 16)));
+
+        if (cmd.Data.Length >= 80)
+        {
+            WriteU64(ref writer, ReadU64BE(cmd.Data, 16), isLE);
+            WriteU64(ref writer, ReadU64BE(cmd.Data, 24), isLE);
+            WriteU64(ref writer, ReadU64BE(cmd.Data, 32), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 40), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 44), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 48), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 52), isLE);
+
+            var numberOfSections = ReadU32BE(cmd.Data, 56);
+            WriteU32(ref writer, numberOfSections, isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 60), isLE);
+
+            var sectionStart = 64;
+            for (var i = 0; i < numberOfSections && sectionStart + 80 <= cmd.Data.Length; i++)
+            {
+                WriteSection64(ref writer, sections, i, isLE);
+                sectionStart += 80;
+            }
+        }
+        else
+        {
+            writer.Write(cmd.Data.AsSpan(16));
+        }
+    }
+
+    private static void WriteSegmentCommand(ref ByteBufferWriter writer, MachOLoadCommandData cmd,
+        IReadOnlyList<MachOSectionData> sections, bool isLE)
+    {
+        var segmentName = ReadString(cmd.Data, 0, 16);
+        writer.Write(Encoding.UTF8.GetBytes(segmentName.PadRight(16, '\0').AsSpan(0, 16)));
+
+        if (cmd.Data.Length >= 56)
+        {
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 16), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 20), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 24), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 28), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 32), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 36), isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 40), isLE);
+
+            var numberOfSections = ReadU32BE(cmd.Data, 44);
+            WriteU32(ref writer, numberOfSections, isLE);
+            WriteU32(ref writer, ReadU32BE(cmd.Data, 48), isLE);
+
+            var sectionStart = 52;
+            for (var i = 0; i < numberOfSections && sectionStart + 68 <= cmd.Data.Length; i++)
+            {
+                WriteSection32(ref writer, sections, i, isLE);
+                sectionStart += 68;
+            }
+        }
+        else
+        {
+            writer.Write(cmd.Data.AsSpan(16));
+        }
+    }
+
+    private static void WriteSection64(ref ByteBufferWriter writer, IReadOnlyList<MachOSectionData> sections, int index, bool isLE)
+    {
+        if (index < sections.Count)
+        {
+            var section = sections[index];
+            writer.Write(Encoding.UTF8.GetBytes(section.SectionName.PadRight(16, '\0').AsSpan(0, 16)));
+            writer.Write(Encoding.UTF8.GetBytes(section.SegmentName.PadRight(16, '\0').AsSpan(0, 16)));
+            WriteU64(ref writer, section.Address, isLE);
+            WriteU64(ref writer, section.Size, isLE);
+            WriteU32(ref writer, section.Offset, isLE);
+            WriteU32(ref writer, section.Alignment, isLE);
+            WriteU32(ref writer, section.RelocationsOffset, isLE);
+            WriteU32(ref writer, section.NumberOfRelocations, isLE);
+            WriteU32(ref writer, section.Flags, isLE);
+            WriteU32(ref writer, 0, isLE);
+            WriteU32(ref writer, 0, isLE);
+        }
+        else
+        {
+            WritePadding(ref writer, 80);
+        }
+    }
+
+    private static void WriteSection32(ref ByteBufferWriter writer, IReadOnlyList<MachOSectionData> sections, int index, bool isLE)
+    {
+        if (index < sections.Count)
+        {
+            var section = sections[index];
+            writer.Write(Encoding.UTF8.GetBytes(section.SectionName.PadRight(16, '\0').AsSpan(0, 16)));
+            writer.Write(Encoding.UTF8.GetBytes(section.SegmentName.PadRight(16, '\0').AsSpan(0, 16)));
+            WriteU32(ref writer, (uint)section.Address, isLE);
+            WriteU32(ref writer, (uint)section.Size, isLE);
+            WriteU32(ref writer, section.Offset, isLE);
+            WriteU32(ref writer, section.Alignment, isLE);
+            WriteU32(ref writer, section.RelocationsOffset, isLE);
+            WriteU32(ref writer, section.NumberOfRelocations, isLE);
+            WriteU32(ref writer, section.Flags, isLE);
+            WriteU32(ref writer, 0, isLE);
+            WriteU32(ref writer, 0, isLE);
+        }
+        else
+        {
+            WritePadding(ref writer, 68);
         }
     }
 
     #endregion
 
-    #region 字节序辅助
+    #region 节区内容
+
+    private static void WriteSectionContents(ref ByteBufferWriter writer, MachOFileData data, bool isLE)
+    {
+        foreach (var section in data.Sections)
+        {
+            if (section.Content.Length == 0) continue;
+
+            var targetOffset = (int)section.Offset;
+            var currentPos = writer.Position;
+
+            if (currentPos < targetOffset)
+            {
+                WritePadding(ref writer, targetOffset - currentPos);
+            }
+
+            writer.Write(section.Content);
+
+            var alignment = 1 << (int)section.Alignment;
+            if (alignment > 1)
+            {
+                var aligned = (writer.Position + alignment - 1) & ~(alignment - 1);
+                if (aligned > writer.Position)
+                {
+                    WritePadding(ref writer, aligned - writer.Position);
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    #region 辅助方法
+
+    private static void WritePadding(ref ByteBufferWriter writer, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            writer.WriteU8(0);
+        }
+    }
+
+    private static string ReadString(byte[] data, int offset, int length)
+    {
+        var end = Math.Min(offset + length, data.Length);
+        var span = data.AsSpan(offset, end - offset);
+        var nullIndex = span.IndexOf((byte)0);
+        if (nullIndex >= 0)
+        {
+            span = span.Slice(0, nullIndex);
+        }
+
+        return Encoding.UTF8.GetString(span);
+    }
+
+    private static uint ReadU32BE(byte[] data, int offset)
+    {
+        if (offset + 4 > data.Length) return 0;
+        return (uint)(data[offset] << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3]);
+    }
+
+    private static ulong ReadU64BE(byte[] data, int offset)
+    {
+        if (offset + 8 > data.Length) return 0;
+        return ((ulong)ReadU32BE(data, offset) << 32) | ReadU32BE(data, offset + 4);
+    }
 
     private static void WriteU16(ref ByteBufferWriter writer, ushort value, bool isLE)
     {
@@ -104,7 +296,18 @@ public sealed class MachOEncoder
             loadCommandsSize += (int)cmd.Size;
         }
 
-        return headerSize + loadCommandsSize + 4096;
+        var sectionContentSize = 0;
+        foreach (var section in data.Sections)
+        {
+            sectionContentSize += section.Content.Length;
+            var alignment = 1 << (int)section.Alignment;
+            if (alignment > 1)
+            {
+                sectionContentSize = (sectionContentSize + alignment - 1) & ~(alignment - 1);
+            }
+        }
+
+        return headerSize + loadCommandsSize + sectionContentSize + 4096;
     }
 
     #endregion

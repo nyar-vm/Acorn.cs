@@ -6,6 +6,7 @@ namespace Acorn.ELF.Encode;
 /// <summary>
 ///     ELF 文件编码器，将 ELFFileData 编码为 ELF 二进制格式。
 ///     支持 32 位/64 位双模式和小端/大端双字节序。
+///     支持节区内容编码和字符串表自动构建。
 /// </summary>
 public sealed class ElfEncoder
 {
@@ -18,19 +19,122 @@ public sealed class ElfEncoder
         var is64 = header.Is64Bit;
         var isLE = header.IsLittleEndian;
 
-        var size = EstimateSize(data);
+        var layout = ComputeLayout(data, is64);
+
+        var size = layout.TotalSize;
         var writer = new ByteBufferWriter(size);
 
-        WriteElfHeader(ref writer, header, is64, isLE);
+        WriteElfHeader(ref writer, header, is64, isLE, layout);
+
         WriteProgramHeaders(ref writer, data.ProgramHeaders, is64, isLE);
-        WriteSectionHeaders(ref writer, data.SectionHeaders, is64, isLE);
+
+        foreach (var section in data.SectionHeaders)
+        {
+            if (section.Content.Length > 0 && layout.SectionOffsets.TryGetValue(section.Name, out var offset))
+            {
+                var currentPos = writer.Position;
+                if (currentPos < offset)
+                {
+                    WritePadding(ref writer, offset - currentPos);
+                }
+
+                writer.Write(section.Content);
+
+                var aligned = AlignUp(writer.Position, (int)section.Alignment);
+                if (aligned > writer.Position)
+                {
+                    WritePadding(ref writer, aligned - writer.Position);
+                }
+            }
+        }
+
+        if (layout.StringTableOffset > 0)
+        {
+            var currentPos = writer.Position;
+            if (currentPos < layout.StringTableOffset)
+            {
+                WritePadding(ref writer, layout.StringTableOffset - currentPos);
+            }
+
+            WriteStringTable(ref writer, layout.StringTable);
+        }
+
+        WriteSectionHeaders(ref writer, data.SectionHeaders, is64, isLE, layout);
 
         return writer.ToArray();
     }
 
+    #region 布局计算
+
+    /// <summary>
+    ///     ELF 文件布局信息
+    /// </summary>
+    private sealed class ElfLayout
+    {
+        public int TotalSize;
+        public int StringTableOffset;
+        public int SectionHeadersOffset;
+        public Dictionary<string, int> SectionOffsets = [];
+        public List<string> StringTable = [];
+    }
+
+    private static ElfLayout ComputeLayout(ELFFileData data, bool is64)
+    {
+        var layout = new ElfLayout();
+
+        var headerSize = is64 ? 64 : 52;
+        var phSize = is64 ? 56 : 32;
+        var shSize = is64 ? 64 : 40;
+
+        var currentOffset = headerSize;
+        currentOffset += data.ProgramHeaders.Count * phSize;
+
+        layout.StringTable = BuildStringTable(data.SectionHeaders);
+
+        foreach (var section in data.SectionHeaders)
+        {
+            if (section.Content.Length > 0)
+            {
+                var alignment = Math.Max((int)section.Alignment, 1);
+                currentOffset = AlignUp(currentOffset, alignment);
+                layout.SectionOffsets[section.Name] = currentOffset;
+                currentOffset += section.Content.Length;
+            }
+        }
+
+        layout.StringTableOffset = currentOffset;
+        layout.StringTable.Add("\0");
+        currentOffset += layout.StringTable.Sum(s => s.Length);
+
+        currentOffset = AlignUp(currentOffset, 8);
+        layout.SectionHeadersOffset = currentOffset;
+        currentOffset += data.SectionHeaders.Count * shSize;
+
+        layout.TotalSize = currentOffset;
+
+        return layout;
+    }
+
+    private static List<string> BuildStringTable(IReadOnlyList<ELFSectionHeaderData> sections)
+    {
+        var strings = new List<string> { "\0" };
+
+        foreach (var section in sections)
+        {
+            if (!string.IsNullOrEmpty(section.Name))
+            {
+                strings.Add(section.Name + "\0");
+            }
+        }
+
+        return strings;
+    }
+
+    #endregion
+
     #region ELF 头
 
-    private static void WriteElfHeader(ref ByteBufferWriter writer, ELFHeaderData header, bool is64, bool isLE)
+    private static void WriteElfHeader(ref ByteBufferWriter writer, ELFHeaderData header, bool is64, bool isLE, ElfLayout layout)
     {
         writer.Write(header.Magic);
 
@@ -52,14 +156,14 @@ public sealed class ElfEncoder
         if (is64)
         {
             WriteU64(ref writer, header.EntryPoint, isLE);
-            WriteU64(ref writer, header.ProgramHeaderOffset, isLE);
-            WriteU64(ref writer, header.SectionHeaderOffset, isLE);
+            WriteU64(ref writer, (ulong)header.ProgramHeaderOffset, isLE);
+            WriteU64(ref writer, (ulong)layout.SectionHeadersOffset, isLE);
         }
         else
         {
             WriteU32(ref writer, (uint)header.EntryPoint, isLE);
             WriteU32(ref writer, (uint)header.ProgramHeaderOffset, isLE);
-            WriteU32(ref writer, (uint)header.SectionHeaderOffset, isLE);
+            WriteU32(ref writer, (uint)layout.SectionHeadersOffset, isLE);
         }
 
         WriteU32(ref writer, header.Flags, isLE);
@@ -113,25 +217,43 @@ public sealed class ElfEncoder
 
     #region 节区头
 
-    private static void WriteSectionHeaders(ref ByteBufferWriter writer, IReadOnlyList<ELFSectionHeaderData> headers, bool is64, bool isLE)
+    private static void WriteSectionHeaders(ref ByteBufferWriter writer, IReadOnlyList<ELFSectionHeaderData> headers, bool is64, bool isLE, ElfLayout layout)
     {
+        var nameIndex = (uint)0;
+        var nameOffset = 1;
+
         foreach (var sh in headers)
         {
-            WriteSectionHeader(ref writer, sh, is64, isLE);
+            var nameIdx = sh.NameIndex;
+            if (nameIdx == 0 && !string.IsNullOrEmpty(sh.Name))
+            {
+                nameIdx = (uint)nameOffset;
+                nameOffset += sh.Name.Length + 1;
+            }
+
+            WriteSectionHeader(ref writer, sh, nameIdx, is64, isLE, layout);
         }
     }
 
-    private static void WriteSectionHeader(ref ByteBufferWriter writer, ELFSectionHeaderData sh, bool is64, bool isLE)
+    private static void WriteSectionHeader(ref ByteBufferWriter writer, ELFSectionHeaderData sh, uint nameIndex, bool is64, bool isLE, ElfLayout layout)
     {
-        WriteU32(ref writer, sh.NameIndex, isLE);
+        WriteU32(ref writer, nameIndex, isLE);
         WriteU32(ref writer, sh.Type, isLE);
+
+        var offset = sh.Offset;
+        var size = sh.Size;
+        if (sh.Content.Length > 0 && layout.SectionOffsets.TryGetValue(sh.Name, out var computedOffset))
+        {
+            offset = (ulong)computedOffset;
+            size = (ulong)sh.Content.Length;
+        }
 
         if (is64)
         {
             WriteU64(ref writer, sh.Flags, isLE);
             WriteU64(ref writer, sh.Address, isLE);
-            WriteU64(ref writer, sh.Offset, isLE);
-            WriteU64(ref writer, sh.Size, isLE);
+            WriteU64(ref writer, offset, isLE);
+            WriteU64(ref writer, size, isLE);
             WriteU32(ref writer, sh.Link, isLE);
             WriteU32(ref writer, sh.Info, isLE);
             WriteU64(ref writer, sh.Alignment, isLE);
@@ -141,8 +263,8 @@ public sealed class ElfEncoder
         {
             WriteU32(ref writer, (uint)sh.Flags, isLE);
             WriteU32(ref writer, (uint)sh.Address, isLE);
-            WriteU32(ref writer, (uint)sh.Offset, isLE);
-            WriteU32(ref writer, (uint)sh.Size, isLE);
+            WriteU32(ref writer, (uint)offset, isLE);
+            WriteU32(ref writer, (uint)size, isLE);
             WriteU32(ref writer, sh.Link, isLE);
             WriteU32(ref writer, sh.Info, isLE);
             WriteU32(ref writer, (uint)sh.Alignment, isLE);
@@ -152,7 +274,39 @@ public sealed class ElfEncoder
 
     #endregion
 
-    #region 字节序辅助
+    #region 字符串表
+
+    private static void WriteStringTable(ref ByteBufferWriter writer, List<string> strings)
+    {
+        foreach (var s in strings)
+        {
+            if (s == "\0")
+            {
+                writer.WriteU8(0);
+            }
+            else
+            {
+                writer.WriteNullTerminatedString(s.TrimEnd('\0'));
+            }
+        }
+    }
+
+    #endregion
+
+    #region 辅助方法
+
+    private static void WritePadding(ref ByteBufferWriter writer, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            writer.WriteU8(0);
+        }
+    }
+
+    private static int AlignUp(int offset, int alignment)
+    {
+        return (offset + alignment - 1) & ~(alignment - 1);
+    }
 
     private static void WriteU16(ref ByteBufferWriter writer, ushort value, bool isLE)
     {
@@ -170,23 +324,6 @@ public sealed class ElfEncoder
     {
         if (isLE) writer.WriteU64LE(value);
         else writer.WriteU64BE(value);
-    }
-
-    #endregion
-
-    #region 大小预估
-
-    private static int EstimateSize(ELFFileData data)
-    {
-        var is64 = data.Header.Is64Bit;
-        var headerSize = is64 ? 64 : 52;
-        var phSize = is64 ? 56 : 32;
-        var shSize = is64 ? 64 : 40;
-
-        return headerSize
-               + data.ProgramHeaders.Count * phSize
-               + data.SectionHeaders.Count * shSize
-               + 4096;
     }
 
     #endregion

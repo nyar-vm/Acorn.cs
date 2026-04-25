@@ -170,6 +170,11 @@ public sealed class ELFSectionHeaderData
     ///     条目大小。
     /// </summary>
     public ulong EntrySize { get; init; }
+
+    /// <summary>
+    ///     节区原始内容数据。
+    /// </summary>
+    public byte[] Content { get; init; } = [];
 }
 
 /// <summary>
