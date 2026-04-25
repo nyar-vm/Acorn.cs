@@ -409,7 +409,7 @@ public sealed class ClrGuidHeap
     /// <summary>
     ///     按索引读取 GUID
     /// </summary>
-    public Guid ReadGuid(uint index) => new(Data, (int)(index * 16));
+    public Guid ReadGuid(uint index) => new(Data.Skip((int)(index * 16)).Take(16).ToArray());
 }
 
 /// <summary>
@@ -425,7 +425,7 @@ public sealed class ClrUserStringHeap
     /// <summary>
     ///     按偏移量读取用户字符串
     /// </summary>
-    public string ReadUserString(uint offset) => Encoding.UTF16.GetString(Data, (int)offset, Data.Length - (int)offset);
+    public string ReadUserString(uint offset) => Encoding.Unicode.GetString(Data, (int)offset, Data.Length - (int)offset);
 }
 
 /// <summary>
@@ -637,7 +637,7 @@ public sealed class ClrInstruction
 /// <summary>
 ///     MSIL 操作码
 /// </summary>
-public enum ClrOpcode : byte
+public enum ClrOpcode : ushort
 {
     Nop = 0x00,
     Break = 0x01,

@@ -539,7 +539,6 @@ public enum JvmOpcode : byte
     Ifge = 156,
     Ifgt = 157,
     Ifle = 158,
-    Iflt = 159,
     Ificmpeq = 160,
     Ificmpne = 161,
     Ificmplt = 162,

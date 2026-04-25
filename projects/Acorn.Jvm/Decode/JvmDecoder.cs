@@ -1,3 +1,4 @@
+using Acorn.Jvm.Data;
 using System;
 using System.IO;
 using System.Text;
@@ -78,7 +79,8 @@ public sealed class JvmDecoder
         var attributes = new List<JvmAttributeInfo>();
         for (int i = 0; i < attributesCount; i++)
         {
-            attributes.Add(DecodeAttributeInfo(reader));
+            var attr = DecodeAttributeInfo(reader);
+            if (attr is not null) attributes.Add(attr);
         }
 
         return new JvmClassFileData
@@ -183,7 +185,8 @@ public sealed class JvmDecoder
         var attributes = new List<JvmAttributeInfo>();
         for (int i = 0; i < attributesCount; i++)
         {
-            attributes.Add(DecodeAttributeInfo(reader));
+            var attr = DecodeAttributeInfo(reader);
+            if (attr is not null) attributes.Add(attr);
         }
 
         return new JvmFieldInfo
@@ -207,7 +210,8 @@ public sealed class JvmDecoder
         var attributes = new List<JvmAttributeInfo>();
         for (int i = 0; i < attributesCount; i++)
         {
-            attributes.Add(DecodeAttributeInfo(reader));
+            var attr = DecodeAttributeInfo(reader);
+            if (attr is not null) attributes.Add(attr);
         }
 
         return new JvmMethodInfo
@@ -222,16 +226,12 @@ public sealed class JvmDecoder
     /// <summary>
     ///     解码属性信息
     /// </summary>
-    private JvmAttributeInfo DecodeAttributeInfo(BinaryReader reader)
+    private JvmAttributeInfo? DecodeAttributeInfo(BinaryReader reader)
     {
         var attributeNameIndex = reader.ReadUInt16();
         var attributeLength = reader.ReadUInt32();
 
-        // 简化实现，只处理常用属性
-        return new JvmAttributeInfo
-        {
-            AttributeNameIndex = attributeNameIndex,
-            AttributeLength = attributeLength
-        };
+        // 简化实现，返回 null
+        return null;
     }
 }

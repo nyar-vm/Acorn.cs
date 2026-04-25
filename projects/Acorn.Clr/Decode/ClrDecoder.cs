@@ -1,3 +1,4 @@
+using Acorn.Clr.Data;
 using Acorn.Pe.Data;
 using Acorn.Pe.Decode;
 using System;
@@ -21,7 +22,7 @@ public sealed class ClrDecoder
         var peFile = _peDecoder.Decode(data);
         if (!peFile.IsDll && !peFile.IsExecutable)
         {
-            throw new DecodeException("Not a valid PE file");
+            throw new Exception("Not a valid PE file");
         }
 
         var clrDirectory = DecodeClrDirectory(peFile);

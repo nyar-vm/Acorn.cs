@@ -1,5 +1,5 @@
+using Acorn.Clr.Data;
 using Acorn.Pe.Data;
-using Acorn.Pe.Encode;
 using System;
 using System.IO;
 using System.Text;
@@ -11,19 +11,28 @@ namespace Acorn.Clr.Encode;
 /// </summary>
 public sealed class ClrEncoder
 {
-    private readonly PeEncoder _peEncoder = new();
-
     /// <summary>
     ///     编码 CLR 模块为字节数组
     /// </summary>
     public byte[] Encode(ClrModuleData module)
     {
-        // 先编码 PE 文件
-        var peData = _peEncoder.Encode(module.PeFile);
-        
-        // 然后将 CLR 元数据和 MSIL 指令注入到 PE 中
-        // 简化实现，实际需要根据 PE 结构定位合适的节区
-        return peData;
+        // 简化实现：直接编码 CLR 元数据和 MSIL 指令
+        using var ms = new MemoryStream();
+        using var writer = new BinaryWriter(ms);
+
+        // 写入 CLR 目录表
+        writer.Write(EncodeClrDirectory(module.ClrDirectory));
+
+        // 写入元数据
+        writer.Write(EncodeMetadata(module.Metadata));
+
+        // 写入方法指令
+        foreach (var method in module.Methods)
+        {
+            writer.Write(EncodeInstructions(method.Instructions));
+        }
+
+        return ms.ToArray();
     }
 
     /// <summary>
