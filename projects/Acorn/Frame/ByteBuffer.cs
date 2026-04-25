@@ -657,6 +657,36 @@ public ref struct ByteBuffer
     }
 
     /// <summary>
+    ///     读取 LEB128 编码的有符号 64 位整数并前进相应字节数。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long ReadLeb128I64()
+    {
+        long result = 0;
+        var shift = 0;
+        byte b;
+
+        do
+        {
+            if (_position >= _data.Length)
+            {
+                throw new InvalidOperationException("已到达数据末尾，LEB128 编码不完整");
+            }
+
+            b = _data[_position++];
+            result |= (long)(b & 0x7F) << shift;
+            shift += 7;
+        } while ((b & 0x80) != 0);
+
+        if (shift < 64 && (b & 0x40) != 0)
+        {
+            result |= ~0L << shift;
+        }
+
+        return result;
+    }
+
+    /// <summary>
     ///     读取 ZigZag + LEB128 编码的有符号 64 位整数并前进相应字节数。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -822,6 +852,44 @@ public ref struct ByteBuffer
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     尝试从指定位置读取 ZigZag + LEB128 编码的有符号 32 位整数，不移动位置。
+    /// </summary>
+    /// <param name="data">数据源。</param>
+    /// <param name="value">解码后的值。</param>
+    /// <param name="consumed">消耗的字节数。</param>
+    /// <returns>如果成功解码则返回 true。</returns>
+    public static bool TryDecodeZigZagLeb128I32(ReadOnlySpan<byte> data, out int value, out int consumed)
+    {
+        if (!TryDecodeLeb128U32(data, out var raw, out consumed))
+        {
+            value = 0;
+            return false;
+        }
+
+        value = (int)((raw >> 1) ^ (0u - (raw & 1)));
+        return true;
+    }
+
+    /// <summary>
+    ///     尝试从指定位置读取 ZigZag + LEB128 编码的有符号 64 位整数，不移动位置。
+    /// </summary>
+    /// <param name="data">数据源。</param>
+    /// <param name="value">解码后的值。</param>
+    /// <param name="consumed">消耗的字节数。</param>
+    /// <returns>如果成功解码则返回 true。</returns>
+    public static bool TryDecodeZigZagLeb128I64(ReadOnlySpan<byte> data, out long value, out int consumed)
+    {
+        if (!TryDecodeLeb128U64(data, out var raw, out consumed))
+        {
+            value = 0;
+            return false;
+        }
+
+        value = (long)((raw >> 1) ^ (0UL - (raw & 1)));
+        return true;
     }
 
     #endregion

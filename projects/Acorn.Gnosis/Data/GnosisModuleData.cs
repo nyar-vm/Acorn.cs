@@ -3,13 +3,11 @@ namespace Acorn.Gnosis.Data;
 /// <summary>
 ///     Gnosis 字节码模块数据。
 /// </summary>
+/// <remarks>
+///     .gnosis 文件是 Gnosis VM 的字节码模块格式，基于 Game 方言特化。
+/// </remarks>
 public sealed class GnosisModuleData
 {
-    /// <summary>
-    ///     模块格式类型。
-    /// </summary>
-    public GnosisModuleFormat Format { get; init; }
-
     /// <summary>
     ///     版本号。
     /// </summary>
@@ -41,14 +39,9 @@ public sealed class GnosisModuleData
     public IReadOnlyList<string> Dependencies { get; init; } = [];
 
     /// <summary>
-    ///     指令字节码。
+    ///     指令字节码（扁平指令流，无函数表）。
     /// </summary>
     public byte[] Instructions { get; init; } = [];
-
-    /// <summary>
-    ///     函数表（GNOS 格式）。
-    /// </summary>
-    public IReadOnlyList<GnosisFunction> Functions { get; init; } = [];
 }
 
 /// <summary>
@@ -76,30 +69,4 @@ public sealed class GnosisConstant
         GnosisConstantTag.Float => "Float",
         _ => $"Unknown(0x{(byte)Tag:X2})"
     };
-}
-
-/// <summary>
-///     Gnosis 函数定义（GNOS 格式）。
-/// </summary>
-public sealed class GnosisFunction
-{
-    /// <summary>
-    ///     函数名称。
-    /// </summary>
-    public string Name { get; init; } = string.Empty;
-
-    /// <summary>
-    ///     参数数量。
-    /// </summary>
-    public int ParameterCount { get; init; }
-
-    /// <summary>
-    ///     代码长度。
-    /// </summary>
-    public int CodeLength { get; init; }
-
-    /// <summary>
-    ///     函数代码。
-    /// </summary>
-    public byte[] Code { get; init; } = [];
 }

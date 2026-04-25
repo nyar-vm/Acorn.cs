@@ -115,9 +115,17 @@ public ref struct SpirvDecoder
     /// <summary>
     ///     从 SPIR-V 二进制数据中提取入口点信息。
     /// </summary>
+    /// <remarks>
+    ///     如果已调用 <see cref="DecodeAll" />，则直接返回缓存数据，避免重复解析。
+    /// </remarks>
     /// <returns>入口点信息列表。</returns>
     public IReadOnlyList<SpirvEntryPoint> DecodeEntryPoints()
     {
+        if (_cachedModule != null)
+        {
+            return _cachedModule.EntryPoints;
+        }
+
         var header = ReadHeader();
         var instructions = ReadInstructions(header.Bound);
 
@@ -137,9 +145,17 @@ public ref struct SpirvDecoder
     /// <summary>
     ///     从 SPIR-V 二进制数据中提取装饰信息。
     /// </summary>
+    /// <remarks>
+    ///     如果已调用 <see cref="DecodeAll" />，则直接返回缓存数据，避免重复解析。
+    /// </remarks>
     /// <returns>装饰信息列表。</returns>
     public IReadOnlyList<SpirvDecorationInfo> DecodeDecorations()
     {
+        if (_cachedModule != null)
+        {
+            return _cachedModule.Decorations;
+        }
+
         var header = ReadHeader();
         var instructions = ReadInstructions(header.Bound);
 
@@ -163,9 +179,17 @@ public ref struct SpirvDecoder
     /// <summary>
     ///     从 SPIR-V 二进制数据中提取名称信息。
     /// </summary>
+    /// <remarks>
+    ///     如果已调用 <see cref="DecodeAll" />，则直接返回缓存数据，避免重复解析。
+    /// </remarks>
     /// <returns>名称信息列表。</returns>
     public IReadOnlyList<SpirvName> DecodeNames()
     {
+        if (_cachedModule != null)
+        {
+            return _cachedModule.Names;
+        }
+
         var header = ReadHeader();
         var instructions = ReadInstructions(header.Bound);
 
@@ -185,9 +209,17 @@ public ref struct SpirvDecoder
     /// <summary>
     ///     从 SPIR-V 二进制数据中提取类型信息。
     /// </summary>
+    /// <remarks>
+    ///     如果已调用 <see cref="DecodeAll" />，则直接返回缓存数据，避免重复解析。
+    /// </remarks>
     /// <returns>类型信息列表。</returns>
     public IReadOnlyList<SpirvTypeInfo> DecodeTypes()
     {
+        if (_cachedModule != null)
+        {
+            return _cachedModule.Types;
+        }
+
         var header = ReadHeader();
         var instructions = ReadInstructions(header.Bound);
 

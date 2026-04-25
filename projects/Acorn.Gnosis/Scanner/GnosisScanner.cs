@@ -7,8 +7,9 @@ namespace Acorn.Gnosis.Scanner;
 ///     Gnosis 字节码模块扫描器，基于 <see cref="SpanScanner" /> 提供对 .gnosis 字节码模块的快速元信息扫描。
 /// </summary>
 /// <remarks>
-///     .gnosis 模块有两种二进制格式：GGBC（ScriptCompiler 输出）和 GNOS（GnosisBackend 输出）。
-///     扫描器读取头部和元信息，不做完整的指令解码，以实现快速探查。
+///     .gnosis 文件是 Gnosis VM 的字节码模块格式，基于 Game 方言特化。
+///     扫描器只读取头部元信息，不做完整的指令解码，以实现快速探查。
+///     扫描器需要跳过常量池等变长区域才能正确读取后续符号计数。
 /// </remarks>
 public ref struct GnosisScanner
 {
@@ -39,37 +40,54 @@ public ref struct GnosisScanner
             throw new InvalidDataException(".gnosis 文件数据过短，无法读取头部");
         }
 
-        var magic = _scanner.Buffer.ReadU32LE();
+        if (!_scanner.MatchMagic(GnosisConstants.MagicNumber))
+        {
+            throw new InvalidDataException($".gnosis 文件魔数不匹配，期望 GNOS(0x474E4F53)");
+        }
+
+        _scanner.ConsumeMagic(GnosisConstants.MagicNumber);
+
         var version = _scanner.Buffer.ReadU16LE();
 
-        GnosisModuleFormat format;
+        if (_scanner.Buffer.Remaining < 2)
+        {
+            return new GnosisScanHeader { Version = version };
+        }
 
-        if (magic == GnosisConstants.GgbcMagicValue)
-        {
-            format = GnosisModuleFormat.Ggbc;
-        }
-        else if (magic == GnosisConstants.GnosMagicValue)
-        {
-            format = GnosisModuleFormat.Gnos;
-        }
-        else
-        {
-            throw new InvalidDataException($".gnosis 文件魔数无效，期望 GGBC(0x47474243) 或 GNOS(0x474E4F53)，实际 0x{magic:X8}");
-        }
+        var nameLength = _scanner.Buffer.ReadU16LE();
+        var moduleName = nameLength > 0 && _scanner.Buffer.Remaining >= nameLength
+            ? _scanner.Buffer.ReadString(nameLength)
+            : string.Empty;
 
         var header = new GnosisScanHeader
         {
-            Format = format,
-            Version = version
+            Version = version,
+            ModuleName = moduleName
         };
 
-        if (format == GnosisModuleFormat.Ggbc)
+        if (_scanner.Buffer.Remaining < 4)
         {
-            ScanGgbcHeader(ref header);
+            return header;
         }
-        else
+
+        header.ConstantCount = _scanner.Buffer.ReadI32LE();
+        SkipConstants(header.ConstantCount);
+
+        if (_scanner.Buffer.Remaining >= 2)
         {
-            ScanGnosHeader(ref header);
+            header.ImportedSymbolCount = _scanner.Buffer.ReadU16LE();
+            SkipLeb128StringList(header.ImportedSymbolCount);
+        }
+
+        if (_scanner.Buffer.Remaining >= 2)
+        {
+            header.ExportedSymbolCount = _scanner.Buffer.ReadU16LE();
+            SkipLeb128StringList(header.ExportedSymbolCount);
+        }
+
+        if (_scanner.Buffer.Remaining >= 2)
+        {
+            header.DependencyCount = _scanner.Buffer.ReadU16LE();
         }
 
         return header;
@@ -85,72 +103,10 @@ public ref struct GnosisScanner
             return false;
         }
 
-        return _scanner.MatchMagic(GnosisConstants.GgbcMagic) || _scanner.MatchMagic(GnosisConstants.GnosMagic);
+        return _scanner.MatchMagic(GnosisConstants.MagicNumber);
     }
 
-    #region 私有扫描方法
-
-    private void ScanGgbcHeader(ref GnosisScanHeader header)
-    {
-        if (_scanner.Buffer.Remaining < 2)
-        {
-            return;
-        }
-
-        var nameLength = _scanner.Buffer.ReadU16LE();
-        header.ModuleName = nameLength > 0 && _scanner.Buffer.Remaining >= nameLength
-            ? _scanner.Buffer.ReadString(nameLength)
-            : string.Empty;
-
-        if (_scanner.Buffer.Remaining >= 4)
-        {
-            header.ConstantCount = _scanner.Buffer.ReadI32LE();
-        }
-
-        SkipConstants(header.ConstantCount);
-
-        if (_scanner.Buffer.Remaining >= 2)
-        {
-            header.ImportedSymbolCount = _scanner.Buffer.ReadU16LE();
-        }
-
-        SkipStrings();
-
-        if (_scanner.Buffer.Remaining >= 2)
-        {
-            header.ExportedSymbolCount = _scanner.Buffer.ReadU16LE();
-        }
-
-        SkipStrings();
-
-        if (_scanner.Buffer.Remaining >= 2)
-        {
-            header.DependencyCount = _scanner.Buffer.ReadU16LE();
-        }
-    }
-
-    private void ScanGnosHeader(ref GnosisScanHeader header)
-    {
-        if (_scanner.Buffer.Remaining < 4)
-        {
-            return;
-        }
-
-        var nameLength = _scanner.Buffer.ReadI32LE();
-        header.ModuleName = nameLength > 0 && _scanner.Buffer.Remaining >= nameLength
-            ? _scanner.Buffer.ReadString(nameLength)
-            : string.Empty;
-
-        if (_scanner.Buffer.Remaining >= 4)
-        {
-            header.ConstantCount = _scanner.Buffer.ReadI32LE();
-        }
-
-        if (_scanner.Buffer.Remaining >= 4)
-        {
-            header.FunctionCount = _scanner.Buffer.ReadI32LE();
-        }
-    }
+    #region 私有跳过方法
 
     private void SkipConstants(int count)
     {
@@ -161,38 +117,29 @@ public ref struct GnosisScanner
             switch ((GnosisConstantTag)tag)
             {
                 case GnosisConstantTag.String:
-                    if (_scanner.Buffer.Remaining >= 4)
-                    {
-                        var len = _scanner.Buffer.ReadI32LE();
-                        _scanner.Advance(len);
-                    }
-
+                    _scanner.Buffer.ReadLeb128String();
                     break;
 
                 case GnosisConstantTag.Int:
-                    _scanner.Advance(4);
+                    _scanner.Buffer.Advance(4);
                     break;
 
                 case GnosisConstantTag.Float:
-                    _scanner.Advance(8);
+                    _scanner.Buffer.Advance(4);
+                    break;
+
+                default:
+                    _scanner.Buffer.Advance(4);
                     break;
             }
         }
     }
 
-    private void SkipStrings()
+    private void SkipLeb128StringList(int count)
     {
-        while (_scanner.Buffer.Remaining > 0)
+        for (var i = 0; i < count && !_scanner.Buffer.IsEnd; i++)
         {
-            var pos = _scanner.Buffer.Position;
-            var b = _scanner.Buffer.ReadU8();
-
-            if (b == 0)
-            {
-                break;
-            }
-
-            while (!_scanner.Buffer.IsEnd && _scanner.Buffer.ReadU8() != 0) { }
+            _scanner.Buffer.ReadLeb128String();
         }
     }
 
@@ -204,11 +151,6 @@ public ref struct GnosisScanner
 /// </summary>
 public sealed class GnosisScanHeader
 {
-    /// <summary>
-    ///     模块格式类型。
-    /// </summary>
-    public GnosisModuleFormat Format { get; set; }
-
     /// <summary>
     ///     版本号。
     /// </summary>
@@ -238,19 +180,4 @@ public sealed class GnosisScanHeader
     ///     依赖模块数量。
     /// </summary>
     public int DependencyCount { get; set; }
-
-    /// <summary>
-    ///     函数数量（GNOS 格式）。
-    /// </summary>
-    public int FunctionCount { get; set; }
-
-    /// <summary>
-    ///     格式名称。
-    /// </summary>
-    public string FormatName => Format switch
-    {
-        GnosisModuleFormat.Ggbc => "GGBC",
-        GnosisModuleFormat.Gnos => "GNOS",
-        _ => "未知"
-    };
 }

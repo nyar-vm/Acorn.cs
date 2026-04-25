@@ -8,8 +8,9 @@ namespace Acorn.Gnosis.Encode;
 ///     Gnosis 字节码模块编码器，将 C# 数据结构编码为 .gnosis 字节码格式。
 /// </summary>
 /// <remarks>
-///     .gnosis 模块有两种二进制格式：GGBC（ScriptCompiler 输出）和 GNOS（GnosisBackend 输出）。
-///     编码器根据模块数据的 Format 属性选择对应的编码方式。
+///     .gnosis 文件是 Gnosis VM 的字节码模块格式，基于 Game 方言特化。
+///     编码器生成与 Gnosis.Toolchain.BytecodeGenerator 兼容的二进制数据。
+///     字符串编码使用 LEB128 长度前缀格式（兼容 .NET BinaryWriter.Write(string)）。
 /// </remarks>
 public sealed class GnosisEncoder
 {
@@ -24,54 +25,25 @@ public sealed class GnosisEncoder
         var buffer = new byte[size];
         var writer = new ByteBufferWriter(buffer);
 
-        if (data.Format == GnosisModuleFormat.Ggbc)
-        {
-            EncodeGgbc(ref writer, data);
-        }
-        else
-        {
-            EncodeGnos(ref writer, data);
-        }
+        writer.WriteU32LE(GnosisConstants.MagicValue);
+        writer.WriteU16LE(data.Version);
+
+        WriteModuleName(ref writer, data.ModuleName);
+        WriteConstants(ref writer, data.Constants);
+        WriteSymbolList(ref writer, data.ImportedSymbols);
+        WriteSymbolList(ref writer, data.ExportedSymbols);
+        WriteSymbolList(ref writer, data.Dependencies);
+        WriteInstructions(ref writer, data.Instructions);
 
         return buffer[..writer.Position];
     }
 
     #region 私有编码方法
 
-    private static void EncodeGgbc(ref ByteBufferWriter writer, GnosisModuleData data)
-    {
-        writer.WriteU32LE(GnosisConstants.GgbcMagicValue);
-        writer.WriteU16LE(data.Version);
-
-        WriteModuleNameU16(ref writer, data.ModuleName);
-        WriteConstants(ref writer, data.Constants);
-        WriteSymbolListU16(ref writer, data.ImportedSymbols);
-        WriteSymbolListU16(ref writer, data.ExportedSymbols);
-        WriteSymbolListU16(ref writer, data.Dependencies);
-        WriteInstructions(ref writer, data.Instructions);
-    }
-
-    private static void EncodeGnos(ref ByteBufferWriter writer, GnosisModuleData data)
-    {
-        writer.WriteU32LE(GnosisConstants.GnosMagicValue);
-        writer.WriteU16LE(data.Version);
-
-        WriteModuleNameI32(ref writer, data.ModuleName);
-        WriteConstants(ref writer, data.Constants);
-        WriteFunctions(ref writer, data.Functions);
-    }
-
-    private static void WriteModuleNameU16(ref ByteBufferWriter writer, string name)
+    private static void WriteModuleName(ref ByteBufferWriter writer, string name)
     {
         var bytes = Encoding.UTF8.GetBytes(name);
         writer.WriteU16LE((ushort)bytes.Length);
-        writer.Write(bytes);
-    }
-
-    private static void WriteModuleNameI32(ref ByteBufferWriter writer, string name)
-    {
-        var bytes = Encoding.UTF8.GetBytes(name);
-        writer.WriteI32LE(bytes.Length);
         writer.Write(bytes);
     }
 
@@ -86,7 +58,7 @@ public sealed class GnosisEncoder
             switch (constant.Tag)
             {
                 case GnosisConstantTag.String:
-                    WriteBinaryWriterString(ref writer, (string?)constant.Value ?? string.Empty);
+                    writer.WriteLeb128String((string?)constant.Value ?? string.Empty);
                     break;
 
                 case GnosisConstantTag.Int:
@@ -94,46 +66,26 @@ public sealed class GnosisEncoder
                     break;
 
                 case GnosisConstantTag.Float:
-                    writer.WriteF64LE(constant.Value is double d ? d : 0.0);
+                    writer.WriteF32LE(constant.Value is float f ? f : 0.0f);
                     break;
             }
         }
     }
 
-    private static void WriteSymbolListU16(ref ByteBufferWriter writer, IReadOnlyList<string> symbols)
+    private static void WriteSymbolList(ref ByteBufferWriter writer, IReadOnlyList<string> symbols)
     {
         writer.WriteU16LE((ushort)symbols.Count);
 
         foreach (var symbol in symbols)
         {
-            WriteBinaryWriterString(ref writer, symbol);
+            writer.WriteLeb128String(symbol);
         }
-    }
-
-    private static void WriteBinaryWriterString(ref ByteBufferWriter writer, string value)
-    {
-        var bytes = Encoding.UTF8.GetBytes(value);
-        writer.WriteI32LE(bytes.Length);
-        writer.Write(bytes);
     }
 
     private static void WriteInstructions(ref ByteBufferWriter writer, byte[] instructions)
     {
         writer.WriteI32LE(instructions.Length);
         writer.Write(instructions);
-    }
-
-    private static void WriteFunctions(ref ByteBufferWriter writer, IReadOnlyList<GnosisFunction> functions)
-    {
-        writer.WriteI32LE(functions.Count);
-
-        foreach (var function in functions)
-        {
-            WriteBinaryWriterString(ref writer, function.Name);
-            writer.WriteI32LE(function.ParameterCount);
-            writer.WriteI32LE(function.Code.Length);
-            writer.Write(function.Code);
-        }
     }
 
     private static int EstimateSize(GnosisModuleData data)
@@ -150,13 +102,13 @@ public sealed class GnosisEncoder
             switch (constant.Tag)
             {
                 case GnosisConstantTag.String:
-                    size += 4 + Encoding.UTF8.GetByteCount((string?)constant.Value ?? "");
+                    size += 5 + Encoding.UTF8.GetByteCount((string?)constant.Value ?? "");
                     break;
                 case GnosisConstantTag.Int:
                     size += 4;
                     break;
                 case GnosisConstantTag.Float:
-                    size += 8;
+                    size += 4;
                     break;
             }
         }
@@ -165,31 +117,24 @@ public sealed class GnosisEncoder
 
         foreach (var s in data.ImportedSymbols)
         {
-            size += 4 + Encoding.UTF8.GetByteCount(s);
+            size += 5 + Encoding.UTF8.GetByteCount(s);
         }
 
         size += 2;
 
         foreach (var s in data.ExportedSymbols)
         {
-            size += 4 + Encoding.UTF8.GetByteCount(s);
+            size += 5 + Encoding.UTF8.GetByteCount(s);
         }
 
         size += 2;
 
         foreach (var s in data.Dependencies)
         {
-            size += 4 + Encoding.UTF8.GetByteCount(s);
+            size += 5 + Encoding.UTF8.GetByteCount(s);
         }
 
         size += 4 + data.Instructions.Length;
-
-        size += 4;
-
-        foreach (var f in data.Functions)
-        {
-            size += 4 + Encoding.UTF8.GetByteCount(f.Name) + 4 + 4 + f.Code.Length;
-        }
 
         return size + 256;
     }

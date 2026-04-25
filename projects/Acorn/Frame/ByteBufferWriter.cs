@@ -520,6 +520,33 @@ public ref struct ByteBufferWriter
     }
 
     /// <summary>
+    ///     以 LEB128 编码写入一个有符号 64 位整数并前进相应字节数。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteLeb128I64(long value)
+    {
+        EnsureCapacity(10);
+        var more = true;
+
+        while (more)
+        {
+            var b = (byte)(value & 0x7F);
+            value >>= 7;
+
+            if ((value == 0 && (b & 0x40) == 0) || (value == -1 && (b & 0x40) != 0))
+            {
+                more = false;
+            }
+            else
+            {
+                b |= 0x80;
+            }
+
+            _buffer[_position++] = b;
+        }
+    }
+
+    /// <summary>
     ///     以 ZigZag + LEB128 编码写入一个有符号 32 位整数并前进相应字节数。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -78,9 +78,6 @@ public ref struct PsdScanner
         _scanner.ConsumeMagic(PsdConstants.MagicNumber);
         _scanner.Advance(PsdConstants.HeaderSize - 4);
 
-        var version = _scanner.Buffer.ReadU16BE();
-        _scanner.Advance(6);
-
         var colorModeDataLength = _scanner.Buffer.ReadU32BE();
 
         if (colorModeDataLength > 0 && _scanner.Position + (int)colorModeDataLength <= _scanner.Length)
@@ -165,21 +162,26 @@ public ref struct PsdScanner
         _scanner.ConsumeMagic(PsdConstants.MagicNumber);
         _scanner.Advance(PsdConstants.HeaderSize - 4);
 
-        var version = _scanner.Buffer.ReadU16BE();
-        _scanner.Advance(6);
-
         var colorModeDataLength = _scanner.Buffer.ReadU32BE();
 
-        if (colorModeDataLength > 0)
+        if (colorModeDataLength > 0 && _scanner.Position + (int)colorModeDataLength <= _scanner.Length)
         {
             _scanner.Advance((int)colorModeDataLength);
+        }
+        else if (colorModeDataLength > 0)
+        {
+            return 0;
         }
 
         var imageResourcesLength = _scanner.Buffer.ReadU32BE();
 
-        if (imageResourcesLength > 0)
+        if (imageResourcesLength > 0 && _scanner.Position + (int)imageResourcesLength <= _scanner.Length)
         {
             _scanner.Advance((int)imageResourcesLength);
+        }
+        else if (imageResourcesLength > 0)
+        {
+            return 0;
         }
 
         var layerAndMaskInfoLength = _scanner.Buffer.ReadU32BE();
