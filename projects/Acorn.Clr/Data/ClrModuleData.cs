@@ -37,17 +37,17 @@ public sealed class ClrModuleData
     /// <summary>
     ///     字段列表（从 Field 表解析）。
     /// </summary>
-    public IReadOnlyList<ClrFieldDef> Fields { get; init; } = [];
+    public IReadOnlyList<ClrFieldDefRow> Fields { get; init; } = [];
 
     /// <summary>
     ///     属性列表（从 Property 表解析）。
     /// </summary>
-    public IReadOnlyList<ClrPropertyDef> Properties { get; init; } = [];
+    public IReadOnlyList<ClrPropertyDefRow> Properties { get; init; } = [];
 
     /// <summary>
     ///     事件列表（从 Event 表解析）。
     /// </summary>
-    public IReadOnlyList<ClrEventDef> Events { get; init; } = [];
+    public IReadOnlyList<ClrEventDefRow> Events { get; init; } = [];
 
     /// <summary>
     ///     模块名。
@@ -1221,7 +1221,10 @@ public enum ClrOpcode : ushort
     Rethrow = 0xFE1A,
     Sizeof = 0xFE1C,
     Refanytype = 0xFE1D,
-    Readonly = 0xFE1E
+    Readonly = 0xFE1E,
+    Mkrefany = 0xC6,
+    Refanyval = 0xC7,
+    Ldtoken = 0xD0
 }
 
 /// <summary>

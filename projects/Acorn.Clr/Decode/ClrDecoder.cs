@@ -1249,7 +1249,8 @@ public sealed class ClrDecoder
             var nextFieldStart = i + 1 < typeDefRows.Count ? typeDefRows[i + 1].FieldListStart : fieldDefRows.Count + 1;
             var nextMethodStart = i + 1 < typeDefRows.Count ? typeDefRows[i + 1].MethodListStart : methodDefRows.Count + 1;
 
-            var typeFields = fieldDefRows.Skip(row.FieldListStart - 1).Take(nextFieldStart - row.FieldListStart).ToList();
+            var typeFields = fieldDefRows.Skip(row.FieldListStart - 1).Take(nextFieldStart - row.FieldListStart)
+                .Select(f => new ClrFieldDef { Name = f.Name, Flags = f.Flags, SignatureIndex = f.SignatureIndex }).ToList();
             var typeMethods = methods.Skip(row.MethodListStart - 1).Take(nextMethodStart - row.MethodListStart).ToList();
 
             types.Add(new ClrTypeDef

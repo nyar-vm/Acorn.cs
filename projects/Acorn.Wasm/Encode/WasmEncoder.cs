@@ -297,6 +297,25 @@ public static class WasmEncoder
 
         #endregion
 
+        #region Custom Sections
+
+        if (module.CustomSections.Count > 0)
+        {
+            foreach (var custom in module.CustomSections)
+            {
+                var sectionData = BuildBytes(w =>
+                {
+                    WriteName(w, custom.Name);
+                    w.Write(custom.Data);
+                });
+                writer.Write((byte)WasmSectionId.Custom);
+                writer.WriteLEB128((uint)sectionData.Length);
+                writer.Write(sectionData);
+            }
+        }
+
+        #endregion
+
         writer.Flush();
         return stream.ToArray();
     }

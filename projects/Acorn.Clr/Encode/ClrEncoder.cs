@@ -47,7 +47,7 @@ public sealed class ClrEncoder
         {
             var tinyWriter = new ByteBufferWriter(1 + codeSize);
             tinyWriter.WriteU8((byte)((codeSize << 2) | ClrConstants.MethodHeaderTinyFlag));
-            tinyWriter.WriteBytes(codeBytes);
+            tinyWriter.Write(codeBytes);
 
             return tinyWriter.ToArray();
         }
@@ -66,7 +66,7 @@ public sealed class ClrEncoder
         fatWriter.WriteU16LE(maxStack);
         fatWriter.WriteU32LE((uint)codeSize);
         fatWriter.WriteU32LE(localVarSigTok);
-        fatWriter.WriteBytes(codeBytes);
+        fatWriter.Write(codeBytes);
 
         if (ehBytes.Length > 0)
         {
@@ -77,7 +77,7 @@ public sealed class ClrEncoder
                 fatWriter.WriteU8(0);
             }
 
-            fatWriter.WriteBytes(ehBytes);
+            fatWriter.Write(ehBytes);
         }
 
         return fatWriter.ToArray();
@@ -158,12 +158,12 @@ public sealed class ClrEncoder
             case ClrOpcode.Ldarg:
             case ClrOpcode.Ldarga:
             case ClrOpcode.Starg:
-                writer.WriteU16LE(((ClrArgumentIndexOperand?)operand!).Index);
+                writer.WriteU16LE((ushort)((ClrArgumentIndexOperand?)operand!).Index);
                 break;
             case ClrOpcode.Ldloc:
             case ClrOpcode.Ldloca:
             case ClrOpcode.Stloc:
-                writer.WriteU16LE(((ClrLocalIndexOperand?)operand!).Index);
+                writer.WriteU16LE((ushort)((ClrLocalIndexOperand?)operand!).Index);
                 break;
             case ClrOpcode.Ldc_I4_S:
                 writer.WriteI8(((ClrInt8Operand?)operand!).Value);
@@ -326,25 +326,24 @@ public sealed class ClrEncoder
             var clrDirectoryOffset = 0x80;
             var metadataOffset = clrDirectoryOffset + ClrConstants.ClrDirectorySize;
 
-            textSectionData.WriteBytes(ilSectionBytes);
+            textSectionData.Write(ilSectionBytes);
 
             while (textSectionData.Position < metadataOffset)
             {
                 textSectionData.WriteU8(0);
             }
 
-            textSectionData.WriteBytes(metadataBytes);
+            textSectionData.Write(metadataBytes);
 
-            var textSectionSize = (textSectionData.Position + 0x1FF) & ~0x1FF;
+            var textSectionSize = (uint)((textSectionData.Position + 0x1FF) & ~0x1FF);
             var peHeaderSize = 0x200;
-            var textSectionRva = peHeaderSize;
-            var imageBase = 0x00400000u;
+            var textSectionRva = (uint)peHeaderSize;
 
-            var writer = new ByteBufferWriter(peHeaderSize + textSectionSize);
+            var writer = new ByteBufferWriter(peHeaderSize + (int)textSectionSize);
 
             WriteDosHeader(ref writer);
             WritePEHeader(ref writer, textSectionRva, textSectionSize);
-            WriteOptionalHeader(ref writer, textSectionRva, textSectionSize, clrDirectoryOffset + textSectionRva, (uint)metadataBytes.Length);
+            WriteOptionalHeader(ref writer, textSectionRva, textSectionSize, (uint)(clrDirectoryOffset + textSectionRva), (uint)metadataBytes.Length);
             WriteSectionHeader(ref writer, textSectionRva, textSectionSize);
 
             while (writer.Position < peHeaderSize)
@@ -352,7 +351,7 @@ public sealed class ClrEncoder
                 writer.WriteU8(0);
             }
 
-            writer.WriteBytes(textSectionData.ToArray());
+            writer.Write(textSectionData.ToArray());
 
             return writer.ToArray();
         }
@@ -401,7 +400,7 @@ public sealed class ClrEncoder
             writer.WriteU16LE(1);
             writer.WriteU32LE(0);
             writer.WriteU32LE((uint)versionLength);
-            writer.WriteBytes(versionString);
+            writer.Write(versionString);
 
             var versionPad = versionLength - versionString.Length;
 
@@ -418,7 +417,7 @@ public sealed class ClrEncoder
                 writer.WriteU32LE((uint)streamOffsets[i]);
                 writer.WriteU32LE((uint)streamData[i].Length);
                 var nameBytes = Encoding.UTF8.GetBytes(streamNames[i] + "\0");
-                writer.WriteBytes(nameBytes);
+                writer.Write(nameBytes);
                 var namePad = ((nameBytes.Length + 3) & ~3) - nameBytes.Length;
 
                 for (var p = 0; p < namePad; p++)
@@ -429,7 +428,7 @@ public sealed class ClrEncoder
 
             foreach (var sd in streamData)
             {
-                writer.WriteBytes(sd);
+                writer.Write(sd);
             }
 
             return writer.ToArray();
@@ -462,7 +461,7 @@ public sealed class ClrEncoder
 
             foreach (var s in strings)
             {
-                writer.WriteBytes(Encoding.UTF8.GetBytes(s));
+                writer.Write(Encoding.UTF8.GetBytes(s));
                 writer.WriteU8(0);
             }
 
@@ -517,13 +516,7 @@ public sealed class ClrEncoder
                 }
 
                 var bodyBytes = EncodeMethodBody(method.Instructions, method.MaxStack, method.LocalVarSigTok, method.ExceptionHandlers);
-
-                while (writer.Position + bodyBytes.Length > writer.Capacity)
-                {
-                    writer.EnsureCapacity(writer.Capacity * 2);
-                }
-
-                writer.WriteBytes(bodyBytes);
+                writer.Write(bodyBytes);
 
                 var pad = (4 - (bodyBytes.Length % 4)) % 4;
 
@@ -622,7 +615,7 @@ public sealed class ClrEncoder
         private static void WriteSectionHeader(ref ByteBufferWriter writer, uint rva, uint rawSize)
         {
             var name = Encoding.UTF8.GetBytes(".text\0\0\0");
-            writer.WriteBytes(name);
+            writer.Write(name);
             writer.WriteU32LE(rawSize);
             writer.WriteU32LE(rva);
             writer.WriteU32LE(rawSize);
