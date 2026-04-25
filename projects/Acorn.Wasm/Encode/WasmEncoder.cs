@@ -21,7 +21,7 @@ public static class WasmEncoder
     /// <returns>已写入的字节数。</returns>
     public static int EncodeModule(Span<byte> buffer, WasmModuleData module)
     {
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(buffer.Length);
         WriteHeader(writer, module.Version);
 
         foreach (var customSection in module.CustomSections)
@@ -84,7 +84,9 @@ public static class WasmEncoder
             WriteDataSection(writer, module.DataSegments);
         }
 
-        return writer.Position;
+        var data = writer.WrittenData;
+        data.CopyTo(buffer);
+        return data.Length;
     }
 
     /// <summary>
@@ -94,9 +96,70 @@ public static class WasmEncoder
     /// <returns>编码后的字节数组。</returns>
     public static byte[] EncodeModule(WasmModuleData module)
     {
-        var temp = new byte[1024 * 1024];
-        var written = EncodeModule(temp, module);
-        return temp[..written].ToArray();
+        var writer = new ByteBufferWriter(1024 * 1024);
+        WriteHeader(writer, module.Version);
+
+        foreach (var customSection in module.CustomSections)
+        {
+            WriteCustomSection(writer, customSection);
+        }
+
+        if (module.Types.Count > 0)
+        {
+            WriteTypeSection(writer, module.Types);
+        }
+
+        if (module.Imports.Count > 0)
+        {
+            WriteImportSection(writer, module.Imports);
+        }
+
+        if (module.FunctionTypeIndices.Count > 0)
+        {
+            WriteFunctionSection(writer, module.FunctionTypeIndices);
+        }
+
+        if (module.Tables.Count > 0)
+        {
+            WriteTableSection(writer, module.Tables);
+        }
+
+        if (module.Memories.Count > 0)
+        {
+            WriteMemorySection(writer, module.Memories);
+        }
+
+        if (module.Globals.Count > 0)
+        {
+            WriteGlobalSection(writer, module.Globals);
+        }
+
+        if (module.Exports.Count > 0)
+        {
+            WriteExportSection(writer, module.Exports);
+        }
+
+        if (module.StartFunctionIndex.HasValue)
+        {
+            WriteStartSection(writer, module.StartFunctionIndex.Value);
+        }
+
+        if (module.Elements.Count > 0)
+        {
+            WriteElementSection(writer, module.Elements);
+        }
+
+        if (module.Codes.Count > 0)
+        {
+            WriteCodeSection(writer, module.Codes);
+        }
+
+        if (module.DataSegments.Count > 0)
+        {
+            WriteDataSection(writer, module.DataSegments);
+        }
+
+        return writer.ToArray();
     }
 
     /// <summary>
@@ -414,10 +477,9 @@ public static class WasmEncoder
 
     private static byte[] BuildSectionData(Action<ByteBufferWriter> writeContent)
     {
-        var temp = new byte[1024 * 1024];
-        var tempWriter = new ByteBufferWriter(temp);
+        var tempWriter = new ByteBufferWriter(1024 * 1024);
         writeContent(tempWriter);
-        return temp[..tempWriter.Position].ToArray();
+        return tempWriter.ToArray();
     }
 
     #endregion

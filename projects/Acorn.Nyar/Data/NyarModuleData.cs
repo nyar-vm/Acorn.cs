@@ -118,4 +118,9 @@ public sealed class NyarExport
     ///     符号名称。
     /// </summary>
     public string SymbolName { get; init; } = string.Empty;
+
+    /// <summary>
+    ///     关联的函数索引（仅当 Kind 为 Function 时有效）。
+    /// </summary>
+    public int FunctionIndex { get; init; }
 }

@@ -1,79 +1,45 @@
+using System.Numerics;
 using System.Text;
 using Acorn.Frame;
 using Acorn.Nyar.Data;
 
 namespace Acorn.Nyar.Decode;
 
-/// <summary>
-///     Nyar 字节码模块解码器，将 .nyar 二进制格式解码为 C# 数据结构。
-/// </summary>
-/// <remarks>
-///     .nyar 是 NyarVM 的字节码模块格式，采用分段式二进制布局。
-///     解码器完整解析模块结构，包括头部、段表、常量池、函数表、导入表和导出表。
-///     二进制布局：[Header 16B] → [Section Headers N*9B] → [Name Section] → [Section Data...]
-/// </remarks>
-public ref struct NyarDecoder
+public sealed class NyarDecoder
 {
-    private ByteBuffer _buffer;
-
-    /// <summary>
-    ///     初始化 <see cref="NyarDecoder" /> 结构的新实例。
-    /// </summary>
-    /// <param name="data">.nyar 二进制数据。</param>
-    public NyarDecoder(ReadOnlySpan<byte> data)
+    public NyarModuleData Decode(byte[] data)
     {
-        _buffer = new ByteBuffer(data);
+        var buffer = new ByteBuffer(data);
+        return DecodeFromBuffer(ref buffer);
     }
 
-    /// <summary>
-    ///     获取当前在流中的位置。
-    /// </summary>
-    public int Position
+    private NyarModuleData DecodeFromBuffer(ref ByteBuffer buffer)
     {
-        get => _buffer.Position;
-        set => _buffer.Position = value;
-    }
-
-    /// <summary>
-    ///     解码 .nyar 模块。
-    /// </summary>
-    /// <returns>Nyar 模块数据。</returns>
-    public NyarModuleData Decode()
-    {
-        if (_buffer.Remaining < NyarConstants.HeaderSize)
+        var header = ReadHeader(ref buffer);
+        if (!header.IsValid)
         {
-            throw new InvalidDataException($".nyar 文件数据过短，期望至少 {NyarConstants.HeaderSize} 字节");
+            throw new InvalidNyarDataException(
+                $"无效的 .nyar 文件头：magic=0x{header.Magic:X8}, version={header.Version}");
         }
 
-        var magic = _buffer.ReadU32BE();
-
-        if (magic != NyarConstants.MagicValue)
-        {
-            throw new InvalidDataException($".nyar 文件魔数无效，期望 NYAR(0x{NyarConstants.MagicValue:X8})，实际 0x{magic:X8}");
-        }
-
-        var version = _buffer.ReadU32LE();
-        var sectionCount = _buffer.ReadI32LE();
-        var nameOffset = _buffer.ReadI32LE();
-
-        var sectionHeaders = ReadSectionHeaders(sectionCount);
-        var moduleName = ReadModuleName(nameOffset);
+        var sections = ReadSectionHeaders(ref buffer, header.SectionCount);
+        var moduleName = ReadModuleName(ref buffer, header.NameOffset);
 
         var constants = new List<NyarConstant>();
         var functions = new List<NyarFunction>();
         var imports = new List<NyarImport>();
         var exports = new List<NyarExport>();
 
-        foreach (var header in sectionHeaders)
+        foreach (var section in sections)
         {
-            _buffer.Position = header.Offset;
-            DecodeSection(header.Kind, constants, functions, imports, exports);
+            buffer.Position = section.Offset;
+            DecodeSection(ref buffer, section.Kind, constants, functions, imports, exports);
         }
 
         return new NyarModuleData
         {
-            Version = version,
             Name = moduleName,
+            Version = header.Version,
             Constants = constants,
             Functions = functions,
             Imports = imports,
@@ -81,292 +47,189 @@ public ref struct NyarDecoder
         };
     }
 
-    /// <summary>
-    ///     仅解码 .nyar 模块头部信息。
-    /// </summary>
-    public (uint Version, string ModuleName) DecodeHeader()
+    #region 头部读取
+
+    private static NyarFileHeader ReadHeader(ref ByteBuffer buffer)
     {
-        if (_buffer.Remaining < NyarConstants.HeaderSize)
+        return new NyarFileHeader
         {
-            throw new InvalidDataException($".nyar 文件数据过短，期望至少 {NyarConstants.HeaderSize} 字节");
-        }
-
-        var magic = _buffer.ReadU32BE();
-
-        if (magic != NyarConstants.MagicValue)
-        {
-            throw new InvalidDataException($".nyar 文件魔数无效，期望 NYAR(0x{NyarConstants.MagicValue:X8})，实际 0x{magic:X8}");
-        }
-
-        var version = _buffer.ReadU32LE();
-        var sectionCount = _buffer.ReadI32LE();
-        var nameOffset = _buffer.ReadI32LE();
-
-        var moduleName = ReadModuleName(nameOffset);
-
-        return (version, moduleName);
+            Magic = buffer.ReadU32BE(),
+            Version = buffer.ReadU32LE(),
+            SectionCount = buffer.ReadI32LE(),
+            NameOffset = buffer.ReadI32LE()
+        };
     }
 
-    #region 私有解码方法
-
-    private List<NyarSectionHeader> ReadSectionHeaders(int count)
+    private static List<NyarSectionHeader> ReadSectionHeaders(ref ByteBuffer buffer, int count)
     {
-        var headers = new List<NyarSectionHeader>(count);
-
+        var sections = new List<NyarSectionHeader>(count);
         for (var i = 0; i < count; i++)
         {
-            if (_buffer.Remaining < NyarConstants.SectionHeaderSize)
+            sections.Add(new NyarSectionHeader
             {
-                throw new InvalidDataException($".nyar 段头数据不足，期望 {NyarConstants.SectionHeaderSize} 字节");
-            }
-
-            headers.Add(new NyarSectionHeader
-            {
-                Kind = (NyarSectionKind)_buffer.ReadU8(),
-                Offset = _buffer.ReadI32LE(),
-                Size = _buffer.ReadI32LE()
+                Kind = (NyarSectionKind)buffer.ReadU8(),
+                Offset = buffer.ReadI32LE(),
+                Size = buffer.ReadI32LE()
             });
         }
 
-        return headers;
+        return sections;
     }
 
-    private string ReadModuleName(int nameOffset)
+    private static string ReadModuleName(ref ByteBuffer buffer, int nameOffset)
     {
-        if (nameOffset <= 0 || nameOffset >= _buffer.Length)
+        if (nameOffset <= 0)
         {
-            return string.Empty;
+            return "<unknown>";
         }
 
-        var savedPosition = _buffer.Position;
-        _buffer.Position = nameOffset;
-
-        if (_buffer.Remaining < 4)
-        {
-            _buffer.Position = savedPosition;
-            return string.Empty;
-        }
-
-        var nameLength = _buffer.ReadI32LE();
-
-        if (nameLength <= 0 || _buffer.Remaining < nameLength)
-        {
-            _buffer.Position = savedPosition;
-            return string.Empty;
-        }
-
-        var name = _buffer.ReadString(nameLength);
-        _buffer.Position = savedPosition;
+        var savedPosition = buffer.Position;
+        buffer.Position = nameOffset;
+        var nameLength = buffer.ReadI32LE();
+        var name = buffer.ReadString(nameLength);
+        buffer.Position = savedPosition;
         return name;
     }
 
-    private void DecodeSection(
-        NyarSectionKind kind,
-        List<NyarConstant> constants,
-        List<NyarFunction> functions,
-        List<NyarImport> imports,
-        List<NyarExport> exports)
+    #endregion
+
+    #region 段解码
+
+    private static void DecodeSection(ref ByteBuffer buffer, NyarSectionKind kind,
+        List<NyarConstant> constants, List<NyarFunction> functions,
+        List<NyarImport> imports, List<NyarExport> exports)
     {
         switch (kind)
         {
             case NyarSectionKind.Constants:
-                DecodeConstants(constants);
+                DecodeConstants(ref buffer, constants);
                 break;
             case NyarSectionKind.Functions:
-                DecodeFunctions(functions);
+                DecodeFunctions(ref buffer, functions);
                 break;
             case NyarSectionKind.Imports:
-                DecodeImports(imports);
+                DecodeImports(ref buffer, imports);
                 break;
             case NyarSectionKind.Exports:
-                DecodeExports(exports);
+                DecodeExports(ref buffer, exports);
                 break;
         }
     }
 
-    private void DecodeConstants(List<NyarConstant> constants)
+    private static void DecodeConstants(ref ByteBuffer buffer, List<NyarConstant> constants)
     {
-        if (_buffer.Remaining < 4)
+        var count = buffer.ReadI32LE();
+        constants.Capacity = count;
+        for (var i = 0; i < count; i++)
         {
-            throw new InvalidDataException(".nyar 常量池段数据不足，无法读取条目数量");
-        }
-
-        var count = _buffer.ReadI32LE();
-
-        for (var i = 0; i < count && !_buffer.IsEnd; i++)
-        {
-            if (_buffer.Remaining < 1)
-            {
-                throw new InvalidDataException($".nyar 常量池第 {i} 个条目数据不足，无法读取类型标签");
-            }
-
-            var kind = (NyarConstantKind)_buffer.ReadU8();
-            var constant = DecodeConstant(kind);
-            constants.Add(constant);
+            var kind = (NyarConstantKind)buffer.ReadU8();
+            constants.Add(DecodeConstant(ref buffer, kind));
         }
     }
 
-    private NyarConstant DecodeConstant(NyarConstantKind kind)
+    private static NyarConstant DecodeConstant(ref ByteBuffer buffer, NyarConstantKind kind)
     {
-        object? value = kind switch
+        return kind switch
         {
-            NyarConstantKind.Int32 => _buffer.Remaining >= 4 ? _buffer.ReadI32LE() : 0,
-            NyarConstantKind.Float64 => _buffer.Remaining >= 8 ? _buffer.ReadF64LE() : 0.0,
-            NyarConstantKind.Bool => _buffer.Remaining >= 1 ? _buffer.ReadU8() != 0 : false,
-            NyarConstantKind.Null => null,
-            NyarConstantKind.String => ReadLengthPrefixedString(),
-            NyarConstantKind.BigInt => ReadBigIntBytes(),
-            _ => throw new InvalidDataException($".nyar 未知常量类型：0x{(byte)kind:X2}")
-        };
-
-        return new NyarConstant
-        {
-            Kind = kind,
-            Value = value
+            NyarConstantKind.Int32 => new NyarConstant { Kind = kind, Value = buffer.ReadI32LE() },
+            NyarConstantKind.Float64 => new NyarConstant { Kind = kind, Value = buffer.ReadF64LE() },
+            NyarConstantKind.Bool => new NyarConstant { Kind = kind, Value = buffer.ReadU8() != 0 },
+            NyarConstantKind.Null => new NyarConstant { Kind = kind, Value = null },
+            NyarConstantKind.String => new NyarConstant { Kind = kind, Value = ReadLengthPrefixedString(ref buffer) },
+            NyarConstantKind.BigInt => new NyarConstant { Kind = kind, Value = DecodeBigIntBytes(ref buffer) },
+            _ => throw new InvalidNyarDataException($"未知的常量类型：{kind}")
         };
     }
 
-    private string ReadLengthPrefixedString()
+    private static byte[] DecodeBigIntBytes(ref ByteBuffer buffer)
     {
-        if (_buffer.Remaining < 4)
-        {
-            throw new InvalidDataException(".nyar 字符串长度前缀数据不足");
-        }
-
-        var length = _buffer.ReadI32LE();
-
-        if (length < 0)
-        {
-            throw new InvalidDataException($".nyar 字符串长度为负数：{length}");
-        }
-
-        if (_buffer.Remaining < length)
-        {
-            throw new InvalidDataException($".nyar 字符串数据不足，期望 {length} 字节");
-        }
-
-        return _buffer.ReadString(length);
+        var byteCount = buffer.ReadI32LE();
+        var bytes = buffer.ReadBytes(byteCount);
+        return bytes.ToArray();
     }
 
-    private byte[] ReadBigIntBytes()
+    private static void DecodeFunctions(ref ByteBuffer buffer, List<NyarFunction> functions)
     {
-        if (_buffer.Remaining < 4)
+        var count = buffer.ReadI32LE();
+        functions.Capacity = count;
+        for (var i = 0; i < count; i++)
         {
-            throw new InvalidDataException(".nyar 大整数长度前缀数据不足");
-        }
-
-        var length = _buffer.ReadI32LE();
-
-        if (length < 0)
-        {
-            throw new InvalidDataException($".nyar 大整数长度为负数：{length}");
-        }
-
-        if (_buffer.Remaining < length)
-        {
-            throw new InvalidDataException($".nyar 大整数数据不足，期望 {length} 字节");
-        }
-
-        return _buffer.ReadBytes(length).ToArray();
-    }
-
-    private void DecodeFunctions(List<NyarFunction> functions)
-    {
-        if (_buffer.Remaining < 4)
-        {
-            throw new InvalidDataException(".nyar 函数表段数据不足，无法读取条目数量");
-        }
-
-        var count = _buffer.ReadI32LE();
-
-        for (var i = 0; i < count && !_buffer.IsEnd; i++)
-        {
-            var name = ReadLengthPrefixedString();
-
-            if (_buffer.Remaining < 12)
-            {
-                throw new InvalidDataException($".nyar 函数表第 {i} 个条目数据不足");
-            }
-
-            var arity = _buffer.ReadI32LE();
-            var localCount = _buffer.ReadI32LE();
-            var codeLength = _buffer.ReadI32LE();
-
+            var name = ReadLengthPrefixedString(ref buffer);
+            var arity = buffer.ReadI32LE();
+            var localCount = buffer.ReadI32LE();
+            var codeOffset = buffer.ReadI32LE();
+            var codeLength = buffer.ReadI32LE();
             functions.Add(new NyarFunction
             {
-                Name = name,
-                Arity = arity,
-                LocalCount = localCount,
-                CodeLength = codeLength
+                Name = name, Arity = arity, LocalCount = localCount,
+                CodeOffset = codeOffset, CodeLength = codeLength
             });
         }
     }
 
-    private void DecodeImports(List<NyarImport> imports)
+    private static void DecodeImports(ref ByteBuffer buffer, List<NyarImport> imports)
     {
-        if (_buffer.Remaining < 4)
+        var count = buffer.ReadI32LE();
+        imports.Capacity = count;
+        for (var i = 0; i < count; i++)
         {
-            throw new InvalidDataException(".nyar 导入表段数据不足，无法读取条目数量");
-        }
-
-        var count = _buffer.ReadI32LE();
-
-        for (var i = 0; i < count && !_buffer.IsEnd; i++)
-        {
-            if (_buffer.Remaining < 1)
-            {
-                throw new InvalidDataException($".nyar 导入表第 {i} 个条目数据不足，无法读取类型标签");
-            }
-
-            var kind = (NyarImportKind)_buffer.ReadU8();
-            var moduleName = ReadLengthPrefixedString();
-            var symbolName = ReadLengthPrefixedString();
-
-            imports.Add(new NyarImport
-            {
-                Kind = kind,
-                ModuleName = moduleName,
-                SymbolName = symbolName
-            });
+            var kind = (NyarImportKind)buffer.ReadU8();
+            var moduleName = ReadLengthPrefixedString(ref buffer);
+            var symbolName = ReadLengthPrefixedString(ref buffer);
+            imports.Add(new NyarImport { Kind = kind, ModuleName = moduleName, SymbolName = symbolName });
         }
     }
 
-    private void DecodeExports(List<NyarExport> exports)
+    private static void DecodeExports(ref ByteBuffer buffer, List<NyarExport> exports)
     {
-        if (_buffer.Remaining < 4)
+        var count = buffer.ReadI32LE();
+        exports.Capacity = count;
+        for (var i = 0; i < count; i++)
         {
-            throw new InvalidDataException(".nyar 导出表段数据不足，无法读取条目数量");
+            var kind = (NyarExportKind)buffer.ReadU8();
+            var symbolName = ReadLengthPrefixedString(ref buffer);
+            var functionIndex = buffer.ReadI32LE();
+            exports.Add(new NyarExport { Kind = kind, SymbolName = symbolName, FunctionIndex = functionIndex });
         }
+    }
 
-        var count = _buffer.ReadI32LE();
+    private static string ReadLengthPrefixedString(ref ByteBuffer buffer)
+    {
+        var length = buffer.ReadI32LE();
+        return buffer.ReadString(length);
+    }
 
-        for (var i = 0; i < count && !_buffer.IsEnd; i++)
-        {
-            if (_buffer.Remaining < 1)
-            {
-                throw new InvalidDataException($".nyar 导出表第 {i} 个条目数据不足，无法读取类型标签");
-            }
+    #endregion
 
-            var kind = (NyarExportKind)_buffer.ReadU8();
-            var symbolName = ReadLengthPrefixedString();
+    #region 内部结构
 
-            exports.Add(new NyarExport
-            {
-                Kind = kind,
-                SymbolName = symbolName
-            });
-        }
+    private sealed class NyarFileHeader
+    {
+        public uint Magic;
+        public uint Version;
+        public int SectionCount;
+        public int NameOffset;
+
+        public bool IsValid => Magic == NyarConstants.MagicValue;
+    }
+
+    private sealed class NyarSectionHeader
+    {
+        public NyarSectionKind Kind;
+        public int Offset;
+        public int Size;
     }
 
     #endregion
 }
 
-/// <summary>
-///     Nyar 段头信息（解码内部使用）。
-/// </summary>
-internal struct NyarSectionHeader
+public sealed class InvalidNyarDataException : Exception
 {
-    public NyarSectionKind Kind;
-    public int Offset;
-    public int Size;
+    public InvalidNyarDataException(string message) : base(message)
+    {
+    }
+
+    public InvalidNyarDataException(string message, Exception innerException) : base(message, innerException)
+    {
+    }
 }

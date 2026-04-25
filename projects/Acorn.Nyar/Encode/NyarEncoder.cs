@@ -139,7 +139,7 @@ public sealed class NyarEncoder
 
     private static NyarSection BuildFunctionsSection(IReadOnlyList<NyarFunction> functions)
     {
-        var size = 4 + functions.Count * (4 + 4 + 4 + 4);
+        var size = 4 + functions.Count * (4 + 4 + 4 + 4 + 4);
 
         foreach (var func in functions)
         {
@@ -155,6 +155,7 @@ public sealed class NyarEncoder
             WriteBinaryWriterString(ref writer, func.Name);
             writer.WriteI32LE(func.Arity);
             writer.WriteI32LE(func.LocalCount);
+            writer.WriteI32LE(func.CodeOffset);
             writer.WriteI32LE(func.CodeLength);
         }
 
@@ -198,7 +199,7 @@ public sealed class NyarEncoder
 
         foreach (var export in exports)
         {
-            size += 1 + 4 + Encoding.UTF8.GetByteCount(export.SymbolName);
+            size += 1 + 4 + Encoding.UTF8.GetByteCount(export.SymbolName) + 4;
         }
 
         var writer = new ByteBufferWriter(size);
@@ -209,6 +210,7 @@ public sealed class NyarEncoder
         {
             writer.WriteU8((byte)export.Kind);
             WriteBinaryWriterString(ref writer, export.SymbolName);
+            writer.WriteI32LE(export.FunctionIndex);
         }
 
         return new NyarSection

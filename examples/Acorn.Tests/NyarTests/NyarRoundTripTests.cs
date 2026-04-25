@@ -52,8 +52,8 @@ public class NyarRoundTripTests
             ],
             Functions =
             [
-                new NyarFunction { Name = "add", Arity = 2, LocalCount = 0, CodeLength = 8 },
-                new NyarFunction { Name = "main", Arity = 0, LocalCount = 3, CodeLength = 16 }
+                new NyarFunction { Name = "add", Arity = 2, LocalCount = 0, CodeOffset = 0, CodeLength = 8 },
+                new NyarFunction { Name = "main", Arity = 0, LocalCount = 3, CodeOffset = 8, CodeLength = 16 }
             ],
             Imports =
             [
@@ -62,8 +62,8 @@ public class NyarRoundTripTests
             ],
             Exports =
             [
-                new NyarExport { Kind = NyarExportKind.Function, SymbolName = "add" },
-                new NyarExport { Kind = NyarExportKind.Global, SymbolName = "count" }
+                new NyarExport { Kind = NyarExportKind.Function, SymbolName = "add", FunctionIndex = 0 },
+                new NyarExport { Kind = NyarExportKind.Global, SymbolName = "count", FunctionIndex = -1 }
             ]
         };
 
@@ -94,10 +94,12 @@ public class NyarRoundTripTests
         Assert.Equal("add", decoded.Functions[0].Name);
         Assert.Equal(2, decoded.Functions[0].Arity);
         Assert.Equal(0, decoded.Functions[0].LocalCount);
+        Assert.Equal(0, decoded.Functions[0].CodeOffset);
         Assert.Equal(8, decoded.Functions[0].CodeLength);
         Assert.Equal("main", decoded.Functions[1].Name);
         Assert.Equal(0, decoded.Functions[1].Arity);
         Assert.Equal(3, decoded.Functions[1].LocalCount);
+        Assert.Equal(8, decoded.Functions[1].CodeOffset);
         Assert.Equal(16, decoded.Functions[1].CodeLength);
 
         Assert.Equal(2, decoded.Imports.Count);
@@ -111,8 +113,10 @@ public class NyarRoundTripTests
         Assert.Equal(2, decoded.Exports.Count);
         Assert.Equal(NyarExportKind.Function, decoded.Exports[0].Kind);
         Assert.Equal("add", decoded.Exports[0].SymbolName);
+        Assert.Equal(0, decoded.Exports[0].FunctionIndex);
         Assert.Equal(NyarExportKind.Global, decoded.Exports[1].Kind);
         Assert.Equal("count", decoded.Exports[1].SymbolName);
+        Assert.Equal(-1, decoded.Exports[1].FunctionIndex);
     }
 
     [Fact]
@@ -201,7 +205,7 @@ public class NyarScannerTests
             Constants = [new NyarConstant { Kind = NyarConstantKind.Int32, Value = 1 }],
             Functions = [new NyarFunction { Name = "fn", Arity = 1, LocalCount = 0, CodeLength = 4 }],
             Imports = [new NyarImport { Kind = NyarImportKind.Function, ModuleName = "m", SymbolName = "s" }],
-            Exports = [new NyarExport { Kind = NyarExportKind.Function, SymbolName = "e" }]
+            Exports = [new NyarExport { Kind = NyarExportKind.Function, SymbolName = "e", FunctionIndex = 0 }]
         };
 
         var encoder = new NyarEncoder();
