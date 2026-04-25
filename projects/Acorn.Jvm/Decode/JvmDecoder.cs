@@ -22,7 +22,7 @@ public sealed class JvmDecoder
         var magic = reader.ReadUInt32();
         if (magic != 0xCAFEBABE)
         {
-            throw new DecodeException("Invalid ClassFile magic");
+            throw new Exception("Invalid ClassFile magic");
         }
 
         // 读取版本号
@@ -169,7 +169,7 @@ public sealed class JvmDecoder
                 BootstrapMethodAttrIndex = reader.ReadUInt16(),
                 NameAndTypeIndex = reader.ReadUInt16()
             },
-            _ => throw new DecodeException($"Unknown constant tag: {tag}")
+            _ => throw new Exception($"Unknown constant tag: {tag}")
         };
     }
 

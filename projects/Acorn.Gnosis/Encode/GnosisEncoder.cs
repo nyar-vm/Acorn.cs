@@ -38,6 +38,32 @@ public sealed class GnosisEncoder
         return buffer[..writer.Position];
     }
 
+    /// <summary>
+    ///     将 Gnosis 模块数据（含结构化指令列表）编码为 .gnosis 二进制格式。
+    ///     指令列表会先编码为字节码流，再写入模块。
+    /// </summary>
+    /// <param name="data">Gnosis 模块数据。</param>
+    /// <param name="instructions">结构化指令列表（覆盖 data.Instructions）。</param>
+    /// <returns>.gnosis 二进制数据。</returns>
+    public byte[] Encode(GnosisModuleData data, IReadOnlyList<GnosisInstruction> instructions)
+    {
+        var instructionEncoder = new GnosisInstructionEncoder();
+        var bytecode = instructionEncoder.Encode(instructions);
+
+        var moduleData = new GnosisModuleData
+        {
+            Version = data.Version,
+            ModuleName = data.ModuleName,
+            Constants = data.Constants,
+            ImportedSymbols = data.ImportedSymbols,
+            ExportedSymbols = data.ExportedSymbols,
+            Dependencies = data.Dependencies,
+            Instructions = bytecode
+        };
+
+        return Encode(moduleData);
+    }
+
     #region 私有编码方法
 
     private static void WriteModuleName(ref ByteBufferWriter writer, string name)
