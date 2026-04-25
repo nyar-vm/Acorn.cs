@@ -215,6 +215,55 @@ public sealed class PeOptionalHeaderData
     ///     数据目录数量。
     /// </summary>
     public uint NumberOfRvaAndSizes { get; init; }
+
+    /// <summary>
+    ///     数据目录列表。每项包含 RVA 和 Size，索引对应 <see cref="PeDataDirectoryIndex" />。
+    /// </summary>
+    public IReadOnlyList<PeDataDirectoryEntry> DataDirectories { get; init; } = [];
+}
+
+/// <summary>
+///     PE 数据目录条目。
+/// </summary>
+public sealed class PeDataDirectoryEntry
+{
+    /// <summary>
+    ///     数据的相对虚拟地址（RVA）。
+    /// </summary>
+    public uint Rva { get; init; }
+
+    /// <summary>
+    ///     数据大小（字节）。
+    /// </summary>
+    public uint Size { get; init; }
+
+    /// <summary>
+    ///     数据目录是否为空（RVA 和 Size 均为 0）。
+    /// </summary>
+    public bool IsEmpty => Rva == 0 && Size == 0;
+}
+
+/// <summary>
+///     PE 数据目录索引（ECMA-335 和 PE/COFF 标准定义）。
+/// </summary>
+public enum PeDataDirectoryIndex
+{
+    ExportTable = 0,
+    ImportTable = 1,
+    ResourceTable = 2,
+    ExceptionTable = 3,
+    CertificateTable = 4,
+    BaseRelocationTable = 5,
+    Debug = 6,
+    Architecture = 7,
+    GlobalPtr = 8,
+    TlsTable = 9,
+    LoadConfigTable = 10,
+    BoundImport = 11,
+    Iat = 12,
+    DelayImportDescriptor = 13,
+    ClrRuntimeHeader = 14,
+    Reserved = 15
 }
 
 /// <summary>
@@ -323,4 +372,37 @@ public sealed class PeFileData
     ///     是否为 64 位。
     /// </summary>
     public bool Is64Bit => OptionalHeader.Magic == 0x20B;
+
+    /// <summary>
+    ///     获取指定索引的数据目录条目。索引不存在时返回空条目。
+    /// </summary>
+    public PeDataDirectoryEntry GetDataDirectory(PeDataDirectoryIndex index)
+    {
+        var i = (int)index;
+
+        if (i < OptionalHeader.DataDirectories.Count)
+        {
+            return OptionalHeader.DataDirectories[i];
+        }
+
+        return new PeDataDirectoryEntry();
+    }
+
+    /// <summary>
+    ///     将 RVA（相对虚拟地址）转换为文件偏移量。
+    /// </summary>
+    public int RvaToOffset(uint rva)
+    {
+        foreach (var section in Sections)
+        {
+            var sectionEnd = section.VirtualAddress + section.VirtualSize;
+
+            if (rva >= section.VirtualAddress && rva < sectionEnd)
+            {
+                return (int)(rva - section.VirtualAddress + section.PointerToRawData);
+            }
+        }
+
+        return (int)rva;
+    }
 }

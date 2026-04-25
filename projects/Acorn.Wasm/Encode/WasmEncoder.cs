@@ -1,5 +1,5 @@
+using System.IO;
 using System.Text;
-using Acorn.Frame;
 using Acorn.Wasm.Data;
 
 namespace Acorn.Wasm.Encode;
@@ -16,470 +16,362 @@ public static class WasmEncoder
     /// <summary>
     ///     将完整的 Wasm 模块编码写入缓冲区。
     /// </summary>
-    /// <param name="buffer">要写入的目标字节缓冲区。</param>
-    /// <param name="module">要编码的 Wasm 模块数据。</param>
-    /// <returns>已写入的字节数。</returns>
     public static int EncodeModule(Span<byte> buffer, WasmModuleData module)
     {
-        var writer = new ByteBufferWriter(buffer.Length);
-        WriteHeader(writer, module.Version);
-
-        foreach (var customSection in module.CustomSections)
-        {
-            WriteCustomSection(writer, customSection);
-        }
-
-        if (module.Types.Count > 0)
-        {
-            WriteTypeSection(writer, module.Types);
-        }
-
-        if (module.Imports.Count > 0)
-        {
-            WriteImportSection(writer, module.Imports);
-        }
-
-        if (module.FunctionTypeIndices.Count > 0)
-        {
-            WriteFunctionSection(writer, module.FunctionTypeIndices);
-        }
-
-        if (module.Tables.Count > 0)
-        {
-            WriteTableSection(writer, module.Tables);
-        }
-
-        if (module.Memories.Count > 0)
-        {
-            WriteMemorySection(writer, module.Memories);
-        }
-
-        if (module.Globals.Count > 0)
-        {
-            WriteGlobalSection(writer, module.Globals);
-        }
-
-        if (module.Exports.Count > 0)
-        {
-            WriteExportSection(writer, module.Exports);
-        }
-
-        if (module.StartFunctionIndex.HasValue)
-        {
-            WriteStartSection(writer, module.StartFunctionIndex.Value);
-        }
-
-        if (module.Elements.Count > 0)
-        {
-            WriteElementSection(writer, module.Elements);
-        }
-
-        if (module.Codes.Count > 0)
-        {
-            WriteCodeSection(writer, module.Codes);
-        }
-
-        if (module.DataSegments.Count > 0)
-        {
-            WriteDataSection(writer, module.DataSegments);
-        }
-
-        var data = writer.WrittenData;
-        data.CopyTo(buffer);
-        return data.Length;
+        var bytes = EncodeModule(module);
+        bytes.CopyTo(buffer);
+        return bytes.Length;
     }
 
     /// <summary>
     ///     将完整的 Wasm 模块编码为字节数组。
     /// </summary>
-    /// <param name="module">要编码的 Wasm 模块数据。</param>
-    /// <returns>编码后的字节数组。</returns>
     public static byte[] EncodeModule(WasmModuleData module)
     {
-        var writer = new ByteBufferWriter(1024 * 1024);
-        WriteHeader(writer, module.Version);
+        using var stream = new MemoryStream();
+        using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
 
-        foreach (var customSection in module.CustomSections)
-        {
-            WriteCustomSection(writer, customSection);
-        }
+        #region Header
+
+        writer.Write(WasmConstants.MagicNumber);
+        writer.WriteLE(module.Version);
+
+        #endregion
+
+        #region Type Section
 
         if (module.Types.Count > 0)
         {
-            WriteTypeSection(writer, module.Types);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.Types.Count);
+                foreach (var type in module.Types)
+                {
+                    w.Write((byte)WasmConstants.FunctionTypeForm);
+                    w.WriteLEB128((uint)type.Parameters.Count);
+                    foreach (var param in type.Parameters)
+                    {
+                        w.Write((byte)param);
+                    }
+
+                    w.WriteLEB128((uint)type.Results.Count);
+                    foreach (var result in type.Results)
+                    {
+                        w.Write((byte)result);
+                    }
+                }
+            });
+            writer.Write((byte)WasmSectionId.Type);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Import Section
 
         if (module.Imports.Count > 0)
         {
-            WriteImportSection(writer, module.Imports);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.Imports.Count);
+                foreach (var import in module.Imports)
+                {
+                    WriteName(w, import.Module);
+                    WriteName(w, import.Field);
+                    w.Write((byte)import.Descriptor.Kind);
+
+                    switch (import.Descriptor.Kind)
+                    {
+                        case WasmExternalKind.Function:
+                            w.WriteLEB128(import.Descriptor.FunctionTypeIndex);
+                            break;
+                        case WasmExternalKind.Table:
+                            w.Write((byte)import.Descriptor.TableType!.ElementType);
+                            WriteLimits(w, import.Descriptor.TableType.Limits);
+                            break;
+                        case WasmExternalKind.Memory:
+                            WriteLimits(w, import.Descriptor.MemoryType!.Limits);
+                            break;
+                        case WasmExternalKind.Global:
+                            w.Write((byte)import.Descriptor.GlobalType!.ValueType);
+                            w.Write(import.Descriptor.GlobalType.Mutable ? WasmConstants.GlobalMutable : WasmConstants.GlobalImmutable);
+                            break;
+                    }
+                }
+            });
+            writer.Write((byte)WasmSectionId.Import);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Function Section
 
         if (module.FunctionTypeIndices.Count > 0)
         {
-            WriteFunctionSection(writer, module.FunctionTypeIndices);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.FunctionTypeIndices.Count);
+                foreach (var index in module.FunctionTypeIndices)
+                {
+                    w.WriteLEB128(index);
+                }
+            });
+            writer.Write((byte)WasmSectionId.Function);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Table Section
 
         if (module.Tables.Count > 0)
         {
-            WriteTableSection(writer, module.Tables);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.Tables.Count);
+                foreach (var table in module.Tables)
+                {
+                    w.Write((byte)table.Type.ElementType);
+                    WriteLimits(w, table.Type.Limits);
+                }
+            });
+            writer.Write((byte)WasmSectionId.Table);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Memory Section
 
         if (module.Memories.Count > 0)
         {
-            WriteMemorySection(writer, module.Memories);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.Memories.Count);
+                foreach (var memory in module.Memories)
+                {
+                    WriteLimits(w, memory.Type.Limits);
+                }
+            });
+            writer.Write((byte)WasmSectionId.Memory);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Global Section
 
         if (module.Globals.Count > 0)
         {
-            WriteGlobalSection(writer, module.Globals);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.Globals.Count);
+                foreach (var global in module.Globals)
+                {
+                    w.Write((byte)global.Type.ValueType);
+                    w.Write(global.Type.Mutable ? WasmConstants.GlobalMutable : WasmConstants.GlobalImmutable);
+                    w.Write(global.InitExpression);
+                }
+            });
+            writer.Write((byte)WasmSectionId.Global);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Export Section
 
         if (module.Exports.Count > 0)
         {
-            WriteExportSection(writer, module.Exports);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.Exports.Count);
+                foreach (var export in module.Exports)
+                {
+                    WriteName(w, export.Name);
+                    w.Write((byte)export.Kind);
+                    w.WriteLEB128(export.Index);
+                }
+            });
+            writer.Write((byte)WasmSectionId.Export);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Start Section
 
         if (module.StartFunctionIndex.HasValue)
         {
-            WriteStartSection(writer, module.StartFunctionIndex.Value);
+            var sectionData = BuildBytes(w => w.WriteLEB128(module.StartFunctionIndex.Value));
+            writer.Write((byte)WasmSectionId.Start);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Element Section
 
         if (module.Elements.Count > 0)
         {
-            WriteElementSection(writer, module.Elements);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.Elements.Count);
+                foreach (var element in module.Elements)
+                {
+                    w.WriteLEB128(element.TableIndex);
+                    w.Write(element.OffsetExpression);
+                    w.WriteLEB128((uint)element.InitValues.Count);
+                    foreach (var value in element.InitValues)
+                    {
+                        w.WriteLEB128(value);
+                    }
+                }
+            });
+            writer.Write((byte)WasmSectionId.Element);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Code Section
 
         if (module.Codes.Count > 0)
         {
-            WriteCodeSection(writer, module.Codes);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.Codes.Count);
+                foreach (var code in module.Codes)
+                {
+                    var bodyData = BuildBytes(bw =>
+                    {
+                        bw.WriteLEB128((uint)code.Locals.Count);
+                        foreach (var local in code.Locals)
+                        {
+                            bw.WriteLEB128(local.Count);
+                            bw.Write((byte)local.Type);
+                        }
+
+                        bw.Write(code.Body);
+                    });
+                    w.WriteLEB128((uint)bodyData.Length);
+                    w.Write(bodyData);
+                }
+            });
+            writer.Write((byte)WasmSectionId.Code);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
+
+        #endregion
+
+        #region Data Section
 
         if (module.DataSegments.Count > 0)
         {
-            WriteDataSection(writer, module.DataSegments);
+            var sectionData = BuildBytes(w =>
+            {
+                w.WriteLEB128((uint)module.DataSegments.Count);
+                foreach (var data in module.DataSegments)
+                {
+                    w.WriteLEB128(data.MemoryIndex);
+                    w.Write(data.OffsetExpression);
+                    w.WriteLEB128((uint)data.Initializer.Length);
+                    w.Write(data.Initializer);
+                }
+            });
+            writer.Write((byte)WasmSectionId.Data);
+            writer.WriteLEB128((uint)sectionData.Length);
+            writer.Write(sectionData);
         }
 
-        return writer.ToArray();
+        #endregion
+
+        writer.Flush();
+        return stream.ToArray();
     }
 
     /// <summary>
     ///     写入 Wasm 文件头（魔数和版本号）。
     /// </summary>
-    /// <param name="writer">字节缓冲区写入器。</param>
-    /// <param name="version">版本号，默认为 1。</param>
-    public static void WriteHeader(ByteBufferWriter writer, uint version = WasmConstants.Version)
+    public static void WriteHeader(System.IO.BinaryWriter writer, uint version = WasmConstants.Version)
     {
         writer.Write(WasmConstants.MagicNumber);
-        writer.WriteU32LE(version);
+        writer.WriteLE(version);
     }
 
-    #region 段写入方法
-
-    private static void WriteSectionHeader(ByteBufferWriter writer, byte sectionId, uint sectionSize)
-    {
-        writer.WriteU8(sectionId);
-        writer.WriteLeb128U32(sectionSize);
-    }
-
-    private static void WriteCustomSection(ByteBufferWriter writer, WasmCustomSection section)
-    {
-        var sectionData = BuildSectionData(w => WriteNameTo(w, section.Name), w => w.Write(section.Data));
-        WriteSectionHeader(writer, (byte)WasmSectionId.Custom, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteTypeSection(ByteBufferWriter writer, IReadOnlyList<WasmFunctionType> types)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)types.Count);
-            foreach (var type in types)
-            {
-                WriteFunctionTypeTo(w, type);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Type, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteImportSection(ByteBufferWriter writer, IReadOnlyList<WasmImport> imports)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)imports.Count);
-            foreach (var import in imports)
-            {
-                WriteImportTo(w, import);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Import, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteFunctionSection(ByteBufferWriter writer, IReadOnlyList<uint> functionTypeIndices)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)functionTypeIndices.Count);
-            foreach (var index in functionTypeIndices)
-            {
-                w.WriteLeb128U32(index);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Function, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteTableSection(ByteBufferWriter writer, IReadOnlyList<WasmTable> tables)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)tables.Count);
-            foreach (var table in tables)
-            {
-                WriteTableTypeTo(w, table.Type);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Table, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteMemorySection(ByteBufferWriter writer, IReadOnlyList<WasmMemory> memories)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)memories.Count);
-            foreach (var memory in memories)
-            {
-                WriteLimitsTo(w, memory.Type.Limits);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Memory, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteGlobalSection(ByteBufferWriter writer, IReadOnlyList<WasmGlobal> globals)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)globals.Count);
-            foreach (var global in globals)
-            {
-                WriteGlobalTypeTo(w, global.Type);
-                w.Write(global.InitExpression);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Global, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteExportSection(ByteBufferWriter writer, IReadOnlyList<WasmExport> exports)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)exports.Count);
-            foreach (var export in exports)
-            {
-                WriteNameTo(w, export.Name);
-                w.WriteU8((byte)export.Kind);
-                w.WriteLeb128U32(export.Index);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Export, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteStartSection(ByteBufferWriter writer, uint startFunctionIndex)
-    {
-        var sectionData = BuildSectionData(w => w.WriteLeb128U32(startFunctionIndex));
-        WriteSectionHeader(writer, (byte)WasmSectionId.Start, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteElementSection(ByteBufferWriter writer, IReadOnlyList<WasmElement> elements)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)elements.Count);
-            foreach (var element in elements)
-            {
-                WriteElementTo(w, element);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Element, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteCodeSection(ByteBufferWriter writer, IReadOnlyList<WasmCode> codes)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)codes.Count);
-            foreach (var code in codes)
-            {
-                WriteCodeTo(w, code);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Code, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    private static void WriteDataSection(ByteBufferWriter writer, IReadOnlyList<WasmData> dataSegments)
-    {
-        var sectionData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)dataSegments.Count);
-            foreach (var data in dataSegments)
-            {
-                WriteDataSegmentTo(w, data);
-            }
-        });
-        WriteSectionHeader(writer, (byte)WasmSectionId.Data, (uint)sectionData.Length);
-        writer.Write(sectionData);
-    }
-
-    #endregion
-
-    #region 类型写入方法
-
-    private static void WriteFunctionTypeTo(ByteBufferWriter writer, WasmFunctionType type)
-    {
-        writer.WriteU8(WasmConstants.FunctionTypeForm);
-        writer.WriteLeb128U32((uint)type.Parameters.Count);
-
-        foreach (var param in type.Parameters)
-        {
-            WriteValueTypeTo(writer, param);
-        }
-
-        writer.WriteLeb128U32((uint)type.Results.Count);
-
-        foreach (var result in type.Results)
-        {
-            WriteValueTypeTo(writer, result);
-        }
-    }
-
-    private static void WriteValueTypeTo(ByteBufferWriter writer, WasmValueType valueType)
-    {
-        writer.WriteU8((byte)valueType);
-    }
-
-    private static void WriteLimitsTo(ByteBufferWriter writer, WasmLimits limits)
-    {
-        if (limits.Maximum.HasValue)
-        {
-            writer.WriteU8(WasmConstants.LimitsHasMinMax);
-            writer.WriteLeb128U32(limits.Minimum);
-            writer.WriteLeb128U32(limits.Maximum.Value);
-        }
-        else
-        {
-            writer.WriteU8(WasmConstants.LimitsHasOnlyMin);
-            writer.WriteLeb128U32(limits.Minimum);
-        }
-    }
-
-    private static void WriteTableTypeTo(ByteBufferWriter writer, WasmTableType tableType)
-    {
-        WriteValueTypeTo(writer, tableType.ElementType);
-        WriteLimitsTo(writer, tableType.Limits);
-    }
-
-    private static void WriteGlobalTypeTo(ByteBufferWriter writer, WasmGlobalType globalType)
-    {
-        WriteValueTypeTo(writer, globalType.ValueType);
-        writer.WriteU8(globalType.Mutable ? WasmConstants.GlobalMutable : WasmConstants.GlobalImmutable);
-    }
-
-    private static void WriteImportTo(ByteBufferWriter writer, WasmImport import)
-    {
-        WriteNameTo(writer, import.Module);
-        WriteNameTo(writer, import.Field);
-        WriteImportDescriptorTo(writer, import.Descriptor);
-    }
-
-    private static void WriteImportDescriptorTo(ByteBufferWriter writer, WasmImportDescriptor descriptor)
-    {
-        writer.WriteU8((byte)descriptor.Kind);
-
-        switch (descriptor.Kind)
-        {
-            case WasmExternalKind.Function:
-                writer.WriteLeb128U32(descriptor.FunctionTypeIndex);
-                break;
-            case WasmExternalKind.Table:
-                WriteTableTypeTo(writer, descriptor.TableType!);
-                break;
-            case WasmExternalKind.Memory:
-                WriteLimitsTo(writer, descriptor.MemoryType!.Limits);
-                break;
-            case WasmExternalKind.Global:
-                WriteGlobalTypeTo(writer, descriptor.GlobalType!);
-                break;
-        }
-    }
-
-    private static void WriteElementTo(ByteBufferWriter writer, WasmElement element)
-    {
-        writer.WriteLeb128U32(element.TableIndex);
-        writer.Write(element.OffsetExpression);
-        writer.WriteLeb128U32((uint)element.InitValues.Count);
-
-        foreach (var value in element.InitValues)
-        {
-            writer.WriteLeb128U32(value);
-        }
-    }
-
-    private static void WriteCodeTo(ByteBufferWriter writer, WasmCode code)
-    {
-        var bodyData = BuildSectionData(w =>
-        {
-            w.WriteLeb128U32((uint)code.Locals.Count);
-
-            foreach (var local in code.Locals)
-            {
-                w.WriteLeb128U32(local.Count);
-                WriteValueTypeTo(w, local.Type);
-            }
-
-            w.Write(code.Body);
-        });
-
-        writer.WriteLeb128U32((uint)bodyData.Length);
-        writer.Write(bodyData);
-    }
-
-    private static void WriteDataSegmentTo(ByteBufferWriter writer, WasmData data)
-    {
-        writer.WriteLeb128U32(data.MemoryIndex);
-        writer.Write(data.OffsetExpression);
-        writer.WriteLeb128U32((uint)data.Initializer.Length);
-        writer.Write(data.Initializer);
-    }
-
-    #endregion
-
-    #region 辅助方法
-
-    private static void WriteNameTo(ByteBufferWriter writer, string name)
+    private static void WriteName(BinaryWriter writer, string name)
     {
         var bytes = Encoding.UTF8.GetBytes(name);
-        writer.WriteLeb128U32((uint)bytes.Length);
+        writer.WriteLEB128((uint)bytes.Length);
         writer.Write(bytes);
     }
 
-    private static byte[] BuildSectionData(params Action<ByteBufferWriter>[] writers)
+    private static void WriteLimits(BinaryWriter writer, WasmLimits limits)
     {
-        return BuildSectionData(w => { foreach (var write in writers) write(w); });
+        if (limits.Maximum.HasValue)
+        {
+            writer.Write((byte)WasmConstants.LimitsHasMinMax);
+            writer.WriteLEB128(limits.Minimum);
+            writer.WriteLEB128(limits.Maximum.Value);
+        }
+        else
+        {
+            writer.Write((byte)WasmConstants.LimitsHasOnlyMin);
+            writer.WriteLEB128(limits.Minimum);
+        }
     }
 
-    private static byte[] BuildSectionData(Action<ByteBufferWriter> writeContent)
+    private static byte[] BuildBytes(Action<BinaryWriter> writeContent)
     {
-        var tempWriter = new ByteBufferWriter(1024 * 1024);
-        writeContent(tempWriter);
-        return tempWriter.ToArray();
+        using var ms = new MemoryStream();
+        using var w = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true);
+        writeContent(w);
+        w.Flush();
+        return ms.ToArray();
+    }
+
+    #region BinaryWriter 扩展方法
+
+    private static void WriteLE(this BinaryWriter writer, uint value)
+    {
+        var bytes = BitConverter.GetBytes(value);
+        if (!BitConverter.IsLittleEndian)
+        {
+            Array.Reverse(bytes);
+        }
+
+        writer.Write(bytes);
+    }
+
+    private static void WriteLEB128(this BinaryWriter writer, uint value)
+    {
+        do
+        {
+            var byteVal = value & 0x7F;
+            value >>= 7;
+            if (value != 0)
+            {
+                byteVal |= 0x80;
+            }
+
+            writer.Write((byte)byteVal);
+        } while (value != 0);
+    }
+
+    private static void WriteLEB128(this BinaryWriter writer, int value)
+    {
+        WriteLEB128(writer, (uint)value);
     }
 
     #endregion

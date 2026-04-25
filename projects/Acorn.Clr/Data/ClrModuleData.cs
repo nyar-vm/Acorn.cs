@@ -5,317 +5,386 @@ using System.Text;
 namespace Acorn.Clr.Data;
 
 /// <summary>
-///     CLR 模块数据（.NET 程序集）
+///     CLR 模块数据（.NET 程序集）。
 /// </summary>
 public sealed class ClrModuleData
 {
     /// <summary>
-    ///     基础 PE 文件数据
+    ///     基础 PE 文件数据。
     /// </summary>
-    public PeFileData PeFile { get; init; }
+    public PeFileData PeFile { get; init; } = new();
 
     /// <summary>
-    ///     CLR 目录表（元数据入口点）
+    ///     CLR 目录表（PE 可选头中的 .NET 元数据入口点）。
     /// </summary>
-    public ClrDirectoryData ClrDirectory { get; init; }
+    public ClrDirectoryData ClrDirectory { get; init; } = new();
 
     /// <summary>
-    ///     元数据
+    ///     元数据。
     /// </summary>
-    public ClrMetadata Metadata { get; init; }
+    public ClrMetadata Metadata { get; init; } = new();
 
     /// <summary>
-    ///     方法列表
+    ///     方法列表（从 MethodDef 表解析）。
     /// </summary>
-    public IReadOnlyList<ClrMethod> Methods { get; init; }
+    public IReadOnlyList<ClrMethodDef> Methods { get; init; } = [];
 
     /// <summary>
-    ///     类型列表
+    ///     类型列表（从 TypeDef 表解析）。
     /// </summary>
-    public IReadOnlyList<ClrType> Types { get; init; }
+    public IReadOnlyList<ClrTypeDef> Types { get; init; } = [];
 
     /// <summary>
-    ///     字段列表
+    ///     字段列表（从 Field 表解析）。
     /// </summary>
-    public IReadOnlyList<ClrField> Fields { get; init; }
+    public IReadOnlyList<ClrFieldDef> Fields { get; init; } = [];
 
     /// <summary>
-    ///     属性列表
+    ///     属性列表（从 Property 表解析）。
     /// </summary>
-    public IReadOnlyList<ClrProperty> Properties { get; init; }
+    public IReadOnlyList<ClrPropertyDef> Properties { get; init; } = [];
 
     /// <summary>
-    ///     事件列表
+    ///     事件列表（从 Event 表解析）。
     /// </summary>
-    public IReadOnlyList<ClrEvent> Events { get; init; }
+    public IReadOnlyList<ClrEventDef> Events { get; init; } = [];
 
     /// <summary>
-    ///     模块名
+    ///     模块名。
     /// </summary>
-    public string ModuleName { get; init; }
+    public string ModuleName { get; init; } = string.Empty;
 
     /// <summary>
-    ///     版本号
+    ///     版本号。
     /// </summary>
-    public string Version { get; init; }
+    public string Version { get; init; } = string.Empty;
 }
 
 /// <summary>
-///     CLR 目录表（PE 可选头中的 .NET 元数据入口点）
+///     CLR 目录表（PE 可选头中的 .NET 元数据入口点，72 字节）。
 /// </summary>
 public sealed class ClrDirectoryData
 {
     /// <summary>
-    ///     特征标志
+    ///     头部大小（字节）。
     /// </summary>
-    public uint Characteristics { get; init; }
+    public uint Cb { get; init; }
 
     /// <summary>
-    ///     主版本号
+    ///     主运行时版本号。
     /// </summary>
-    public ushort MajorVersion { get; init; }
+    public ushort MajorRuntimeVersion { get; init; }
 
     /// <summary>
-    ///     次版本号
+    ///     次运行时版本号。
     /// </summary>
-    public ushort MinorVersion { get; init; }
+    public ushort MinorRuntimeVersion { get; init; }
 
     /// <summary>
-    ///     元数据 RVA
+    ///     元数据 RVA。
     /// </summary>
     public uint MetadataRva { get; init; }
 
     /// <summary>
-    ///     元数据大小
+    ///     元数据大小。
     /// </summary>
     public uint MetadataSize { get; init; }
 
     /// <summary>
-    ///     标志
+    ///     标志（<see cref="ClrDirectoryFlags" />）。
     /// </summary>
     public uint Flags { get; init; }
 
     /// <summary>
-    ///     入口点 RVA（如果有）
+    ///     入口点 RVA 或令牌。
     /// </summary>
-    public uint EntryPointRva { get; init; }
+    public uint EntryPoint { get; init; }
 
     /// <summary>
-    ///     资源 RVA
+    ///     资源 RVA。
     /// </summary>
     public uint ResourcesRva { get; init; }
 
     /// <summary>
-    ///     资源大小
+    ///     资源大小。
     /// </summary>
     public uint ResourcesSize { get; init; }
 
     /// <summary>
-    ///     强名称签名 RVA
+    ///     强名称签名 RVA。
     /// </summary>
     public uint StrongNameSignatureRva { get; init; }
 
     /// <summary>
-    ///     强名称签名大小
+    ///     强名称签名大小。
     /// </summary>
     public uint StrongNameSignatureSize { get; init; }
 
     /// <summary>
-    ///     代码管理器表 RVA
+    ///     代码管理器表 RVA。
     /// </summary>
     public uint CodeManagerTableRva { get; init; }
 
     /// <summary>
-    ///     代码管理器表大小
+    ///     代码管理器表大小。
     /// </summary>
     public uint CodeManagerTableSize { get; init; }
 
     /// <summary>
-    ///     VTable 固定部分映射 RVA
+    ///     VTable 固定部分映射 RVA。
     /// </summary>
     public uint VTableFixupsRva { get; init; }
 
     /// <summary>
-    ///     VTable 固定部分映射大小
+    ///     VTable 固定部分映射大小。
     /// </summary>
     public uint VTableFixupsSize { get; init; }
 
     /// <summary>
-    ///     导出地址表 RVA
+    ///     导出地址表 RVA。
     /// </summary>
     public uint ExportAddressTableJumpsRva { get; init; }
 
     /// <summary>
-    ///     导出地址表大小
+    ///     导出地址表大小。
     /// </summary>
     public uint ExportAddressTableJumpsSize { get; init; }
 
     /// <summary>
-    ///     托管原生头 RVA
+    ///     托管原生头 RVA。
     /// </summary>
     public uint ManagedNativeHeaderRva { get; init; }
 
     /// <summary>
-    ///     托管原生头大小
+    ///     托管原生头大小。
     /// </summary>
     public uint ManagedNativeHeaderSize { get; init; }
+
+    /// <summary>
+    ///     是否为纯 IL 程序集。
+    /// </summary>
+    public bool IsILOnly => (Flags & (uint)ClrDirectoryFlags.ILOnly) != 0;
+
+    /// <summary>
+    ///     入口点是否为元数据令牌（而非 RVA）。
+    /// </summary>
+    public bool IsEntryPointToken => (Flags & (uint)ClrDirectoryFlags.NativeEntryPoint) == 0;
 }
 
 /// <summary>
-///     CLR 元数据
+///     CLR 元数据。
 /// </summary>
 public sealed class ClrMetadata
 {
     /// <summary>
-    ///     元数据头
+    ///     元数据头。
     /// </summary>
-    public ClrMetadataHeader Header { get; init; }
+    public ClrMetadataHeader Header { get; init; } = new();
 
     /// <summary>
-    ///     表流（#~ 或 #Schema）
+    ///     流头列表。
     /// </summary>
-    public ClrTableStream TableStream { get; init; }
+    public IReadOnlyList<ClrStreamHeader> StreamHeaders { get; init; } = [];
 
     /// <summary>
-    ///     字符串堆（#Strings）
+    ///     表流（#~ 或 #-）。
     /// </summary>
-    public ClrStringHeap StringHeap { get; init; }
+    public ClrTableStream? TableStream { get; init; }
 
     /// <summary>
-    ///     Blob 堆（#Blob）
+    ///     字符串堆（#Strings）。
     /// </summary>
-    public ClrBlobHeap BlobHeap { get; init; }
+    public ClrStringHeap StringHeap { get; init; } = new();
 
     /// <summary>
-    ///     GUID 堆（#GUID）
+    ///     Blob 堆（#Blob）。
     /// </summary>
-    public ClrGuidHeap GuidHeap { get; init; }
+    public ClrBlobHeap BlobHeap { get; init; } = new();
 
     /// <summary>
-    ///     用户字符串堆（#US）
+    ///     GUID 堆（#GUID）。
     /// </summary>
-    public ClrUserStringHeap UserStringHeap { get; init; }
+    public ClrGuidHeap GuidHeap { get; init; } = new();
+
+    /// <summary>
+    ///     用户字符串堆（#US）。
+    /// </summary>
+    public ClrUserStringHeap UserStringHeap { get; init; } = new();
 }
 
 /// <summary>
-///     元数据头
+///     元数据头。
 /// </summary>
 public sealed class ClrMetadataHeader
 {
     /// <summary>
-    ///     签名（"Magic"）
+    ///     签名（应为 <see cref="ClrConstants.MetadataSignature" /> = 0x424A5342 "BSJB"）。
     /// </summary>
-    public uint Magic { get; init; }
+    public uint Signature { get; init; }
 
     /// <summary>
-    ///     主版本号
+    ///     主版本号。
     /// </summary>
     public ushort MajorVersion { get; init; }
 
     /// <summary>
-    ///     次版本号
+    ///     次版本号。
     /// </summary>
     public ushort MinorVersion { get; init; }
 
     /// <summary>
-    ///     保留字段
+    ///     保留字段。
     /// </summary>
     public uint Reserved { get; init; }
 
     /// <summary>
-    ///     主版本字符串长度
+    ///     版本字符串长度（包含尾部填充）。
     /// </summary>
     public uint VersionStringLength { get; init; }
 
     /// <summary>
-    ///     版本字符串
+    ///     版本字符串。
     /// </summary>
-    public string VersionString { get; init; }
+    public string VersionString { get; init; } = string.Empty;
 
     /// <summary>
-    ///     位掩码（表存在性）
+    ///     标志。
     /// </summary>
-    public uint Flags { get; init; }
+    public ushort Flags { get; init; }
 
     /// <summary>
-    ///     流数量
+    ///     流数量。
     /// </summary>
-    public uint Streams { get; init; }
+    public ushort Streams { get; init; }
 }
 
 /// <summary>
-///     表流
+///     元数据流头。
+/// </summary>
+public sealed class ClrStreamHeader
+{
+    /// <summary>
+    ///     流数据偏移量（相对于元数据根）。
+    /// </summary>
+    public uint Offset { get; init; }
+
+    /// <summary>
+    ///     流数据大小（字节）。
+    /// </summary>
+    public uint Size { get; init; }
+
+    /// <summary>
+    ///     流名称（如 "#~"、"#Strings"、"#Blob"、"#GUID"、"#US"）。
+    /// </summary>
+    public string Name { get; init; } = string.Empty;
+}
+
+/// <summary>
+///     表流（#~ 或 #-）。
 /// </summary>
 public sealed class ClrTableStream
 {
     /// <summary>
-    ///     表头部
+    ///     表头部。
     /// </summary>
-    public ClrTableHeader Header { get; init; }
+    public ClrTableHeader Header { get; init; } = new();
 
     /// <summary>
-    ///     表数据
+    ///     各表行数据，按 <see cref="ClrTableKind" /> 索引。
     /// </summary>
-    public IReadOnlyList<ClrTable> Tables { get; init; }
+    public IReadOnlyList<ClrTableData> Tables { get; init; } = [];
 }
 
 /// <summary>
-///     表头部
+///     表流头部。
 /// </summary>
 public sealed class ClrTableHeader
 {
     /// <summary>
-    ///     预留字节
+    ///     预留字节。
     /// </summary>
-    public byte Reserved1 { get; init; }
+    public uint Reserved { get; init; }
 
     /// <summary>
-    ///     主要表计数
+    ///     主版本号。
     /// </summary>
     public byte MajorVersion { get; init; }
 
     /// <summary>
-    ///     次要表计数
+    ///     次版本号。
     /// </summary>
     public byte MinorVersion { get; init; }
 
     /// <summary>
-    ///     堆偏移大小（2 或 4）
+    ///     堆偏移大小标志（<see cref="ClrHeapSizeFlags" />）。
     /// </summary>
-    public byte HeapOffsetSize { get; init; }
+    public byte HeapSizes { get; init; }
 
     /// <summary>
-    ///     表行计数
+    ///     有效表位掩码（哪些表存在）。
     /// </summary>
-    public IReadOnlyList<uint> RowCounts { get; init; }
+    public ulong ValidTables { get; init; }
+
+    /// <summary>
+    ///     已排序表位掩码。
+    /// </summary>
+    public ulong SortedTables { get; init; }
+
+    /// <summary>
+    ///     各表行计数（仅包含 ValidTables 中标记为存在的表）。
+    /// </summary>
+    public IReadOnlyList<uint> RowCounts { get; init; } = [];
+
+    /// <summary>
+    ///     #Strings 堆索引大小（2 或 4 字节）。
+    /// </summary>
+    public int StringIndexSize => (HeapSizes & (byte)ClrHeapSizeFlags.StringHeapLarge) != 0 ? 4 : 2;
+
+    /// <summary>
+    ///     #GUID 堆索引大小（2 或 4 字节）。
+    /// </summary>
+    public int GuidIndexSize => (HeapSizes & (byte)ClrHeapSizeFlags.GuidHeapLarge) != 0 ? 4 : 2;
+
+    /// <summary>
+    ///     #Blob 堆索引大小（2 或 4 字节）。
+    /// </summary>
+    public int BlobIndexSize => (HeapSizes & (byte)ClrHeapSizeFlags.BlobHeapLarge) != 0 ? 4 : 2;
 }
 
 /// <summary>
-///     表基类
+///     单个元数据表的原始数据。
 /// </summary>
-public abstract class ClrTable
+public sealed class ClrTableData
 {
     /// <summary>
-    ///     表类型
+    ///     表类型。
     /// </summary>
-    public abstract ClrTableKind Kind { get; }
+    public ClrTableKind Kind { get; init; }
 
     /// <summary>
-    ///     行数据
+    ///     行数。
     /// </summary>
-    public abstract IReadOnlyList<ClrTableRow> Rows { get; }
+    public uint RowCount { get; init; }
+
+    /// <summary>
+    ///     原始行数据（每行为字节数组，由具体表类型解析）。
+    /// </summary>
+    public IReadOnlyList<byte[]> RawRows { get; init; } = [];
 }
 
 /// <summary>
-///     表类型
+///     元数据表类型（ECMA-335 §22）。
 /// </summary>
-public enum ClrTableKind
+public enum ClrTableKind : byte
 {
     Module = 0,
     TypeRef = 1,
     TypeDef = 2,
+    FieldPtr = 3,
     Field = 4,
+    MethodPtr = 5,
     MethodDef = 6,
+    ParamPtr = 7,
     Param = 8,
     InterfaceImpl = 9,
     MemberRef = 10,
@@ -327,8 +396,10 @@ public enum ClrTableKind
     FieldLayout = 16,
     StandAloneSig = 17,
     EventMap = 18,
+    EventPtr = 19,
     Event = 20,
     PropertyMap = 21,
+    PropertyPtr = 22,
     Property = 23,
     MethodSemantics = 24,
     MethodImpl = 25,
@@ -353,290 +424,597 @@ public enum ClrTableKind
     GenericParamConstraint = 44
 }
 
+#region 元数据表行类型
+
 /// <summary>
-///     表行基类
+///     Module 表行（ECMA-335 §22.30）。
 /// </summary>
-public abstract class ClrTableRow
+public sealed class ClrModuleRow
 {
-    /// <summary>
-    ///     行索引
-    /// </summary>
-    public uint Index { get; init; }
+    public ushort Generation { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public Guid Mvid { get; init; }
+    public Guid EncId { get; init; }
+    public Guid EncBaseId { get; init; }
 }
 
 /// <summary>
-///     字符串堆
+///     TypeDef 表行（ECMA-335 §22.37）。
+/// </summary>
+public sealed class ClrTypeDefRow
+{
+    public ClrTypeAttributes Flags { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Namespace { get; init; } = string.Empty;
+    public uint ExtendsIndex { get; init; }
+    public int FieldListStart { get; init; }
+    public int MethodListStart { get; init; }
+}
+
+/// <summary>
+///     MethodDef 表行（ECMA-335 §22.26）。
+/// </summary>
+public sealed class ClrMethodDefRow
+{
+    public uint Rva { get; init; }
+    public ushort ImplFlags { get; init; }
+    public ClrMethodAttributes Flags { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public uint SignatureIndex { get; init; }
+    public int ParamListStart { get; init; }
+}
+
+/// <summary>
+///     Field 表行（ECMA-335 §22.15）。
+/// </summary>
+public sealed class ClrFieldDefRow
+{
+    public ClrFieldAttributes Flags { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public uint SignatureIndex { get; init; }
+}
+
+/// <summary>
+///     Param 表行（ECMA-335 §22.33）。
+/// </summary>
+public sealed class ClrParamRow
+{
+    public ushort Flags { get; init; }
+    public ushort Sequence { get; init; }
+    public string Name { get; init; } = string.Empty;
+}
+
+/// <summary>
+///     TypeRef 表行（ECMA-335 §22.38）。
+/// </summary>
+public sealed class ClrTypeRefRow
+{
+    public uint ResolutionScopeIndex { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Namespace { get; init; } = string.Empty;
+}
+
+/// <summary>
+///     MemberRef 表行（ECMA-335 §22.25）。
+/// </summary>
+public sealed class ClrMemberRefRow
+{
+    public uint ClassIndex { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public uint SignatureIndex { get; init; }
+}
+
+/// <summary>
+///     InterfaceImpl 表行（ECMA-335 §22.23）。
+/// </summary>
+public sealed class ClrInterfaceImplRow
+{
+    public uint ClassIndex { get; init; }
+    public uint InterfaceIndex { get; init; }
+}
+
+/// <summary>
+///     Property 表行（ECMA-335 §22.34）。
+/// </summary>
+public sealed class ClrPropertyDefRow
+{
+    public ushort Flags { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public uint SignatureIndex { get; init; }
+}
+
+/// <summary>
+///     Event 表行（ECMA-335 §22.13）。
+/// </summary>
+public sealed class ClrEventDefRow
+{
+    public ushort EventFlags { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public uint EventTypeIndex { get; init; }
+}
+
+/// <summary>
+///     Assembly 表行（ECMA-335 §22.2）。
+/// </summary>
+public sealed class ClrAssemblyRow
+{
+    public uint HashAlgId { get; init; }
+    public ushort MajorVersion { get; init; }
+    public ushort MinorVersion { get; init; }
+    public ushort BuildNumber { get; init; }
+    public ushort RevisionNumber { get; init; }
+    public uint Flags { get; init; }
+    public uint PublicKeyIndex { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Culture { get; init; } = string.Empty;
+}
+
+/// <summary>
+///     AssemblyRef 表行（ECMA-335 §22.5）。
+/// </summary>
+public sealed class ClrAssemblyRefRow
+{
+    public ushort MajorVersion { get; init; }
+    public ushort MinorVersion { get; init; }
+    public ushort BuildNumber { get; init; }
+    public ushort RevisionNumber { get; init; }
+    public uint Flags { get; init; }
+    public uint PublicKeyOrTokenIndex { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Culture { get; init; } = string.Empty;
+    public uint HashValueIndex { get; init; }
+}
+
+/// <summary>
+///     NestedClass 表行（ECMA-335 §22.32）。
+/// </summary>
+public sealed class ClrNestedClassRow
+{
+    public uint NestedClassIndex { get; init; }
+    public uint EnclosingClassIndex { get; init; }
+}
+
+/// <summary>
+///     CustomAttribute 表行（ECMA-335 §22.10）。
+/// </summary>
+public sealed class ClrCustomAttributeRow
+{
+    public uint ParentIndex { get; init; }
+    public uint TypeIndex { get; init; }
+    public uint ValueIndex { get; init; }
+}
+
+/// <summary>
+///     StandAloneSig 表行（ECMA-335 §22.36）。
+/// </summary>
+public sealed class ClrStandAloneSigRow
+{
+    public uint SignatureIndex { get; init; }
+}
+
+/// <summary>
+///     TypeSpec 表行（ECMA-335 §22.39）。
+/// </summary>
+public sealed class ClrTypeSpecRow
+{
+    public uint SignatureIndex { get; init; }
+}
+
+/// <summary>
+///     MethodSpec 表行（ECMA-335 §22.27）。
+/// </summary>
+public sealed class ClrMethodSpecRow
+{
+    public uint MethodIndex { get; init; }
+    public uint InstantiationIndex { get; init; }
+}
+
+/// <summary>
+///     GenericParam 表行（ECMA-335 §22.20）。
+/// </summary>
+public sealed class ClrGenericParamRow
+{
+    public ushort Number { get; init; }
+    public ushort Flags { get; init; }
+    public uint OwnerIndex { get; init; }
+    public string Name { get; init; } = string.Empty;
+}
+
+/// <summary>
+///     GenericParamConstraint 表行（ECMA-335 §22.21）。
+/// </summary>
+public sealed class ClrGenericParamConstraintRow
+{
+    public uint OwnerIndex { get; init; }
+    public uint ConstraintIndex { get; init; }
+}
+
+/// <summary>
+///     ManifestResource 表行（ECMA-335 §22.24）。
+/// </summary>
+public sealed class ClrManifestResourceRow
+{
+    public uint Offset { get; init; }
+    public uint Flags { get; init; }
+    public uint ImplementationIndex { get; init; }
+    public string Name { get; init; } = string.Empty;
+}
+
+/// <summary>
+///     File 表行（ECMA-335 §22.16）。
+/// </summary>
+public sealed class ClrFileRow
+{
+    public uint Flags { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public uint HashValueIndex { get; init; }
+}
+
+/// <summary>
+///     ExportedType 表行（ECMA-335 §22.14）。
+/// </summary>
+public sealed class ClrExportedTypeRow
+{
+    public uint Flags { get; init; }
+    public uint TypeDefId { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Namespace { get; init; } = string.Empty;
+    public uint ImplementationIndex { get; init; }
+}
+
+#endregion
+
+#region 堆类型
+
+/// <summary>
+///     字符串堆（#Strings）。
 /// </summary>
 public sealed class ClrStringHeap
 {
     /// <summary>
-    ///     数据
+    ///     原始数据。
     /// </summary>
-    public byte[] Data { get; init; }
+    public byte[] Data { get; init; } = [];
 
     /// <summary>
-    ///     按偏移量读取字符串
+    ///     按偏移量读取以 null 结尾的 UTF-8 字符串。
     /// </summary>
-    public string ReadString(uint offset) => Encoding.UTF8.GetString(Data, (int)offset, Data.Length - (int)offset);
+    public string ReadString(uint offset)
+    {
+        if (offset == 0 || offset >= Data.Length)
+        {
+            return string.Empty;
+        }
+
+        var start = (int)offset;
+        var end = start;
+
+        while (end < Data.Length && Data[end] != 0)
+        {
+            end++;
+        }
+
+        return Encoding.UTF8.GetString(Data, start, end - start);
+    }
 }
 
 /// <summary>
-///     Blob 堆
+///     Blob 堆（#Blob）。
 /// </summary>
 public sealed class ClrBlobHeap
 {
     /// <summary>
-    ///     数据
+    ///     原始数据。
     /// </summary>
-    public byte[] Data { get; init; }
+    public byte[] Data { get; init; } = [];
 
     /// <summary>
-    ///     按偏移量读取 Blob
+    ///     按偏移量读取 Blob（先读取压缩长度前缀，再读取数据）。
     /// </summary>
-    public byte[] ReadBlob(uint offset) => Data[(int)offset..];
+    public ReadOnlySpan<byte> ReadBlob(uint offset)
+    {
+        if (offset == 0 || offset >= Data.Length)
+        {
+            return [];
+        }
+
+        var pos = (int)offset;
+        var length = DecodeBlobLength(Data, ref pos);
+
+        return Data.AsSpan(pos, length);
+    }
+
+    /// <summary>
+    ///     解码 Blob 堆的压缩长度前缀（ECMA-335 §23.2.4）。
+    /// </summary>
+    internal static int DecodeBlobLength(byte[] data, ref int pos)
+    {
+        var first = data[pos];
+
+        if ((first & 0x80) == 0)
+        {
+            pos++;
+            return first;
+        }
+
+        if ((first & 0xC0) == 0x80)
+        {
+            pos += 2;
+            return ((first & 0x3F) << 8) | data[pos - 1];
+        }
+
+        if ((first & 0xE0) == 0xC0)
+        {
+            pos += 4;
+            return ((first & 0x1F) << 24) | (data[pos - 3] << 16) | (data[pos - 2] << 8) | data[pos - 1];
+        }
+
+        pos++;
+        return 0;
+    }
 }
 
 /// <summary>
-///     GUID 堆
+///     GUID 堆（#GUID）。
 /// </summary>
 public sealed class ClrGuidHeap
 {
     /// <summary>
-    ///     数据
+    ///     原始数据。
     /// </summary>
-    public byte[] Data { get; init; }
+    public byte[] Data { get; init; } = [];
 
     /// <summary>
-    ///     按索引读取 GUID
+    ///     按索引读取 GUID（索引从 1 开始，每个 GUID 16 字节）。
     /// </summary>
-    public Guid ReadGuid(uint index) => new(Data.Skip((int)(index * 16)).Take(16).ToArray());
+    public Guid ReadGuid(uint index)
+    {
+        if (index == 0 || Data.Length < 16)
+        {
+            return Guid.Empty;
+        }
+
+        var offset = (int)(index - 1) * 16;
+
+        if (offset + 16 > Data.Length)
+        {
+            return Guid.Empty;
+        }
+
+        return new Guid(Data.AsSpan(offset, 16));
+    }
 }
 
 /// <summary>
-///     用户字符串堆
+///     用户字符串堆（#US）。
 /// </summary>
 public sealed class ClrUserStringHeap
 {
     /// <summary>
-    ///     数据
+    ///     原始数据。
     /// </summary>
-    public byte[] Data { get; init; }
+    public byte[] Data { get; init; } = [];
 
     /// <summary>
-    ///     按偏移量读取用户字符串
+    ///     按偏移量读取用户字符串（先读取压缩长度前缀，再读取 UTF-16LE 数据 + 尾部标志字节）。
     /// </summary>
-    public string ReadUserString(uint offset) => Encoding.Unicode.GetString(Data, (int)offset, Data.Length - (int)offset);
+    public string ReadUserString(uint offset)
+    {
+        if (offset == 0 || offset >= Data.Length)
+        {
+            return string.Empty;
+        }
+
+        var pos = (int)offset;
+        var length = ClrBlobHeap.DecodeBlobLength(Data, ref pos);
+
+        if (length == 0 || pos + length > Data.Length)
+        {
+            return string.Empty;
+        }
+
+        var byteCount = length - 1;
+
+        if (byteCount <= 0)
+        {
+            return string.Empty;
+        }
+
+        return Encoding.Unicode.GetString(Data, pos, byteCount);
+    }
 }
 
+#endregion
+
+#region 高级类型（解析后的便捷视图）
+
 /// <summary>
-///     方法定义
+///     方法定义（解析后的高级视图）。
 /// </summary>
-public sealed class ClrMethod
+public sealed class ClrMethodDef
 {
     /// <summary>
-    ///     方法名
+    ///     方法名。
     /// </summary>
-    public string Name { get; init; }
+    public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    ///     签名
+    ///     访问标志。
     /// </summary>
-    public string Signature { get; init; }
+    public ClrMethodAttributes Flags { get; init; }
 
     /// <summary>
-    ///     访问标志
-    /// </summary>
-    public uint AccessFlags { get; init; }
-
-    /// <summary>
-    ///     RVA
+    ///     方法 RVA。
     /// </summary>
     public uint Rva { get; init; }
 
     /// <summary>
-    ///     代码大小
+    ///     代码大小。
     /// </summary>
     public uint CodeSize { get; init; }
 
     /// <summary>
-    ///     局部变量大小
+    ///     局部变量签名令牌。
     /// </summary>
     public uint LocalVarSigTok { get; init; }
 
     /// <summary>
-    ///     MSIL 指令
+    ///     最大栈深度。
     /// </summary>
-    public IReadOnlyList<ClrInstruction> Instructions { get; init; }
+    public ushort MaxStack { get; init; }
 
     /// <summary>
-    ///     异常表
+    ///     MSIL 指令列表。
     /// </summary>
-    public IReadOnlyList<ClrExceptionHandler> ExceptionHandlers { get; init; }
+    public IReadOnlyList<ClrInstruction> Instructions { get; init; } = [];
+
+    /// <summary>
+    ///     异常处理表。
+    /// </summary>
+    public IReadOnlyList<ClrExceptionHandler> ExceptionHandlers { get; init; } = [];
 }
 
 /// <summary>
-///     类型定义
+///     类型定义（解析后的高级视图）。
 /// </summary>
-public sealed class ClrType
+public sealed class ClrTypeDef
 {
     /// <summary>
-    ///     类型名
+    ///     类型名。
     /// </summary>
-    public string Name { get; init; }
+    public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    ///     命名空间
+    ///     命名空间。
     /// </summary>
-    public string Namespace { get; init; }
+    public string Namespace { get; init; } = string.Empty;
 
     /// <summary>
-    ///     访问标志
+    ///     类型标志。
     /// </summary>
-    public uint AccessFlags { get; init; }
+    public ClrTypeAttributes Flags { get; init; }
 
     /// <summary>
-    ///     父类
+    ///     父类索引（TypeDef 或 TypeRef 编码索引）。
     /// </summary>
-    public ClrType? BaseType { get; init; }
+    public uint ExtendsIndex { get; init; }
 
     /// <summary>
-    ///     接口列表
+    ///     字段列表。
     /// </summary>
-    public IReadOnlyList<ClrType> Interfaces { get; init; }
+    public IReadOnlyList<ClrFieldDef> Fields { get; init; } = [];
 
     /// <summary>
-    ///     字段列表
+    ///     方法列表。
     /// </summary>
-    public IReadOnlyList<ClrField> Fields { get; init; }
+    public IReadOnlyList<ClrMethodDef> Methods { get; init; } = [];
 
     /// <summary>
-    ///     方法列表
+    ///     属性列表。
     /// </summary>
-    public IReadOnlyList<ClrMethod> Methods { get; init; }
+    public IReadOnlyList<ClrPropertyDef> Properties { get; init; } = [];
 
     /// <summary>
-    ///     属性列表
+    ///     事件列表。
     /// </summary>
-    public IReadOnlyList<ClrProperty> Properties { get; init; }
-
-    /// <summary>
-    ///     事件列表
-    /// </summary>
-    public IReadOnlyList<ClrEvent> Events { get; init; }
+    public IReadOnlyList<ClrEventDef> Events { get; init; } = [];
 }
 
 /// <summary>
-///     字段定义
+///     字段定义（解析后的高级视图）。
 /// </summary>
-public sealed class ClrField
+public sealed class ClrFieldDef
 {
     /// <summary>
-    ///     字段名
+    ///     字段名。
     /// </summary>
-    public string Name { get; init; }
+    public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    ///     签名
+    ///     字段标志。
     /// </summary>
-    public string Signature { get; init; }
+    public ClrFieldAttributes Flags { get; init; }
 
     /// <summary>
-    ///     访问标志
+    ///     签名 Blob 偏移。
     /// </summary>
-    public uint AccessFlags { get; init; }
+    public uint SignatureIndex { get; init; }
 }
 
 /// <summary>
-///     属性定义
+///     属性定义（解析后的高级视图）。
 /// </summary>
-public sealed class ClrProperty
+public sealed class ClrPropertyDef
 {
     /// <summary>
-    ///     属性名
+    ///     属性名。
     /// </summary>
-    public string Name { get; init; }
+    public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    ///     签名
+    ///     属性标志。
     /// </summary>
-    public string Signature { get; init; }
+    public ushort Flags { get; init; }
 
     /// <summary>
-    ///     访问标志
+    ///     签名 Blob 偏移。
     /// </summary>
-    public uint AccessFlags { get; init; }
-
-    /// <summary>
-    ///     Getter 方法
-    /// </summary>
-    public ClrMethod? GetMethod { get; init; }
-
-    /// <summary>
-    ///     Setter 方法
-    /// </summary>
-    public ClrMethod? SetMethod { get; init; }
+    public uint SignatureIndex { get; init; }
 }
 
 /// <summary>
-///     事件定义
+///     事件定义（解析后的高级视图）。
 /// </summary>
-public sealed class ClrEvent
+public sealed class ClrEventDef
 {
     /// <summary>
-    ///     事件名
+    ///     事件名。
     /// </summary>
-    public string Name { get; init; }
+    public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    ///     事件类型
+    ///     事件标志。
     /// </summary>
-    public ClrType EventType { get; init; }
+    public ushort EventFlags { get; init; }
 
     /// <summary>
-    ///     访问标志
+    ///     事件类型索引。
     /// </summary>
-    public uint AccessFlags { get; init; }
-
-    /// <summary>
-    ///     Add 方法
-    /// </summary>
-    public ClrMethod? AddMethod { get; init; }
-
-    /// <summary>
-    ///     Remove 方法
-    /// </summary>
-    public ClrMethod? RemoveMethod { get; init; }
-
-    /// <summary>
-    ///     Raise 方法
-    /// </summary>
-    public ClrMethod? RaiseMethod { get; init; }
+    public uint EventTypeIndex { get; init; }
 }
 
+#endregion
+
+#region MSIL 指令
+
 /// <summary>
-///     MSIL 指令
+///     MSIL 指令。
 /// </summary>
 public sealed class ClrInstruction
 {
     /// <summary>
-    ///     偏移量
+    ///     指令偏移量。
     /// </summary>
     public uint Offset { get; init; }
 
     /// <summary>
-    ///     操作码
+    ///     操作码。
     /// </summary>
     public ClrOpcode Opcode { get; init; }
 
     /// <summary>
-    ///     操作数
+    ///     操作数。
     /// </summary>
     public ClrOperand? Operand { get; init; }
 }
 
 /// <summary>
-///     MSIL 操作码
+///     MSIL 操作码（ECMA-335 标准定义）。
 /// </summary>
+/// <remarks>
+///     单字节操作码范围 0x00-0xFE，双字节操作码以 0xFE 为前缀，
+///     编码为 0xFE00-0xFEFF。
+/// </remarks>
 public enum ClrOpcode : ushort
 {
     Nop = 0x00,
@@ -715,16 +1093,17 @@ public enum ClrOpcode : ushort
     Ldind_I4 = 0x4A,
     Ldind_U4 = 0x4B,
     Ldind_I8 = 0x4C,
-    Ldind_R4 = 0x4D,
-    Ldind_R8 = 0x4E,
-    Ldind_Ref = 0x4F,
-    Stind_Ref = 0x50,
-    Stind_I1 = 0x51,
-    Stind_I2 = 0x52,
-    Stind_I4 = 0x53,
-    Stind_I8 = 0x54,
-    Stind_R4 = 0x55,
-    Stind_R8 = 0x56,
+    Ldind_I = 0x4D,
+    Ldind_R4 = 0x4E,
+    Ldind_R8 = 0x4F,
+    Ldind_Ref = 0x50,
+    Stind_Ref = 0x51,
+    Stind_I1 = 0x52,
+    Stind_I2 = 0x53,
+    Stind_I4 = 0x54,
+    Stind_I8 = 0x55,
+    Stind_R4 = 0x56,
+    Stind_R8 = 0x57,
     Add = 0x58,
     Sub = 0x59,
     Mul = 0x5A,
@@ -764,179 +1143,139 @@ public enum ClrOpcode : ushort
     Ldsfld = 0x7E,
     Ldsflda = 0x7F,
     Stsfld = 0x80,
-    Ldftn = 0x81,
-    Ldvirtftn = 0x83,
-    Ldarg = 0x89,
-    Ldarga = 0x8A,
-    Starg = 0x8B,
-    Ldloc = 0x8C,
-    Ldloca = 0x8D,
-    Stloc = 0x8E,
-    Localloc = 0x8F,
-    Endfinally = 0xDC,
+    Stobj = 0x81,
+    Conv_Ovf_I1_Un = 0x82,
+    Conv_Ovf_I2_Un = 0x83,
+    Conv_Ovf_I4_Un = 0x84,
+    Conv_Ovf_I8_Un = 0x85,
+    Conv_Ovf_U1_Un = 0x86,
+    Conv_Ovf_U2_Un = 0x87,
+    Conv_Ovf_U4_Un = 0x88,
+    Conv_Ovf_U8_Un = 0x89,
+    Conv_Ovf_I_Un = 0x8A,
+    Conv_Ovf_U_Un = 0x8B,
+    Box = 0x8C,
+    Newarr = 0x8D,
+    Ldlen = 0x8E,
+    Ldelema = 0x8F,
+    Ldelem_I1 = 0x90,
+    Ldelem_U1 = 0x91,
+    Ldelem_I2 = 0x92,
+    Ldelem_U2 = 0x93,
+    Ldelem_I4 = 0x94,
+    Ldelem_U4 = 0x95,
+    Ldelem_I8 = 0x96,
+    Ldelem_I = 0x97,
+    Ldelem_R4 = 0x98,
+    Ldelem_R8 = 0x99,
+    Ldelem_Ref = 0x9A,
+    Stelem_I = 0x9B,
+    Stelem_I1 = 0x9C,
+    Stelem_I2 = 0x9D,
+    Stelem_I4 = 0x9E,
+    Stelem_I8 = 0x9F,
+    Stelem_R4 = 0xA0,
+    Stelem_R8 = 0xA1,
+    Stelem_Ref = 0xA2,
+    Ldelem_Any = 0xA3,
+    Stelem_Any = 0xA4,
+    Unbox_Any = 0xA5,
+    Conv_Ovf_I1 = 0xB3,
+    Conv_Ovf_U1 = 0xB4,
+    Conv_Ovf_I2 = 0xB5,
+    Conv_Ovf_U2 = 0xB6,
+    Conv_Ovf_I4 = 0xB7,
+    Conv_Ovf_U4 = 0xB8,
+    Conv_Ovf_I8 = 0xB9,
+    Conv_Ovf_U8 = 0xBA,
+    Conv_Ovf_I = 0xC2,
+    Conv_Ovf_U = 0xC3,
     Leave = 0xDD,
     Leave_S = 0xDE,
-    Stind_I = 0xFE01,
-    Ldind_I = 0xFE02,
-    Conv_U1 = 0xFE03,
-    Conv_U2 = 0xFE04,
-    Conv_I = 0xFE05,
-    Conv_Ovf_I1_Un = 0xFE06,
-    Conv_Ovf_I2_Un = 0xFE07,
-    Conv_Ovf_I4_Un = 0xFE08,
-    Conv_Ovf_I8_Un = 0xFE09,
-    Conv_Ovf_U1_Un = 0xFE0A,
-    Conv_Ovf_U2_Un = 0xFE0B,
-    Conv_Ovf_U4_Un = 0xFE0C,
-    Conv_Ovf_U8_Un = 0xFE0D,
-    Conv_Ovf_I_Un = 0xFE0E,
-    Conv_Ovf_U_Un = 0xFE0F,
-    Box = 0xFE10,
-    Newarr = 0xFE14,
-    Ldlen = 0xFE15,
-    Ldelema = 0xFE16,
-    Ldelem_I1 = 0xFE17,
-    Ldelem_U1 = 0xFE18,
-    Ldelem_I2 = 0xFE19,
-    Ldelem_U2 = 0xFE1A,
-    Ldelem_I4 = 0xFE1B,
-    Ldelem_U4 = 0xFE1C,
-    Ldelem_I8 = 0xFE1D,
-    Ldelem_R4 = 0xFE1E,
-    Ldelem_R8 = 0xFE1F,
-    Ldelem_Ref = 0xFE20,
-    Stelem_I = 0xFE21,
-    Stelem_I1 = 0xFE22,
-    Stelem_I2 = 0xFE23,
-    Stelem_I4 = 0xFE24,
-    Stelem_I8 = 0xFE25,
-    Stelem_R4 = 0xFE26,
-    Stelem_R8 = 0xFE27,
-    Stelem_Ref = 0xFE28,
-    Ldelem_I = 0xFE29,
-    Conv_R8_Un = 0xFE2A,
-    Conv_R4_Un = 0xFE2B,
-    Conv_I8_Un = 0xFE2C,
-    Conv_I4_Un = 0xFE2D,
-    Conv_I2_Un = 0xFE2E,
-    Conv_I1_Un = 0xFE2F,
-    Calli_Vftable = 0xFE30,
-    Jmp_Vftable = 0xFE31,
-    Ldvirtftn_Vftable = 0xFE32,
-    Callvirt_Vftable = 0xFE33,
-    Calli_RegIndirect = 0xFE34,
-    Jmp_RegIndirect = 0xFE35,
-    Ldvirtftn_RegIndirect = 0xFE36,
-    Callvirt_RegIndirect = 0xFE37,
-    Initobj = 0xFE38,
-    Constrained = 0xFE39,
-    Cpblk = 0xFE3A,
-    Initblk = 0xFE3B,
-    Ldtoken = 0xFE3C,
-    Ldarg_0_Virtual = 0xFE3D,
-    Ldarg_1_Virtual = 0xFE3E,
-    Ldarg_2_Virtual = 0xFE3F,
-    Ldarg_3_Virtual = 0xFE40,
-    Ldarg_S_Virtual = 0xFE41,
-    Ldarga_S_Virtual = 0xFE42,
-    Starg_S_Virtual = 0xFE43,
-    Ldloc_S_Virtual = 0xFE44,
-    Ldloca_S_Virtual = 0xFE45,
-    Stloc_S_Virtual = 0xFE46,
-    Ldarg_Virtual = 0xFE47,
-    Ldarga_Virtual = 0xFE48,
-    Starg_Virtual = 0xFE49,
-    Ldloc_Virtual = 0xFE4A,
-    Ldloca_Virtual = 0xFE4B,
-    Stloc_Virtual = 0xFE4C,
-    Unbox_Any = 0xFE4D,
-    Refanyval = 0xFE4F,
-    Ckfinite = 0xFE50,
-    Mkrefany = 0xFE51,
-    Ldtoken_Method = 0xFE52,
-    Ldtoken_Field = 0xFE53,
-    Ldtoken_Type = 0xFE54,
-    Ldtoken_MemberRef = 0xFE55,
-    Ldtoken_MemberDef = 0xFE56,
-    Ldtoken_UserString = 0xFE57,
-    Ldtoken_MethodSpec = 0xFE58,
-    Ldtoken_TypeSpec = 0xFE59,
-    Ldtoken_Token = 0xFE5A,
-    Throw_Unchecked = 0xFE5B,
-    ReThrow = 0xFE5C,
-    Sizeof = 0xFE5D,
-    Refanytype = 0xFE5E,
-    Box_Any = 0xFE5F,
-    Unbox_Any_Unchecked = 0xFE60,
-    Calli_Unmanaged = 0xFE61,
-    Calli_Unmanaged_Vftable = 0xFE62,
-    Calli_Unmanaged_RegIndirect = 0xFE63,
-    Jmp_Unmanaged = 0xFE64,
-    Jmp_Unmanaged_Vftable = 0xFE65,
-    Jmp_Unmanaged_RegIndirect = 0xFE66,
-    Ldftn_Unmanaged = 0xFE67,
-    Ldvirtftn_Unmanaged = 0xFE68,
-    Ldvirtftn_Unmanaged_Vftable = 0xFE69,
-    Ldvirtftn_Unmanaged_RegIndirect = 0xFE6A,
-    Callvirt_Unmanaged = 0xFE6B,
-    Callvirt_Unmanaged_Vftable = 0xFE6C,
-    Callvirt_Unmanaged_RegIndirect = 0xFE6D,
-    Constrained_Unmanaged = 0xFE6E,
-    Initobj_Unmanaged = 0xFE6F,
-    Cpblk_Unmanaged = 0xFE70,
-    Initblk_Unmanaged = 0xFE71,
-    Ldtoken_Unmanaged = 0xFE72,
-    Ldtoken_Method_Unmanaged = 0xFE73,
-    Ldtoken_Field_Unmanaged = 0xFE74,
-    Ldtoken_Type_Unmanaged = 0xFE75,
-    Ldtoken_MemberRef_Unmanaged = 0xFE76,
-    Ldtoken_MemberDef_Unmanaged = 0xFE77,
-    Ldtoken_UserString_Unmanaged = 0xFE78,
-    Ldtoken_MethodSpec_Unmanaged = 0xFE79,
-    Ldtoken_TypeSpec_Unmanaged = 0xFE7A,
-    Ldtoken_Token_Unmanaged = 0xFE7B,
-    Throw_Unchecked_Unmanaged = 0xFE7C,
-    ReThrow_Unmanaged = 0xFE7D,
-    Sizeof_Unmanaged = 0xFE7E,
-    Refanytype_Unmanaged = 0xFE7F,
-    Box_Any_Unmanaged = 0xFE80,
-    Unbox_Any_Unchecked_Unmanaged = 0xFE81
+    Stind_I = 0xDF,
+    Conv_U = 0xE0,
+
+    Arglist = 0xFE00,
+    Ceq = 0xFE01,
+    Cgt = 0xFE02,
+    Cgt_Un = 0xFE03,
+    Clt = 0xFE04,
+    Clt_Un = 0xFE05,
+    Ldftn = 0xFE06,
+    Ldvirtftn = 0xFE07,
+    Ldarg = 0xFE09,
+    Ldarga = 0xFE0A,
+    Starg = 0xFE0B,
+    Ldloc = 0xFE0C,
+    Ldloca = 0xFE0D,
+    Stloc = 0xFE0E,
+    Localloc = 0xFE0F,
+    Endfilter = 0xFE11,
+    Unaligned = 0xFE12,
+    Volatile = 0xFE13,
+    Tail = 0xFE14,
+    Initobj = 0xFE15,
+    Constrained = 0xFE16,
+    Cpblk = 0xFE17,
+    Initblk = 0xFE18,
+    Rethrow = 0xFE1A,
+    Sizeof = 0xFE1C,
+    Refanytype = 0xFE1D,
+    Readonly = 0xFE1E
 }
 
 /// <summary>
-///     MSIL 操作数
+///     MSIL 操作数。
 /// </summary>
 public abstract class ClrOperand
 {
     /// <summary>
-    ///     操作数类型
+    ///     操作数类型。
     /// </summary>
     public abstract ClrOperandKind Kind { get; }
 }
 
 /// <summary>
-///     操作数类型
+///     操作数类型。
 /// </summary>
 public enum ClrOperandKind
 {
     None,
+    Int8,
+    Int16,
     Int32,
     Int64,
     Float32,
     Float64,
     String,
-    Type,
-    Method,
-    Field,
     Token,
-    BranchTarget,
+    BranchTarget8,
+    BranchTarget32,
     SwitchTargets,
     LocalIndex,
     ArgumentIndex
 }
 
 /// <summary>
-///     32 位整数操作数
+///     8 位整数操作数。
+/// </summary>
+public sealed class ClrInt8Operand : ClrOperand
+{
+    public override ClrOperandKind Kind => ClrOperandKind.Int8;
+    public sbyte Value { get; init; }
+}
+
+/// <summary>
+///     16 位整数操作数。
+/// </summary>
+public sealed class ClrInt16Operand : ClrOperand
+{
+    public override ClrOperandKind Kind => ClrOperandKind.Int16;
+    public short Value { get; init; }
+}
+
+/// <summary>
+///     32 位整数操作数。
 /// </summary>
 public sealed class ClrInt32Operand : ClrOperand
 {
@@ -945,7 +1284,7 @@ public sealed class ClrInt32Operand : ClrOperand
 }
 
 /// <summary>
-///     64 位整数操作数
+///     64 位整数操作数。
 /// </summary>
 public sealed class ClrInt64Operand : ClrOperand
 {
@@ -954,7 +1293,7 @@ public sealed class ClrInt64Operand : ClrOperand
 }
 
 /// <summary>
-///     32 位浮点操作数
+///     32 位浮点操作数。
 /// </summary>
 public sealed class ClrFloat32Operand : ClrOperand
 {
@@ -963,7 +1302,7 @@ public sealed class ClrFloat32Operand : ClrOperand
 }
 
 /// <summary>
-///     64 位浮点操作数
+///     64 位浮点操作数。
 /// </summary>
 public sealed class ClrFloat64Operand : ClrOperand
 {
@@ -972,43 +1311,7 @@ public sealed class ClrFloat64Operand : ClrOperand
 }
 
 /// <summary>
-///     字符串操作数
-/// </summary>
-public sealed class ClrStringOperand : ClrOperand
-{
-    public override ClrOperandKind Kind => ClrOperandKind.String;
-    public string Value { get; init; }
-}
-
-/// <summary>
-///     类型操作数
-/// </summary>
-public sealed class ClrTypeOperand : ClrOperand
-{
-    public override ClrOperandKind Kind => ClrOperandKind.Type;
-    public ClrType Value { get; init; }
-}
-
-/// <summary>
-///     方法操作数
-/// </summary>
-public sealed class ClrMethodOperand : ClrOperand
-{
-    public override ClrOperandKind Kind => ClrOperandKind.Method;
-    public ClrMethod Value { get; init; }
-}
-
-/// <summary>
-///     字段操作数
-/// </summary>
-public sealed class ClrFieldOperand : ClrOperand
-{
-    public override ClrOperandKind Kind => ClrOperandKind.Field;
-    public ClrField Value { get; init; }
-}
-
-/// <summary>
-///     元数据令牌操作数
+///     元数据令牌操作数。
 /// </summary>
 public sealed class ClrTokenOperand : ClrOperand
 {
@@ -1017,25 +1320,34 @@ public sealed class ClrTokenOperand : ClrOperand
 }
 
 /// <summary>
-///     分支目标操作数
+///     8 位分支目标操作数。
 /// </summary>
-public sealed class ClrBranchTargetOperand : ClrOperand
+public sealed class ClrBranchTarget8Operand : ClrOperand
 {
-    public override ClrOperandKind Kind => ClrOperandKind.BranchTarget;
-    public uint Offset { get; init; }
+    public override ClrOperandKind Kind => ClrOperandKind.BranchTarget8;
+    public int Offset { get; init; }
 }
 
 /// <summary>
-///     开关目标操作数
+///     32 位分支目标操作数。
+/// </summary>
+public sealed class ClrBranchTarget32Operand : ClrOperand
+{
+    public override ClrOperandKind Kind => ClrOperandKind.BranchTarget32;
+    public int Offset { get; init; }
+}
+
+/// <summary>
+///     开关目标操作数。
 /// </summary>
 public sealed class ClrSwitchTargetsOperand : ClrOperand
 {
     public override ClrOperandKind Kind => ClrOperandKind.SwitchTargets;
-    public IReadOnlyList<uint> Offsets { get; init; }
+    public IReadOnlyList<int> Offsets { get; init; } = [];
 }
 
 /// <summary>
-///     局部变量索引操作数
+///     局部变量索引操作数。
 /// </summary>
 public sealed class ClrLocalIndexOperand : ClrOperand
 {
@@ -1044,7 +1356,7 @@ public sealed class ClrLocalIndexOperand : ClrOperand
 }
 
 /// <summary>
-///     参数索引操作数
+///     参数索引操作数。
 /// </summary>
 public sealed class ClrArgumentIndexOperand : ClrOperand
 {
@@ -1052,33 +1364,51 @@ public sealed class ClrArgumentIndexOperand : ClrOperand
     public uint Index { get; init; }
 }
 
+#endregion
+
 /// <summary>
-///     异常处理
+///     异常处理子句。
 /// </summary>
 public sealed class ClrExceptionHandler
 {
     /// <summary>
-    ///     尝试块开始偏移
+    ///     异常处理类型标志。
+    /// </summary>
+    public ClrExceptionHandlerKind HandlerKind { get; init; }
+
+    /// <summary>
+    ///     尝试块开始偏移。
     /// </summary>
     public uint TryStart { get; init; }
 
     /// <summary>
-    ///     尝试块长度
+    ///     尝试块长度。
     /// </summary>
     public uint TryLength { get; init; }
 
     /// <summary>
-    ///     处理块开始偏移
+    ///     处理块开始偏移。
     /// </summary>
     public uint HandlerStart { get; init; }
 
     /// <summary>
-    ///     处理块长度
+    ///     处理块长度。
     /// </summary>
     public uint HandlerLength { get; init; }
 
     /// <summary>
-    ///     异常类型令牌
+    ///     异常类型令牌（Catch 类型）或 Filter 偏移。
     /// </summary>
-    public uint CatchTypeToken { get; init; }
+    public uint ClassTokenOrFilterOffset { get; init; }
+}
+
+/// <summary>
+///     异常处理类型（ECMA-335 §25.4.6）。
+/// </summary>
+public enum ClrExceptionHandlerKind : uint
+{
+    Catch = 0x0000,
+    Filter = 0x0001,
+    Finally = 0x0002,
+    Fault = 0x0004
 }

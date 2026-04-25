@@ -119,6 +119,8 @@ public ref struct TtfDecoder
             tables.Add(ReadTableRecord());
         }
 
+        ReadTableData(tables);
+
         return (fontType, tableCount, tables);
     }
 
@@ -150,6 +152,33 @@ public ref struct TtfDecoder
         }
 
         return null;
+    }
+
+    private void ReadTableData(List<TtfTableRecord> tables)
+    {
+        for (var i = 0; i < tables.Count; i++)
+        {
+            var record = tables[i];
+
+            if (record.Offset == 0 || record.Length == 0 || record.Offset + record.Length > _buffer.Length)
+            {
+                continue;
+            }
+
+            var savedPos = _buffer.Position;
+            _buffer.Position = (int)record.Offset;
+            var data = _buffer.ReadBytes((int)record.Length).ToArray();
+            _buffer.Position = savedPos;
+
+            tables[i] = new TtfTableRecord
+            {
+                Tag = record.Tag,
+                Checksum = record.Checksum,
+                Offset = record.Offset,
+                Length = record.Length,
+                Data = data
+            };
+        }
     }
 
     private TtfHeadInfo? ReadHeadTable(TtfTableRecord record)

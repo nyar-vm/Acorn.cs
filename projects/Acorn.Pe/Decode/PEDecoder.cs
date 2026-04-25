@@ -165,6 +165,8 @@ public sealed class PeDecoder
         var loaderFlags = buffer.ReadU32LE();
         var numberOfRvaAndSizes = buffer.ReadU32LE();
 
+        var dataDirectories = ReadDataDirectories(ref buffer, (int)Math.Min(numberOfRvaAndSizes, 16));
+
         return new PeOptionalHeaderData
         {
             Magic = magic,
@@ -196,8 +198,27 @@ public sealed class PeDecoder
             SizeOfHeapReserve = sizeOfHeapReserve,
             SizeOfHeapCommit = sizeOfHeapCommit,
             LoaderFlags = loaderFlags,
-            NumberOfRvaAndSizes = numberOfRvaAndSizes
+            NumberOfRvaAndSizes = numberOfRvaAndSizes,
+            DataDirectories = dataDirectories
         };
+    }
+
+    /// <summary>
+    ///     读取数据目录。
+    /// </summary>
+    private List<PeDataDirectoryEntry> ReadDataDirectories(ref ByteBuffer buffer, int count)
+    {
+        var directories = new List<PeDataDirectoryEntry>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            var rva = buffer.ReadU32LE();
+            var size = buffer.ReadU32LE();
+
+            directories.Add(new PeDataDirectoryEntry { Rva = rva, Size = size });
+        }
+
+        return directories;
     }
 
     /// <summary>

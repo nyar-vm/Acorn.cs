@@ -46,6 +46,11 @@ public sealed class MachOHeaderData
     public uint Reserved { get; init; }
 
     /// <summary>
+    ///     是否为小端序。
+    /// </summary>
+    public bool IsLittleEndian { get; init; } = true;
+
+    /// <summary>
     ///     是否为 64 位。
     /// </summary>
     public bool Is64Bit => Magic == 0xFEEDFACF;

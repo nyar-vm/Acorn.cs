@@ -79,7 +79,8 @@ public sealed class MachODecoder
             NumberOfLoadCommands = numberOfLoadCommands,
             SizeOfLoadCommands = sizeOfLoadCommands,
             Flags = flags,
-            Reserved = reserved
+            Reserved = reserved,
+            IsLittleEndian = isLittleEndian
         };
     }
 

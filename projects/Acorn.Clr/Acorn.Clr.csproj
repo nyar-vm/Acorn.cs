@@ -10,7 +10,7 @@
         <PackageId>Acorn.Clr</PackageId>
         <Version>0.0.0</Version>
         <Authors>Nyar Team - Acorn Group</Authors>
-        <Description>Acorn CLR 格式编解码器，提供 .NET 程序集元数据和 MSIL 指令的解析与生成</Description>
+        <Description>Acorn CLR 格式编解码器，提供 .NET 程序集元数据和 MSIL 指令的扫描、解码与编码</Description>
         <PackageProjectUrl>https://github.com/nyar-vm/Acorn.cs</PackageProjectUrl>
         <RepositoryUrl>https://github.com/nyar-vm/Acorn.cs</RepositoryUrl>
         <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>

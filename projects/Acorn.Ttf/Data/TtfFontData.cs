@@ -81,6 +81,11 @@ public sealed class TtfTableRecord
     ///     表长度。
     /// </summary>
     public uint Length { get; init; }
+
+    /// <summary>
+    ///     表原始数据。
+    /// </summary>
+    public byte[] Data { get; init; } = [];
 }
 
 /// <summary>
