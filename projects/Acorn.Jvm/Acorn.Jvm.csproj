@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net11.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>preview</LangVersion>
+        <RootNamespace>Acorn.Jvm</RootNamespace>
+        <AssemblyName>Acorn.Jvm</AssemblyName>
+        <PackageId>Acorn.Jvm</PackageId>
+        <Version>0.0.0</Version>
+        <Authors>Nyar Team - Acorn Group</Authors>
+        <Description>Acorn JVM 格式编解码器，提供 ClassFile 字节码的解析与生成</Description>
+        <PackageProjectUrl>https://github.com/nyar-vm/Acorn.cs</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/nyar-vm/Acorn.cs</RepositoryUrl>
+        <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+        <PackageTags>acorn;jvm;classfile;bytecode;java</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Acorn\Acorn.csproj"/>
+    </ItemGroup>
+
+</Project>

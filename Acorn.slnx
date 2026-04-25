@@ -26,6 +26,8 @@
     <Project Path="projects\Acorn.Spine\Acorn.Spine.csproj" />
     <Project Path="projects\Acorn.SpirV\SpirV.csproj" />
     <Project Path="projects\Acorn.Wasm\Acorn.Wasm.csproj" />
+    <Project Path="projects\Acorn.Clr\Acorn.Clr.csproj" />
+    <Project Path="projects\Acorn.Jvm\Acorn.Jvm.csproj" />
     <Project Path="projects\Acorn.Wav\Acorn.Wav.csproj" />
     <Project Path="projects\Acorn.ZeroMQ\Acorn.ZeroMQ.csproj" />
     <Project Path="projects\Acorn.Zip\Acorn.Zip.csproj" />
