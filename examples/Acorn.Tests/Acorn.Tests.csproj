@@ -17,5 +17,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\projects\Acorn\Acorn.csproj" />
         <ProjectReference Include="..\..\projects\Acorn.Nyar\Acorn.Nyar.csproj" />
+        <ProjectReference Include="..\..\projects\Acorn.Clr\Acorn.Clr.csproj" />
     </ItemGroup>
 </Project>
