@@ -311,6 +311,8 @@ public sealed class ClrEncoder
     private sealed class PeBuilder
     {
         private readonly ClrModuleData _module;
+        private Dictionary<string, uint> _stringIndices = [];
+        private List<uint> _methodRvas = [];
 
         public PeBuilder(ClrModuleData module)
         {
@@ -319,8 +321,16 @@ public sealed class ClrEncoder
 
         public byte[] Build()
         {
-            var metadataBytes = BuildMetadata();
-            var ilSectionBytes = BuildILSection();
+            var stringHeap = BuildStringHeap();
+            var blobHeap = BuildBlobHeap();
+            var guidHeap = BuildGuidHeap();
+            var userStringHeap = BuildUserStringHeap();
+
+            var textSectionRva = 0x200;
+            var ilSectionBytes = BuildILSection(textSectionRva);
+
+            var tableStream = BuildTableStream();
+            var metadataBytes = BuildMetadata(stringHeap, blobHeap, guidHeap, userStringHeap, tableStream);
 
             var textSectionData = new ByteBufferWriter(0x2000);
             var clrDirectoryOffset = 0x80;
@@ -328,23 +338,24 @@ public sealed class ClrEncoder
 
             textSectionData.Write(ilSectionBytes);
 
-            while (textSectionData.Position < metadataOffset)
+            while (textSectionData.Position < clrDirectoryOffset)
             {
                 textSectionData.WriteU8(0);
             }
+
+            WriteClrDirectory(ref textSectionData, (uint)(metadataOffset + textSectionRva), (uint)metadataBytes.Length);
 
             textSectionData.Write(metadataBytes);
 
             var textSectionSize = (uint)((textSectionData.Position + 0x1FF) & ~0x1FF);
             var peHeaderSize = 0x200;
-            var textSectionRva = (uint)peHeaderSize;
 
             var writer = new ByteBufferWriter(peHeaderSize + (int)textSectionSize);
 
             WriteDosHeader(ref writer);
-            WritePEHeader(ref writer, textSectionRva, textSectionSize);
-            WriteOptionalHeader(ref writer, textSectionRva, textSectionSize, (uint)(clrDirectoryOffset + textSectionRva), (uint)metadataBytes.Length);
-            WriteSectionHeader(ref writer, textSectionRva, textSectionSize);
+            WritePEHeader(ref writer, (uint)textSectionRva, textSectionSize);
+            WriteOptionalHeader(ref writer, (uint)textSectionRva, textSectionSize, (uint)(clrDirectoryOffset + textSectionRva), ClrConstants.ClrDirectorySize);
+            WriteSectionHeader(ref writer, (uint)textSectionRva, textSectionSize);
 
             while (writer.Position < peHeaderSize)
             {
@@ -356,33 +367,31 @@ public sealed class ClrEncoder
             return writer.ToArray();
         }
 
-        private byte[] BuildMetadata()
+        private byte[] BuildMetadata(byte[] stringHeap, byte[] blobHeap, byte[] guidHeap, byte[] userStringHeap, byte[] tableStream)
         {
             var headerSize = 16;
             var versionString = Encoding.UTF8.GetBytes(_module.Version ?? "v4.0.30319");
             var versionLength = (4 + versionString.Length + 3) & ~3;
 
-            var stringHeap = BuildStringHeap();
-            var blobHeap = BuildBlobHeap();
-            var guidHeap = BuildGuidHeap();
-            var userStringHeap = BuildUserStringHeap();
-            var tableStream = BuildTableStream();
-
             var streamCount = 5;
             var streamHeaderSize = 0;
-
-            var streamOffsets = new int[streamCount];
-            var currentOffset = headerSize + versionLength + 4;
 
             var streamNames = new[] { ClrConstants.TableStreamName, ClrConstants.StringsStreamName, ClrConstants.BlobStreamName, ClrConstants.GuidStreamName, ClrConstants.UserStringStreamName };
             var streamData = new[] { tableStream, stringHeap, blobHeap, guidHeap, userStringHeap };
 
             for (var i = 0; i < streamCount; i++)
             {
-                streamOffsets[i] = currentOffset;
                 var nameBytes = Encoding.UTF8.GetBytes(streamNames[i] + "\0");
                 var namePadded = (nameBytes.Length + 3) & ~3;
                 streamHeaderSize += 8 + namePadded;
+            }
+
+            var streamOffsets = new int[streamCount];
+            var currentOffset = headerSize + versionLength + 4 + streamHeaderSize;
+
+            for (var i = 0; i < streamCount; i++)
+            {
+                streamOffsets[i] = currentOffset;
                 currentOffset += streamData[i].Length;
             }
 
@@ -436,36 +445,65 @@ public sealed class ClrEncoder
 
         private byte[] BuildStringHeap()
         {
-            var strings = new HashSet<string> { _module.ModuleName ?? string.Empty, "<Module>" };
+            var strings = new List<string>();
+            _stringIndices = new Dictionary<string, uint>();
+            _stringIndices[string.Empty] = 0;
+
+            void AddString(string s)
+            {
+                if (string.IsNullOrEmpty(s) || _stringIndices.ContainsKey(s))
+                {
+                    return;
+                }
+
+                _stringIndices[s] = 0;
+                strings.Add(s);
+            }
+
+            AddString(_module.ModuleName);
 
             foreach (var type in _module.Types)
             {
-                strings.Add(type.Name);
-                strings.Add(type.Namespace);
+                AddString(type.Name);
+                AddString(type.Namespace);
+
+                foreach (var field in type.Fields)
+                {
+                    AddString(field.Name);
+                }
             }
 
             foreach (var method in _module.Methods)
             {
-                strings.Add(method.Name);
+                AddString(method.Name);
             }
 
             foreach (var field in _module.Fields)
             {
-                strings.Add(field.Name);
+                AddString(field.Name);
             }
-
-            strings.Remove(string.Empty);
 
             var writer = new ByteBufferWriter(1 + strings.Sum(s => Encoding.UTF8.GetByteCount(s) + 1));
             writer.WriteU8(0);
 
             foreach (var s in strings)
             {
+                _stringIndices[s] = (uint)writer.Position;
                 writer.Write(Encoding.UTF8.GetBytes(s));
                 writer.WriteU8(0);
             }
 
             return writer.ToArray();
+        }
+
+        private uint GetStringIndex(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return 0;
+            }
+
+            return _stringIndices.TryGetValue(s, out var idx) ? idx : 0;
         }
 
         private byte[] BuildBlobHeap()
@@ -492,28 +530,193 @@ public sealed class ClrEncoder
 
         private byte[] BuildTableStream()
         {
-            var writer = new ByteBufferWriter(256);
+            var allMethods = new List<ClrMethodDef>();
+            allMethods.AddRange(_module.Methods);
+
+            foreach (var type in _module.Types)
+            {
+                allMethods.AddRange(type.Methods);
+            }
+
+            var allFields = new List<ClrFieldDef>();
+            allFields.AddRange(_module.Types.SelectMany(t => t.Fields));
+
+            var moduleRowCount = 1u;
+            var typeDefRowCount = (uint)_module.Types.Count;
+            var methodDefRowCount = (uint)allMethods.Count;
+            var fieldRowCount = (uint)allFields.Count;
+
+            var validTables = 0UL;
+            validTables |= 1UL << (int)ClrTableKind.Module;
+            validTables |= 1UL << (int)ClrTableKind.TypeDef;
+
+            if (fieldRowCount > 0)
+            {
+                validTables |= 1UL << (int)ClrTableKind.Field;
+            }
+
+            if (methodDefRowCount > 0)
+            {
+                validTables |= 1UL << (int)ClrTableKind.MethodDef;
+            }
+
+            var heapSizes = (byte)0;
+            var stringIndexSize = 2;
+            var guidIndexSize = 2;
+            var blobIndexSize = 2;
+
+            var rowCounts = new List<uint>();
+
+            if ((validTables & (1UL << (int)ClrTableKind.Module)) != 0)
+            {
+                rowCounts.Add(moduleRowCount);
+            }
+
+            if ((validTables & (1UL << (int)ClrTableKind.TypeDef)) != 0)
+            {
+                rowCounts.Add(typeDefRowCount);
+            }
+
+            if ((validTables & (1UL << (int)ClrTableKind.Field)) != 0)
+            {
+                rowCounts.Add(fieldRowCount);
+            }
+
+            if ((validTables & (1UL << (int)ClrTableKind.MethodDef)) != 0)
+            {
+                rowCounts.Add(methodDefRowCount);
+            }
+
+            var typeDefOrRefIndexSize = 2;
+            var fieldTableIndexSize = fieldRowCount <= 0xFFFF ? 2 : 4;
+            var methodDefTableIndexSize = methodDefRowCount <= 0xFFFF ? 2 : 4;
+            var paramTableIndexSize = 2;
+
+            var moduleRowSize = 2 + stringIndexSize + guidIndexSize * 3;
+            var typeDefRowSize = 4 + stringIndexSize * 2 + typeDefOrRefIndexSize + fieldTableIndexSize + methodDefTableIndexSize;
+            var fieldRowSize = 2 + stringIndexSize + blobIndexSize;
+            var methodDefRowSize = 4 + 2 + 2 + stringIndexSize + blobIndexSize + paramTableIndexSize;
+
+            var totalRowSize = moduleRowCount * (uint)moduleRowSize
+                               + typeDefRowCount * (uint)typeDefRowSize
+                               + fieldRowCount * (uint)fieldRowSize
+                               + methodDefRowCount * (uint)methodDefRowSize;
+
+            var headerSize = 24 + rowCounts.Count * 4;
+            var writer = new ByteBufferWriter(headerSize + (int)totalRowSize);
+
             writer.WriteU32LE(0);
             writer.WriteU8(2);
             writer.WriteU8(0);
+            writer.WriteU8(heapSizes);
             writer.WriteU8(0);
-            writer.WriteU8(0);
-            writer.WriteU64LE(0);
-            writer.WriteU64LE(0);
+            writer.WriteU64LE(validTables);
+            writer.WriteU64LE(validTables);
+
+            foreach (var rc in rowCounts)
+            {
+                writer.WriteU32LE(rc);
+            }
+
+            writer.WriteU16LE(0);
+            WriteIndex(ref writer, GetStringIndex(_module.ModuleName), stringIndexSize);
+            WriteIndex(ref writer, 1, guidIndexSize);
+            WriteIndex(ref writer, 0, guidIndexSize);
+            WriteIndex(ref writer, 0, guidIndexSize);
+
+            var methodIndex = 1 + _module.Methods.Count;
+            var fieldIndex = 1;
+
+            foreach (var type in _module.Types)
+            {
+                writer.WriteU32LE((uint)type.Flags);
+                WriteIndex(ref writer, GetStringIndex(type.Name), stringIndexSize);
+                WriteIndex(ref writer, GetStringIndex(type.Namespace), stringIndexSize);
+                WriteIndex(ref writer, 0, typeDefOrRefIndexSize);
+                WriteIndex(ref writer, (uint)fieldIndex, fieldTableIndexSize);
+                WriteIndex(ref writer, (uint)methodIndex, methodDefTableIndexSize);
+
+                fieldIndex += type.Fields.Count;
+                methodIndex += type.Methods.Count;
+            }
+
+            foreach (var type in _module.Types)
+            {
+                foreach (var field in type.Fields)
+                {
+                    writer.WriteU16LE((ushort)field.Flags);
+                    WriteIndex(ref writer, GetStringIndex(field.Name), stringIndexSize);
+                    WriteIndex(ref writer, 0, blobIndexSize);
+                }
+            }
+
+            var methodIdx = 0;
+
+            foreach (var method in _module.Methods)
+            {
+                var rva = methodIdx < _methodRvas.Count ? _methodRvas[methodIdx] : 0u;
+                methodIdx++;
+                writer.WriteU32LE(rva);
+                writer.WriteU16LE(0);
+                writer.WriteU16LE((ushort)method.Flags);
+                WriteIndex(ref writer, GetStringIndex(method.Name), stringIndexSize);
+                WriteIndex(ref writer, 0, blobIndexSize);
+                WriteIndex(ref writer, 1, paramTableIndexSize);
+            }
+
+            foreach (var type in _module.Types)
+            {
+                foreach (var method in type.Methods)
+                {
+                    var rva = methodIdx < _methodRvas.Count ? _methodRvas[methodIdx] : 0u;
+                    methodIdx++;
+                    writer.WriteU32LE(rva);
+                    writer.WriteU16LE(0);
+                    writer.WriteU16LE((ushort)method.Flags);
+                    WriteIndex(ref writer, GetStringIndex(method.Name), stringIndexSize);
+                    WriteIndex(ref writer, 0, blobIndexSize);
+                    WriteIndex(ref writer, 1, paramTableIndexSize);
+                }
+            }
 
             return writer.ToArray();
         }
 
-        private byte[] BuildILSection()
+        private static void WriteIndex(ref ByteBufferWriter writer, uint value, int size)
+        {
+            if (size == 2)
+            {
+                writer.WriteU16LE((ushort)value);
+            }
+            else
+            {
+                writer.WriteU32LE(value);
+            }
+        }
+
+        private byte[] BuildILSection(int textSectionRva)
         {
             var writer = new ByteBufferWriter(0x80);
+            _methodRvas = [];
 
-            foreach (var method in _module.Methods)
+            var allMethods = new List<ClrMethodDef>();
+            allMethods.AddRange(_module.Methods);
+
+            foreach (var type in _module.Types)
+            {
+                allMethods.AddRange(type.Methods);
+            }
+
+            foreach (var method in allMethods)
             {
                 if (method.Instructions.Count == 0)
                 {
+                    _methodRvas.Add(0);
                     continue;
                 }
+
+                var rva = (uint)(writer.Position + textSectionRva);
+                _methodRvas.Add(rva);
 
                 var bodyBytes = EncodeMethodBody(method.Instructions, method.MaxStack, method.LocalVarSigTok, method.ExceptionHandlers);
                 writer.Write(bodyBytes);
@@ -546,12 +749,12 @@ public sealed class ClrEncoder
             writer.WriteU32LE(0x00000000);
             writer.WriteU32LE(0x00000000);
 
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 14; i++)
             {
                 writer.WriteU16LE(0x0000);
             }
 
-            writer.WriteU32LE(0x00000080);
+            writer.WriteU32LE(0x00000040);
         }
 
         private static void WritePEHeader(ref ByteBufferWriter writer, uint textSectionRva, uint textSectionSize)
@@ -597,7 +800,6 @@ public sealed class ClrEncoder
             writer.WriteU32LE(0x00100000);
             writer.WriteU32LE(0x1000);
             writer.WriteU32LE(0);
-            writer.WriteU32LE(0x10);
             writer.WriteU32LE(16);
 
             for (var i = 0; i < 14; i++)
@@ -608,6 +810,29 @@ public sealed class ClrEncoder
 
             writer.WriteU32LE(clrRva);
             writer.WriteU32LE(clrSize);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+        }
+
+        private static void WriteClrDirectory(ref ByteBufferWriter writer, uint metadataRva, uint metadataSize)
+        {
+            writer.WriteU32LE(ClrConstants.ClrDirectorySize);
+            writer.WriteU16LE(2);
+            writer.WriteU16LE(5);
+            writer.WriteU32LE(metadataRva);
+            writer.WriteU32LE(metadataSize);
+            writer.WriteU32LE((uint)ClrDirectoryFlags.ILOnly);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
             writer.WriteU32LE(0);
             writer.WriteU32LE(0);
         }

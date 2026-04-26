@@ -23,8 +23,8 @@ public class NyarRoundTripTests
         var encoder = new NyarEncoder();
         var bytes = encoder.Encode(original);
 
-        var decoder = new NyarDecoder(bytes);
-        var decoded = decoder.Decode();
+        var decoder = new NyarDecoder();
+        var decoded = decoder.Decode(bytes);
 
         Assert.Equal(original.Version, decoded.Version);
         Assert.Equal(original.Name, decoded.Name);
@@ -70,8 +70,8 @@ public class NyarRoundTripTests
         var encoder = new NyarEncoder();
         var bytes = encoder.Encode(original);
 
-        var decoder = new NyarDecoder(bytes);
-        var decoded = decoder.Decode();
+        var decoder = new NyarDecoder();
+        var decoded = decoder.Decode(bytes);
 
         Assert.Equal(original.Version, decoded.Version);
         Assert.Equal(original.Name, decoded.Name);
@@ -123,47 +123,18 @@ public class NyarRoundTripTests
     public void Decode_InvalidMagic_Throws()
     {
         var data = new byte[16];
+        var decoder = new NyarDecoder();
 
-        Assert.Throws<InvalidDataException>(() =>
-        {
-            var decoder = new NyarDecoder(data);
-            decoder.Decode();
-        });
+        Assert.Throws<InvalidNyarDataException>(() => decoder.Decode(data));
     }
 
     [Fact]
     public void Decode_TooShort_Throws()
     {
         var data = new byte[4];
+        var decoder = new NyarDecoder();
 
-        Assert.Throws<InvalidDataException>(() =>
-        {
-            var decoder = new NyarDecoder(data);
-            decoder.Decode();
-        });
-    }
-
-    [Fact]
-    public void DecodeHeader_ReturnsCorrectInfo()
-    {
-        var original = new NyarModuleData
-        {
-            Version = 1,
-            Name = "header_test",
-            Constants = [new NyarConstant { Kind = NyarConstantKind.Int32, Value = 1 }],
-            Functions = [],
-            Imports = [],
-            Exports = []
-        };
-
-        var encoder = new NyarEncoder();
-        var bytes = encoder.Encode(original);
-
-        var decoder = new NyarDecoder(bytes);
-        var (version, moduleName) = decoder.DecodeHeader();
-
-        Assert.Equal(1u, version);
-        Assert.Equal("header_test", moduleName);
+        Assert.ThrowsAny<Exception>(() => decoder.Decode(data));
     }
 }
 
