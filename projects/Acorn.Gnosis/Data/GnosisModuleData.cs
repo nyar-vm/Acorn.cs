@@ -79,19 +79,10 @@ public sealed class GnosisModuleData
 /// </summary>
 public sealed class GnosisConstant
 {
-    /// <summary>
-    ///     常量类型标签。
-    /// </summary>
     public GnosisConstantTag Tag { get; init; }
 
-    /// <summary>
-    ///     常量值。
-    /// </summary>
     public object? Value { get; init; }
 
-    /// <summary>
-    ///     类型名称。
-    /// </summary>
     public string TagName => Tag switch
     {
         GnosisConstantTag.String => "String",
@@ -99,6 +90,12 @@ public sealed class GnosisConstant
         GnosisConstantTag.Float => "Float",
         _ => $"Unknown(0x{(byte)Tag:X2})"
     };
+
+    public static GnosisConstant Int(long value) => new() { Tag = GnosisConstantTag.Int, Value = value };
+    public static GnosisConstant Float(double value) => new() { Tag = GnosisConstantTag.Float, Value = value };
+    public static GnosisConstant String(string value) => new() { Tag = GnosisConstantTag.String, Value = value };
+    public static GnosisConstant Bool(bool value) => new() { Tag = GnosisConstantTag.Int, Value = value ? 1L : 0L };
+    public static GnosisConstant Null() => new() { Tag = GnosisConstantTag.Int, Value = 0L };
 }
 
 /// <summary>
@@ -106,40 +103,24 @@ public sealed class GnosisConstant
 /// </summary>
 public sealed class GnosisInstruction
 {
-    /// <summary>
-    ///     指令在字节码流中的偏移量。
-    /// </summary>
     public int Offset { get; init; }
 
-    /// <summary>
-    ///     操作码。
-    /// </summary>
     public GnosisOpCode OpCode { get; init; }
 
-    /// <summary>
-    ///     操作数原始值（64 位统一存储，由 OpCode 决定实际宽度）。
-    /// </summary>
     public long RawOperand { get; init; }
 
-    /// <summary>
-    ///     操作数格式。
-    /// </summary>
     public GnosisOperandFormat OperandFormat => GnosisOpCodeInfo.GetOperandFormat(OpCode);
 
-    /// <summary>
-    ///     指令类别。
-    /// </summary>
     public GnosisInstructionCategory Category => GnosisOpCodeInfo.GetCategory(OpCode);
 
-    /// <summary>
-    ///     指令总字节长度（操作码 + 操作数）。
-    /// </summary>
     public int ByteLength => 1 + GnosisOpCodeInfo.GetOperandSize(OpCode);
 
-    /// <summary>
-    ///     操作码名称。
-    /// </summary>
     public string OpCodeName => OpCode.ToString();
+
+    public static GnosisInstruction Create(GnosisOpCode opCode, long operand = 0)
+    {
+        return new GnosisInstruction { OpCode = opCode, RawOperand = operand };
+    }
 }
 
 /// <summary>
@@ -168,10 +149,16 @@ public static class GnosisOpCodeInfo
                 or GnosisOpCode.SetComponent or GnosisOpCode.HasComponent
                 or GnosisOpCode.QueryWith or GnosisOpCode.QueryWithout
                 or GnosisOpCode.DefineComponent or GnosisOpCode.DefineSystem or GnosisOpCode.SystemSchedule
+                or GnosisOpCode.EmitEvent
                 or GnosisOpCode.PushString or GnosisOpCode.NewArray or GnosisOpCode.MakeClosure
                 or GnosisOpCode.IsType or GnosisOpCode.TypeOf or GnosisOpCode.QueryAll
-                or GnosisOpCode.QueryAny => GnosisOperandFormat.Int32,
+                or GnosisOpCode.QueryAny or GnosisOpCode.ToString
+                or GnosisOpCode.ArrayPush or GnosisOpCode.NewMap
+                or GnosisOpCode.MapGet or GnosisOpCode.MapSet or GnosisOpCode.MapContains
+                or GnosisOpCode.MapRemove or GnosisOpCode.CreateCoroutine
+                or GnosisOpCode.StringSlice or GnosisOpCode.StringIndexOf => GnosisOperandFormat.Int32,
             GnosisOpCode.CallModule => GnosisOperandFormat.Int64,
+            GnosisOpCode.ShiftLeft or GnosisOpCode.ShiftRight => GnosisOperandFormat.Int8,
             _ => GnosisOperandFormat.None
         };
     }
@@ -213,13 +200,19 @@ public static class GnosisOpCodeInfo
                 ? GnosisInstructionCategory.ControlFlow
                 : opCode <= GnosisOpCode.GreaterEqualFloat
                     ? GnosisInstructionCategory.Comparison
-                    : GnosisInstructionCategory.Logic,
-            0x5 => GnosisInstructionCategory.Call,
+                    : opCode <= GnosisOpCode.Not
+                        ? GnosisInstructionCategory.Logic
+                        : GnosisInstructionCategory.TypeConversion,
+            0x5 => opCode <= GnosisOpCode.CallModule
+                ? GnosisInstructionCategory.Call
+                : GnosisInstructionCategory.BitOperation,
             0x6 => GnosisInstructionCategory.Variable,
             0x7 => GnosisInstructionCategory.Object,
             0x8 => GnosisInstructionCategory.Ecs,
             0x9 => GnosisInstructionCategory.String,
-            0xA => GnosisInstructionCategory.Array,
+            0xA => opCode >= GnosisOpCode.NewMap
+                ? GnosisInstructionCategory.Map
+                : GnosisInstructionCategory.Array,
             0xB => GnosisInstructionCategory.Closure,
             0xC => GnosisInstructionCategory.TypeCheck,
             0xD => GnosisInstructionCategory.Coroutine,

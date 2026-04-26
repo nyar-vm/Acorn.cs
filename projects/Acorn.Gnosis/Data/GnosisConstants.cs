@@ -143,12 +143,32 @@ public enum GnosisOpCode : byte
 
     #endregion
 
+    #region 类型转换 (0x4C-0x4E)
+
+    IntToFloat = 0x4C,
+    FloatToInt = 0x4D,
+    ToString = 0x4E,
+
+    #endregion
+
     #region 调用 (0x50-0x53)
 
     Call = 0x50,
     CallNative = 0x51,
     Return = 0x52,
     CallModule = 0x53,
+
+    #endregion
+
+    #region 位运算 (0x54-0x5A)
+
+    BitAnd = 0x54,
+    BitOr = 0x55,
+    BitXor = 0x56,
+    BitNot = 0x57,
+    ShiftLeft = 0x58,
+    ShiftRight = 0x59,
+    ModInt = 0x5A,
 
     #endregion
 
@@ -171,7 +191,7 @@ public enum GnosisOpCode : byte
 
     #endregion
 
-    #region ECS — Game 方言特化 (0x80-0x8E)
+    #region ECS — Game 方言特化 (0x80-0x8F)
 
     SpawnEntity = 0x80,
     DestroyEntity = 0x81,
@@ -188,24 +208,42 @@ public enum GnosisOpCode : byte
     QueryWithout = 0x8C,
     SystemSchedule = 0x8D,
     WorldUpdate = 0x8E,
+    EmitEvent = 0x8F,
 
     #endregion
 
-    #region 字符串 (0x90-0x93)
+    #region 字符串 (0x90-0x96)
 
     PushString = 0x90,
     ConcatString = 0x91,
     StringLength = 0x92,
     StringGetChar = 0x93,
+    StringSlice = 0x94,
+    StringIndexOf = 0x95,
+    StringEquals = 0x96,
 
     #endregion
 
-    #region 数组 (0xA0-0xA3)
+    #region 数组 (0xA0-0xA6)
 
     NewArray = 0xA0,
     ArrayGet = 0xA1,
     ArraySet = 0xA2,
     ArrayLength = 0xA3,
+    ArrayPush = 0xA4,
+    ArrayPop = 0xA5,
+    ArrayContains = 0xA6,
+
+    #endregion
+
+    #region 映射 (0xA8-0xAD)
+
+    NewMap = 0xA8,
+    MapGet = 0xA9,
+    MapSet = 0xAA,
+    MapContains = 0xAB,
+    MapRemove = 0xAC,
+    MapLength = 0xAD,
 
     #endregion
 
@@ -225,10 +263,13 @@ public enum GnosisOpCode : byte
 
     #endregion
 
-    #region 协程 (0xD0-0xD1)
+    #region 协程 (0xD0-0xD4)
 
     Yield = 0xD0,
-    Resume = 0xD1
+    Resume = 0xD1,
+    CreateCoroutine = 0xD2,
+    CoroutineStatus = 0xD3,
+    Await = 0xD4
 
     #endregion
 }
@@ -285,6 +326,8 @@ public enum GnosisInstructionCategory : byte
     Arithmetic,
     Comparison,
     Logic,
+    TypeConversion,
+    BitOperation,
     ControlFlow,
     Call,
     Variable,
@@ -292,6 +335,7 @@ public enum GnosisInstructionCategory : byte
     Ecs,
     String,
     Array,
+    Map,
     Closure,
     TypeCheck,
     Coroutine
