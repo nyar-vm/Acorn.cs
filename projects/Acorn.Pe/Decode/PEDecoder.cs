@@ -46,12 +46,12 @@ public sealed class PeDecoder
     {
         var dosMagic = buffer.ReadU16LE();
 
-        if (dosMagic != 0x5A4D)
+        if (dosMagic != PeConstants.DosMagic)
         {
             throw new InvalidDataException("不是有效的 PE 文件（DOS 头魔数不匹配）");
         }
 
-        buffer.Advance(58);
+        buffer.Advance(PeConstants.PeOffsetPosition - 2);
 
         var peHeaderOffset = buffer.ReadU32LE();
 
@@ -69,7 +69,7 @@ public sealed class PeDecoder
     {
         var peMagic = buffer.ReadU32LE();
 
-        if (peMagic != 0x00004550)
+        if (peMagic != PeConstants.PeMagic)
         {
             throw new InvalidDataException("不是有效的 PE 文件（PE 头魔数不匹配）");
         }
@@ -113,12 +113,12 @@ public sealed class PeDecoder
         uint baseOfData = 0;
         ulong imageBase;
 
-        if (magic == 0x10B)
+        if (magic == PeConstants.OptionalMagicPE32)
         {
             baseOfData = buffer.ReadU32LE();
             imageBase = buffer.ReadU32LE();
         }
-        else if (magic == 0x20B)
+        else if (magic == PeConstants.OptionalMagicPE32Plus)
         {
             imageBase = buffer.ReadU64LE();
         }
@@ -147,7 +147,7 @@ public sealed class PeDecoder
         ulong sizeOfHeapReserve;
         ulong sizeOfHeapCommit;
 
-        if (magic == 0x10B)
+        if (magic == PeConstants.OptionalMagicPE32)
         {
             sizeOfStackReserve = buffer.ReadU32LE();
             sizeOfStackCommit = buffer.ReadU32LE();

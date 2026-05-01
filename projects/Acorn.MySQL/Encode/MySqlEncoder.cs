@@ -66,18 +66,18 @@ public ref struct MySqlEncoder
             var passwordBytes = System.Text.Encoding.UTF8.GetBytes(password);
             var pwLength = passwordBytes.Length;
 
-            if (pwLength <= MySqlConstants.LengthEncodedMaxSingle)
+            if (pwLength <= MySQLConstants.LengthEncodedMaxSingle)
             {
                 writer.WriteU8((byte)pwLength);
             }
-            else if (pwLength < MySqlConstants.LengthEncodedInt16Threshold)
+            else if (pwLength < MySQLConstants.LengthEncodedInt16Threshold)
             {
-                writer.WriteU8(MySqlConstants.LengthEncodedInt16);
+                writer.WriteU8(MySQLConstants.LengthEncodedInt16);
                 writer.WriteU16LE((ushort)pwLength);
             }
             else
             {
-                writer.WriteU8(MySqlConstants.LengthEncodedInt24);
+                writer.WriteU8(MySQLConstants.LengthEncodedInt24);
                 writer.WriteU32LE((uint)pwLength);
             }
 
@@ -112,7 +112,7 @@ public ref struct MySqlEncoder
         Span<byte> temp = stackalloc byte[4096];
         var writer = new ByteBufferWriter(temp);
 
-        writer.WriteU8((byte)MySqlConstants.CommandType.Query);
+        writer.WriteU8((byte)MySQLConstants.CommandType.Query);
 
         writer.WriteString(query);
 
@@ -122,7 +122,7 @@ public ref struct MySqlEncoder
             Length = written.Length,
             SequenceId = sequenceId,
             Type = MySqlPacketType.Command,
-            CommandType = MySqlConstants.CommandType.Query,
+            CommandType = MySQLConstants.CommandType.Query,
             Data = written
         };
 

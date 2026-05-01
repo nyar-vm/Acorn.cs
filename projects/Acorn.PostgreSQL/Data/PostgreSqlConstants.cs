@@ -3,7 +3,7 @@ namespace Acorn.PostgreSql.Data;
 /// <summary>
 ///     PostgreSQL 协议常量。
 /// </summary>
-public static class PostgreSqlConstants
+public static class PostgreSQLConstants
 {
     /// <summary>
     ///     PostgreSQL 协议版本。

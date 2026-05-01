@@ -52,7 +52,14 @@ public ref struct FlacDecoder
 
             if (blockType == FlacMetadataBlockType.StreamInfo)
             {
-                streamInfo = ReadStreamInfo(blockSize);
+                if (blockSize < 34)
+                {
+                    _buffer.Advance(blockSize);
+                }
+                else
+                {
+                    streamInfo = FlacAudioData.ParseStreamInfo(ref _buffer);
+                }
             }
             else
             {
@@ -65,38 +72,4 @@ public ref struct FlacDecoder
         return streamInfo ?? new FlacAudioData();
     }
 
-    private FlacAudioData ReadStreamInfo(int blockSize)
-    {
-        if (blockSize < 34)
-        {
-            _buffer.Advance(blockSize);
-            return new FlacAudioData();
-        }
-
-        var minBlockSize = _buffer.ReadU16BE();
-        var maxBlockSize = _buffer.ReadU16BE();
-        var minFrameSize = (int)(_buffer.ReadU8() << 16 | _buffer.ReadU16BE());
-        var maxFrameSize = (int)(_buffer.ReadU8() << 16 | _buffer.ReadU16BE());
-
-        var sampleRateBits = _buffer.ReadU32BE();
-        var sampleRate = (int)((sampleRateBits >> 12) & 0xFFFFF);
-        var channels = (int)(((sampleRateBits >> 9) & 0x07) + 1);
-        var bitsPerSample = (int)(((sampleRateBits >> 4) & 0x1F) + 1);
-        var totalSamplesHigh = (long)(sampleRateBits & 0x0F) << 32;
-        var totalSamplesLow = _buffer.ReadU32BE();
-        var totalSamples = totalSamplesHigh | totalSamplesLow;
-
-        var md5 = _buffer.ReadBytes(16).ToArray();
-
-        return new FlacAudioData
-        {
-            MinBlockSize = minBlockSize,
-            MaxBlockSize = maxBlockSize,
-            SampleRate = sampleRate,
-            Channels = channels,
-            BitsPerSample = bitsPerSample,
-            TotalSamples = totalSamples,
-            MD5Checksum = md5
-        };
-    }
 }

@@ -1,4 +1,5 @@
 using Acorn.Frame;
+using Acorn.Hashing;
 using Acorn.Ogg.Data;
 
 namespace Acorn.Ogg.Encode;
@@ -162,42 +163,11 @@ public sealed class OggEncoder
 
     private static uint ComputeOggCrc(ReadOnlySpan<byte> data)
     {
-        uint crc = 0;
+        var crc = new Crc32(Crc32.NormalPolynomial, 0, 0, reflected: false);
 
-        for (var i = 0; i < data.Length; i++)
-        {
-            crc = (crc << 8) ^ OggCrcTable[(crc >> 24) ^ data[i]];
-        }
+        crc.Update(data);
 
-        return crc;
-    }
-
-    private static readonly uint[] OggCrcTable = BuildOggCrcTable();
-
-    private static uint[] BuildOggCrcTable()
-    {
-        var table = new uint[256];
-
-        for (var i = 0u; i < 256; i++)
-        {
-            var r = i << 24;
-
-            for (var j = 0; j < 8; j++)
-            {
-                if ((r & 0x80000000) != 0)
-                {
-                    r = (r << 1) ^ 0x04C11DB7;
-                }
-                else
-                {
-                    r <<= 1;
-                }
-            }
-
-            table[i] = r;
-        }
-
-        return table;
+        return crc.Value;
     }
 
     #endregion

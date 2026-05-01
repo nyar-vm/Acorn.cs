@@ -41,7 +41,7 @@ public sealed class ELFDecoder
     {
         var magic = buffer.ReadBytes(4).ToArray();
 
-        if (magic[0] != 0x7F || magic[1] != 0x45 || magic[2] != 0x4C || magic[3] != 0x46)
+        if (magic[0] != ElfConstants.Magic[0] || magic[1] != ElfConstants.Magic[1] || magic[2] != ElfConstants.Magic[2] || magic[3] != ElfConstants.Magic[3])
         {
             throw new InvalidDataException("不是有效的 ELF 文件（魔数不匹配）");
         }
@@ -239,7 +239,7 @@ public sealed class ELFDecoder
     /// </summary>
     private static ushort ReadUInt16(ref ByteBuffer buffer, byte dataEncoding)
     {
-        return dataEncoding == 1 ? buffer.ReadU16LE() : buffer.ReadU16BE();
+        return dataEncoding == ElfConstants.DataEncodingLittleEndian ? buffer.ReadU16LE() : buffer.ReadU16BE();
     }
 
     /// <summary>
@@ -247,7 +247,7 @@ public sealed class ELFDecoder
     /// </summary>
     private static uint ReadUInt32(ref ByteBuffer buffer, byte dataEncoding)
     {
-        return dataEncoding == 1 ? buffer.ReadU32LE() : buffer.ReadU32BE();
+        return dataEncoding == ElfConstants.DataEncodingLittleEndian ? buffer.ReadU32LE() : buffer.ReadU32BE();
     }
 
     /// <summary>
@@ -255,6 +255,6 @@ public sealed class ELFDecoder
     /// </summary>
     private static ulong ReadUInt64(ref ByteBuffer buffer, byte dataEncoding)
     {
-        return dataEncoding == 1 ? buffer.ReadU64LE() : buffer.ReadU64BE();
+        return dataEncoding == ElfConstants.DataEncodingLittleEndian ? buffer.ReadU64LE() : buffer.ReadU64BE();
     }
 }

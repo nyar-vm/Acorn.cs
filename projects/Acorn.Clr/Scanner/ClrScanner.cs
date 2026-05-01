@@ -43,13 +43,13 @@ public ref struct ClrScanner
             throw new InvalidDataException("数据过短，不是有效的 PE 文件");
         }
 
-        if (!_scanner.MatchMagic(new ReadOnlySpan<byte>([0x4D, 0x5A])))
+        if (!_scanner.MatchMagic(PeConstants.DosMagicBytes))
         {
             throw new InvalidDataException("MZ 魔数不匹配，不是有效的 PE 文件");
         }
 
         var peOffset = _scanner.Buffer.Position;
-        _scanner.Buffer.Position = 60;
+        _scanner.Buffer.Position = PeConstants.PeOffsetPosition;
 
         if (_scanner.Buffer.Remaining < 4)
         {
@@ -72,7 +72,7 @@ public ref struct ClrScanner
 
         var peMagic = _scanner.Buffer.ReadU32LE();
 
-        if (peMagic != 0x00004550)
+        if (peMagic != PeConstants.PeMagic)
         {
             throw new InvalidDataException("PE 签名不匹配");
         }
@@ -93,7 +93,7 @@ public ref struct ClrScanner
         {
             _scanner.Buffer.Position = optionalHeaderOffset;
             var optionalMagic = _scanner.Buffer.ReadU16LE();
-            header.IsPE32Plus = optionalMagic == 0x20B;
+            header.IsPE32Plus = optionalMagic == PeConstants.OptionalMagicPE32Plus;
         }
 
         int clrDirectoryDataIndex = header.IsPE32Plus ? 14 : 14;
@@ -129,8 +129,8 @@ public ref struct ClrScanner
 
         header.Machine = machine;
         header.NumberOfSections = numberOfSections;
-        header.IsExecutable = (characteristics & 0x0002) != 0;
-        header.IsDll = (characteristics & 0x2000) != 0;
+        header.IsExecutable = (characteristics & PeConstants.CharacteristicsExecutable) != 0;
+        header.IsDll = (characteristics & PeConstants.CharacteristicsDll) != 0;
 
         return header;
     }
@@ -145,7 +145,7 @@ public ref struct ClrScanner
             return false;
         }
 
-        if (!_scanner.MatchMagic(new ReadOnlySpan<byte>([0x4D, 0x5A])))
+        if (!_scanner.MatchMagic(PeConstants.DosMagicBytes))
         {
             return false;
         }

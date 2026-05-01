@@ -52,9 +52,9 @@ public ref struct FlacScanner
             _scanner.Advance(6);
 
             var sampleRateBits = _scanner.Buffer.ReadU32BE();
-            var sampleRate = (int)((sampleRateBits >> 12) & 0xFFFFF);
-            var channels = (int)(((sampleRateBits >> 9) & 0x07) + 1);
-            var bitsPerSample = (int)(((sampleRateBits >> 4) & 0x1F) + 1);
+            var sampleRate = FlacAudioData.ParseSampleRate(sampleRateBits);
+            var channels = FlacAudioData.ParseChannels(sampleRateBits);
+            var bitsPerSample = FlacAudioData.ParseBitsPerSample(sampleRateBits);
 
             return new FlacScanHeader
             {

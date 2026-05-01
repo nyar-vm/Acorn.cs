@@ -8,7 +8,7 @@ public class PostgreSqlMessageData
     /// <summary>
     ///     获取或设置消息类型。
     /// </summary>
-    public PostgreSqlConstants.MessageType Type { get; set; }
+    public PostgreSQLConstants.MessageType Type { get; set; }
     
     /// <summary>
     ///     获取或设置消息长度。
@@ -23,7 +23,7 @@ public class PostgreSqlMessageData
     /// <summary>
     ///     获取或设置认证类型（仅适用于认证请求消息）。
     /// </summary>
-    public PostgreSqlConstants.AuthenticationType? AuthenticationType { get; set; }
+    public PostgreSQLConstants.AuthenticationType? AuthenticationType { get; set; }
     
     /// <summary>
     ///     获取或设置认证数据（仅适用于认证请求消息）。
@@ -43,7 +43,7 @@ public class PostgreSqlMessageData
     /// <summary>
     ///     获取或设置事务状态（仅适用于就绪消息）。
     /// </summary>
-    public PostgreSqlConstants.TransactionStatus? TransactionStatus { get; set; }
+    public PostgreSQLConstants.TransactionStatus? TransactionStatus { get; set; }
     
     /// <summary>
     ///     获取或设置字段描述（仅适用于行描述消息）。

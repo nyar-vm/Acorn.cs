@@ -26,7 +26,7 @@ public class PeScanner
             return result.ToString();
         }
 
-        if (data[0] != 0x4D || data[1] != 0x5A)
+        if (data[0] != PeConstants.DosMagicBytes[0] || data[1] != PeConstants.DosMagicBytes[1])
         {
             result.AppendLine("❌ 不是有效的 PE 文件");
             return result.ToString();

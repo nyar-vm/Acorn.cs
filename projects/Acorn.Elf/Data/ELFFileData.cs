@@ -103,12 +103,12 @@ public sealed class ELFHeaderData
     /// <summary>
     ///     是否为 64 位。
     /// </summary>
-    public bool Is64Bit => Class == 2;
+    public bool Is64Bit => Class == ElfConstants.Class64;
 
     /// <summary>
     ///     是否为小端。
     /// </summary>
-    public bool IsLittleEndian => DataEncoding == 1;
+    public bool IsLittleEndian => DataEncoding == ElfConstants.DataEncodingLittleEndian;
 }
 
 /// <summary>
@@ -246,10 +246,10 @@ public sealed class ELFFileData
     /// <summary>
     ///     是否为可执行文件。
     /// </summary>
-    public bool IsExecutable => Header.Type == 2;
+    public bool IsExecutable => Header.Type == ElfConstants.TypeExecutable;
 
     /// <summary>
     ///     是否为共享库。
     /// </summary>
-    public bool IsSharedLibrary => Header.Type == 3;
+    public bool IsSharedLibrary => Header.Type == ElfConstants.TypeSharedLibrary;
 }

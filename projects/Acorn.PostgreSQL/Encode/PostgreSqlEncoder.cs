@@ -47,7 +47,7 @@ public ref struct PostgreSqlEncoder
         Span<byte> temp = stackalloc byte[4096];
         var writer = new ByteBufferWriter(temp);
 
-        writer.WriteI32BE(PostgreSqlConstants.ProtocolVersion);
+        writer.WriteI32BE(PostgreSQLConstants.ProtocolVersion);
 
         writer.WriteNullTerminatedString("user");
         writer.WriteNullTerminatedString(user);
@@ -82,7 +82,7 @@ public ref struct PostgreSqlEncoder
 
         var message = new PostgreSqlMessageData
         {
-            Type = PostgreSqlConstants.MessageType.Query,
+            Type = PostgreSQLConstants.MessageType.Query,
             Length = writer.Position + 4,
             Data = temp.Slice(0, writer.Position).ToArray()
         };
@@ -103,7 +103,7 @@ public ref struct PostgreSqlEncoder
 
         var message = new PostgreSqlMessageData
         {
-            Type = (PostgreSqlConstants.MessageType)'p',
+            Type = (PostgreSQLConstants.MessageType)'p',
             Length = writer.Position + 4,
             Data = temp.Slice(0, writer.Position).ToArray()
         };
@@ -118,7 +118,7 @@ public ref struct PostgreSqlEncoder
     {
         var message = new PostgreSqlMessageData
         {
-            Type = PostgreSqlConstants.MessageType.SyncMessage,
+            Type = PostgreSQLConstants.MessageType.SyncMessage,
             Length = 4,
             Data = Array.Empty<byte>()
         };
@@ -133,7 +133,7 @@ public ref struct PostgreSqlEncoder
     {
         var message = new PostgreSqlMessageData
         {
-            Type = PostgreSqlConstants.MessageType.TerminateMessage,
+            Type = PostgreSQLConstants.MessageType.TerminateMessage,
             Length = 4,
             Data = Array.Empty<byte>()
         };

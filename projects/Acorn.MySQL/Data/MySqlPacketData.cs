@@ -30,12 +30,12 @@ public class MySqlPacketData
     /// <summary>
     ///     获取或设置命令类型（仅适用于命令包）。
     /// </summary>
-    public MySqlConstants.CommandType? CommandType { get; set; }
+    public MySQLConstants.CommandType? CommandType { get; set; }
     
     /// <summary>
     ///     获取或设置错误码（仅适用于错误包）。
     /// </summary>
-    public MySqlConstants.ErrorCode? ErrorCode { get; set; }
+    public MySQLConstants.ErrorCode? ErrorCode { get; set; }
     
     /// <summary>
     ///     获取或设置错误消息（仅适用于错误包）。
@@ -45,7 +45,7 @@ public class MySqlPacketData
     /// <summary>
     ///     获取或设置服务器状态（仅适用于结果包）。
     /// </summary>
-    public MySqlConstants.ServerStatus? ServerStatus { get; set; }
+    public MySQLConstants.ServerStatus? ServerStatus { get; set; }
 }
 
 /// <summary>

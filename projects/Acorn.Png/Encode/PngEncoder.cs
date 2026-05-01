@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using Acorn.Frame;
+using Acorn.Hashing;
 using Acorn.Png.Data;
 
 namespace Acorn.Png.Encode;
@@ -131,7 +132,7 @@ public sealed class PngEncoder
     private static uint ComputeCrc(string type, ReadOnlySpan<byte> data)
     {
         var typeBytes = System.Text.Encoding.ASCII.GetBytes(type);
-        var crc = new Crc32();
+        var crc = new Acorn.Hashing.Crc32();
 
         crc.Update(typeBytes);
         crc.Update(data);
@@ -149,62 +150,4 @@ public sealed class PngEncoder
     #endregion
 }
 
-/// <summary>
-///     CRC32 计算器，用于 PNG 块校验。
-/// </summary>
-internal sealed class Crc32
-{
-    private static readonly uint[] Table = BuildTable();
 
-    private uint _crc = 0xFFFFFFFF;
-
-    /// <summary>
-    ///     获取当前 CRC 值。
-    /// </summary>
-    public uint Value => _crc ^ 0xFFFFFFFF;
-
-    /// <summary>
-    ///     更新 CRC 值。
-    /// </summary>
-    public void Update(ReadOnlySpan<byte> data)
-    {
-        foreach (var b in data)
-        {
-            _crc = Table[(_crc ^ b) & 0xFF] ^ (_crc >> 8);
-        }
-    }
-
-    /// <summary>
-    ///     更新 CRC 值。
-    /// </summary>
-    public void Update(byte[] data)
-    {
-        Update(data.AsSpan());
-    }
-
-    private static uint[] BuildTable()
-    {
-        var table = new uint[256];
-
-        for (var i = 0u; i < 256; i++)
-        {
-            var crc = i;
-
-            for (var j = 0; j < 8; j++)
-            {
-                if ((crc & 1) != 0)
-                {
-                    crc = (crc >> 1) ^ 0xEDB88320;
-                }
-                else
-                {
-                    crc >>= 1;
-                }
-            }
-
-            table[i] = crc;
-        }
-
-        return table;
-    }
-}

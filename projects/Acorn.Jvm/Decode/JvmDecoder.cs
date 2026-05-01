@@ -20,7 +20,7 @@ public sealed class JvmDecoder
 
         // 读取魔数
         var magic = reader.ReadUInt32();
-        if (magic != 0xCAFEBABE)
+        if (magic != JvmConstants.Magic)
         {
             throw new Exception("Invalid ClassFile magic");
         }

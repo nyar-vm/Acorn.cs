@@ -269,7 +269,46 @@ public enum GnosisOpCode : byte
     Resume = 0xD1,
     CreateCoroutine = 0xD2,
     CoroutineStatus = 0xD3,
-    Await = 0xD4
+    Await = 0xD4,
+
+    #endregion
+
+    #region Game 方言扩展 (0xE0-0xE6)
+
+    /// <summary>
+    ///     ECS 原型迭代器。
+    /// </summary>
+    ArchetypeIter = 0xE0,
+
+    /// <summary>
+    ///     ECS 组件 SOA 内存布局。
+    /// </summary>
+    ComponentSoaLayout = 0xE1,
+
+    /// <summary>
+    ///     平台能力查询。
+    /// </summary>
+    UseCapability = 0xE2,
+
+    /// <summary>
+    ///     硬件信息查询。
+    /// </summary>
+    HardwareInfo = 0xE3,
+
+    /// <summary>
+    ///     平台信息查询。
+    /// </summary>
+    PlatformInfo = 0xE4,
+
+    /// <summary>
+    ///     渠道守卫检查。
+    /// </summary>
+    ChannelGuard = 0xE5,
+
+    /// <summary>
+    ///     插件声明注册。
+    /// </summary>
+    PluginDecl = 0xE6
 
     #endregion
 }
@@ -338,5 +377,6 @@ public enum GnosisInstructionCategory : byte
     Map,
     Closure,
     TypeCheck,
-    Coroutine
+    Coroutine,
+    GameExtension
 }

@@ -26,7 +26,7 @@ public ref struct PostgreSqlDecoder
     public PostgreSqlMessageData DecodeMessage()
     {
         var messageTypeByte = _buffer.ReadU8();
-        var messageType = (PostgreSqlConstants.MessageType)messageTypeByte;
+        var messageType = (PostgreSQLConstants.MessageType)messageTypeByte;
 
         var length = _buffer.ReadI32BE();
 
@@ -43,19 +43,19 @@ public ref struct PostgreSqlDecoder
 
         switch (messageType)
         {
-            case PostgreSqlConstants.MessageType.AuthenticationRequest:
+            case PostgreSQLConstants.MessageType.AuthenticationRequest:
                 DecodeAuthenticationRequest(message);
                 break;
-            case PostgreSqlConstants.MessageType.ErrorResponse:
+            case PostgreSQLConstants.MessageType.ErrorResponse:
                 DecodeErrorResponse(message);
                 break;
-            case PostgreSqlConstants.MessageType.CommandComplete:
+            case PostgreSQLConstants.MessageType.CommandComplete:
                 DecodeCommandComplete(message);
                 break;
-            case PostgreSqlConstants.MessageType.ReadyForQuery:
+            case PostgreSQLConstants.MessageType.ReadyForQuery:
                 DecodeReadyForQuery(message);
                 break;
-            case PostgreSqlConstants.MessageType.RowDescription:
+            case PostgreSQLConstants.MessageType.RowDescription:
                 DecodeRowDescription(message);
                 break;
         }
@@ -71,7 +71,7 @@ public ref struct PostgreSqlDecoder
     {
         var buffer = new ByteBuffer(message.Data);
 
-        var authType = (PostgreSqlConstants.AuthenticationType)buffer.ReadI32BE();
+        var authType = (PostgreSQLConstants.AuthenticationType)buffer.ReadI32BE();
         message.AuthenticationType = authType;
 
         if (buffer.Remaining > 0)
@@ -121,7 +121,7 @@ public ref struct PostgreSqlDecoder
         var buffer = new ByteBuffer(message.Data);
 
         var transactionStatusByte = buffer.ReadU8();
-        message.TransactionStatus = (PostgreSqlConstants.TransactionStatus)transactionStatusByte;
+        message.TransactionStatus = (PostgreSQLConstants.TransactionStatus)transactionStatusByte;
     }
 
     /// <summary>

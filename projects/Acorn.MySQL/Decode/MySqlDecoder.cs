@@ -47,28 +47,28 @@ public ref struct MySqlDecoder
         {
             var firstByte = data[0];
 
-            if (firstByte == MySqlConstants.PacketMarkerOk)
+            if (firstByte == MySQLConstants.PacketMarkerOk)
             {
                 packet.Type = MySqlPacketType.Result;
                 DecodeResultPacket(packet);
             }
-            else if (firstByte == MySqlConstants.PacketMarkerError)
+            else if (firstByte == MySQLConstants.PacketMarkerError)
             {
                 packet.Type = MySqlPacketType.Error;
                 DecodeErrorPacket(packet);
             }
-            else if (firstByte == MySqlConstants.PacketMarkerEof)
+            else if (firstByte == MySQLConstants.PacketMarkerEof)
             {
                 packet.Type = MySqlPacketType.Eof;
             }
-            else if (firstByte == MySqlConstants.ProtocolVersion)
+            else if (firstByte == MySQLConstants.ProtocolVersion)
             {
                 packet.Type = MySqlPacketType.Handshake;
             }
-            else if (firstByte >= MySqlConstants.CommandTypeMin && firstByte <= MySqlConstants.CommandTypeMax)
+            else if (firstByte >= MySQLConstants.CommandTypeMin && firstByte <= MySQLConstants.CommandTypeMax)
             {
                 packet.Type = MySqlPacketType.Command;
-                packet.CommandType = (MySqlConstants.CommandType)firstByte;
+                packet.CommandType = (MySQLConstants.CommandType)firstByte;
             }
             else
             {
@@ -93,7 +93,7 @@ public ref struct MySqlDecoder
 
         var lastInsertId = ReadLengthEncodedInteger(ref buffer);
 
-        var serverStatus = (MySqlConstants.ServerStatus)buffer.ReadU16LE();
+        var serverStatus = (MySQLConstants.ServerStatus)buffer.ReadU16LE();
         packet.ServerStatus = serverStatus;
 
         var warningCount = buffer.ReadU16LE();
@@ -109,7 +109,7 @@ public ref struct MySqlDecoder
 
         buffer.ReadU8();
 
-        var errorCode = (MySqlConstants.ErrorCode)buffer.ReadU16LE();
+        var errorCode = (MySQLConstants.ErrorCode)buffer.ReadU16LE();
         packet.ErrorCode = errorCode;
 
         if (!buffer.IsEnd && buffer.Peek(1)[0] == (byte)'#')
@@ -130,19 +130,19 @@ public ref struct MySqlDecoder
     {
         var firstByte = buffer.ReadU8();
 
-        if (firstByte <= MySqlConstants.LengthEncodedMaxSingle)
+        if (firstByte <= MySQLConstants.LengthEncodedMaxSingle)
         {
             return firstByte;
         }
-        else if (firstByte == MySqlConstants.LengthEncodedNull)
+        else if (firstByte == MySQLConstants.LengthEncodedNull)
         {
             return 0;
         }
-        else if (firstByte == MySqlConstants.LengthEncodedInt16)
+        else if (firstByte == MySQLConstants.LengthEncodedInt16)
         {
             return buffer.ReadU16LE();
         }
-        else if (firstByte == MySqlConstants.LengthEncodedInt24)
+        else if (firstByte == MySQLConstants.LengthEncodedInt24)
         {
             return buffer.ReadU32LE();
         }

@@ -366,17 +366,17 @@ public sealed class PeFileData
     /// <summary>
     ///     是否为 DLL。
     /// </summary>
-    public bool IsDll => (Header.Characteristics & 0x2000) != 0;
+    public bool IsDll => (Header.Characteristics & PeConstants.CharacteristicsDll) != 0;
 
     /// <summary>
     ///     是否为可执行文件。
     /// </summary>
-    public bool IsExecutable => (Header.Characteristics & 0x0002) != 0;
+    public bool IsExecutable => (Header.Characteristics & PeConstants.CharacteristicsExecutable) != 0;
 
     /// <summary>
     ///     是否为 64 位。
     /// </summary>
-    public bool Is64Bit => OptionalHeader.Magic == 0x20B;
+    public bool Is64Bit => OptionalHeader.Magic == PeConstants.OptionalMagicPE32Plus;
 
     /// <summary>
     ///     获取指定索引的数据目录条目。索引不存在时返回空条目。

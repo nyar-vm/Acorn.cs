@@ -25,6 +25,7 @@
     <Project Path="projects\Acorn.SafeTensors\Acorn.SafeTensors.csproj" />
     <Project Path="projects\Acorn.Spine\Acorn.Spine.csproj" />
     <Project Path="projects\Acorn.SpirV\SpirV.csproj" />
+    <Project Path="projects\Acorn.Sqlite\Acorn.Sqlite.csproj" />
     <Project Path="projects\Acorn.Wasm\Acorn.Wasm.csproj" />
     <Project Path="projects\Acorn.Clr\Acorn.Clr.csproj" />
     <Project Path="projects\Acorn.Jvm\Acorn.Jvm.csproj" />

@@ -3,7 +3,7 @@ namespace Acorn.MySql.Data;
 /// <summary>
 ///     MySQL 协议常量。
 /// </summary>
-public static class MySqlConstants
+public static class MySQLConstants
 {
     /// <summary>
     ///     MySQL 协议版本。

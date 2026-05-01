@@ -26,7 +26,7 @@ public class ELFScanner
             return result.ToString();
         }
 
-        if (data[0] != 0x7F || data[1] != 0x45 || data[2] != 0x4C || data[3] != 0x46)
+        if (data[0] != ElfConstants.Magic[0] || data[1] != ElfConstants.Magic[1] || data[2] != ElfConstants.Magic[2] || data[3] != ElfConstants.Magic[3])
         {
             result.AppendLine("❌ 不是有效的 ELF 文件");
             return result.ToString();
