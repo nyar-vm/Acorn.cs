@@ -38,6 +38,19 @@ public sealed class DWARFDecoder
             }
         }
 
+        while (!buffer.IsEnd)
+        {
+            var table = ReadLineNumberTable(ref buffer);
+            if (table != null)
+            {
+                lineNumberTables.Add(table);
+            }
+            else
+            {
+                break;
+            }
+        }
+
         return new DWARFFileData
         {
             CompilationUnits = compilationUnits,
@@ -72,7 +85,7 @@ public sealed class DWARFDecoder
         var segmentSelectorSize = buffer.ReadU8();
 
         var entries = new List<DWARFEntryData>();
-        var endPosition = buffer.Position + (int)unitLength - 11;
+        var endPosition = buffer.Position + (int)unitLength - 8;
 
         while (buffer.Position < endPosition)
         {
@@ -123,6 +136,80 @@ public sealed class DWARFDecoder
             AddressSize = addressSize,
             SegmentSelectorSize = segmentSelectorSize,
             Entries = entries
+        };
+    }
+
+    /// <summary>
+    ///     读取行号表。
+    /// </summary>
+    private DWARFLineNumberTableData? ReadLineNumberTable(ref ByteBuffer buffer)
+    {
+        if (buffer.Remaining < 4)
+        {
+            return null;
+        }
+
+        var unitLength = buffer.ReadU32LE();
+
+        if (unitLength == 0 || buffer.Position + unitLength > buffer.Length)
+        {
+            return null;
+        }
+
+        var endPosition = buffer.Position + (int)unitLength;
+
+        var version = buffer.ReadU16LE();
+        var addressSize = buffer.ReadU8();
+        var segmentSelectorSize = buffer.ReadU8();
+        var headerLength = buffer.ReadU32LE();
+        var minimumInstructionLength = buffer.ReadU8();
+        var maximumOperationsPerInstruction = buffer.ReadU8();
+        var defaultIsStatement = buffer.ReadU8();
+        var lineBase = buffer.ReadI8();
+        var lineRange = buffer.ReadU8();
+        var opcodeBase = buffer.ReadU8();
+
+        var standardOpcodeLengths = new List<byte>();
+        var opcodeLengthCount = (int)opcodeBase - 1;
+
+        if (opcodeLengthCount < 0)
+        {
+            return null;
+        }
+
+        for (var i = 0; i < opcodeLengthCount; i++)
+        {
+            if (buffer.Position >= endPosition)
+            {
+                return null;
+            }
+
+            standardOpcodeLengths.Add(buffer.ReadU8());
+        }
+
+        var fileNames = new List<string>();
+
+        while (buffer.Position < endPosition)
+        {
+            var fileName = buffer.ReadNullTerminatedString();
+            fileNames.Add(fileName);
+        }
+
+        return new DWARFLineNumberTableData
+        {
+            UnitLength = unitLength,
+            Version = version,
+            AddressSize = addressSize,
+            SegmentSelectorSize = segmentSelectorSize,
+            HeaderLength = headerLength,
+            MinimumInstructionLength = minimumInstructionLength,
+            MaximumOperationsPerInstruction = maximumOperationsPerInstruction,
+            DefaultIsStatement = defaultIsStatement,
+            LineBase = lineBase,
+            LineRange = lineRange,
+            OpcodeBase = opcodeBase,
+            StandardOpcodeLengths = standardOpcodeLengths,
+            FileNames = fileNames
         };
     }
 

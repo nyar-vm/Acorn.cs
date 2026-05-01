@@ -219,7 +219,6 @@ public sealed class ElfEncoder
 
     private static void WriteSectionHeaders(ref ByteBufferWriter writer, IReadOnlyList<ELFSectionHeaderData> headers, bool is64, bool isLE, ElfLayout layout)
     {
-        var nameIndex = (uint)0;
         var nameOffset = 1;
 
         foreach (var sh in headers)

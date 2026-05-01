@@ -18,5 +18,6 @@
         <ProjectReference Include="..\..\projects\Acorn\Acorn.csproj" />
         <ProjectReference Include="..\..\projects\Acorn.Nyar\Acorn.Nyar.csproj" />
         <ProjectReference Include="..\..\projects\Acorn.Clr\Acorn.Clr.csproj" />
+        <ProjectReference Include="..\..\projects\Acorn.Jvm\Acorn.Jvm.csproj" />
     </ItemGroup>
 </Project>

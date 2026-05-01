@@ -581,5 +581,20 @@ public enum JvmOpcode : byte
     Ifnull = 198,
     Ifnonnull = 199,
     GotoW = 200,
-    JsrW = 201
+    JsrW = 201,
+
+    /// <summary>
+    ///     调试器断点保留指令
+    /// </summary>
+    Breakpoint = 202,
+
+    /// <summary>
+    ///     实现相关指令 1
+    /// </summary>
+    Impdep1 = 254,
+
+    /// <summary>
+    ///     实现相关指令 2
+    /// </summary>
+    Impdep2 = 255
 }

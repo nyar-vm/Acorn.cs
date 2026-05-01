@@ -136,6 +136,240 @@ public class NyarRoundTripTests
 
         Assert.ThrowsAny<Exception>(() => decoder.Decode(data));
     }
+
+    [Fact]
+    public void Encode_Decode_Int64BigIntConstants()
+    {
+        var maxBytes = BitConverter.GetBytes(long.MaxValue);
+        var minBytes = BitConverter.GetBytes(long.MinValue);
+
+        var original = new NyarModuleData
+        {
+            Name = "int64_test",
+            Constants =
+            [
+                new NyarConstant { Kind = NyarConstantKind.BigInt, Value = maxBytes },
+                new NyarConstant { Kind = NyarConstantKind.BigInt, Value = minBytes }
+            ],
+            Functions = [],
+            Imports = [],
+            Exports = []
+        };
+
+        var encoder = new NyarEncoder();
+        var bytes = encoder.Encode(original);
+
+        var decoder = new NyarDecoder();
+        var decoded = decoder.Decode(bytes);
+
+        Assert.Equal(2, decoded.Constants.Count);
+        Assert.Equal(NyarConstantKind.BigInt, decoded.Constants[0].Kind);
+        Assert.Equal(NyarConstantKind.BigInt, decoded.Constants[1].Kind);
+
+        var decodedMax = (byte[])decoded.Constants[0].Value!;
+        var decodedMin = (byte[])decoded.Constants[1].Value!;
+        Assert.Equal(long.MaxValue, BitConverter.ToInt64(decodedMax, 0));
+        Assert.Equal(long.MinValue, BitConverter.ToInt64(decodedMin, 0));
+    }
+
+    [Fact]
+    public void Encode_Decode_LongModuleName()
+    {
+        var longName = new string('N', 256);
+
+        var original = new NyarModuleData
+        {
+            Name = longName,
+            Constants = [],
+            Functions = [],
+            Imports = [],
+            Exports = []
+        };
+
+        var encoder = new NyarEncoder();
+        var bytes = encoder.Encode(original);
+
+        var decoder = new NyarDecoder();
+        var decoded = decoder.Decode(bytes);
+
+        Assert.Equal(original.Name, decoded.Name);
+        Assert.Equal(256, decoded.Name.Length);
+    }
+
+    [Fact]
+    public void Encode_Decode_ManyFunctions()
+    {
+        var functions = new List<NyarFunction>(100);
+        for (var i = 0; i < 100; i++)
+        {
+            functions.Add(new NyarFunction
+            {
+                Name = $"func_{i:D3}",
+                Arity = i % 4,
+                LocalCount = i % 8,
+                CodeOffset = i * 10,
+                CodeLength = 10
+            });
+        }
+
+        var original = new NyarModuleData
+        {
+            Name = "many_funcs",
+            Constants = [],
+            Functions = functions,
+            Imports = [],
+            Exports = []
+        };
+
+        var encoder = new NyarEncoder();
+        var bytes = encoder.Encode(original);
+
+        var decoder = new NyarDecoder();
+        var decoded = decoder.Decode(bytes);
+
+        Assert.Equal(100, decoded.Functions.Count);
+
+        for (var i = 0; i < 100; i++)
+        {
+            Assert.Equal($"func_{i:D3}", decoded.Functions[i].Name);
+            Assert.Equal(i % 4, decoded.Functions[i].Arity);
+            Assert.Equal(i % 8, decoded.Functions[i].LocalCount);
+            Assert.Equal(i * 10, decoded.Functions[i].CodeOffset);
+            Assert.Equal(10, decoded.Functions[i].CodeLength);
+        }
+    }
+
+    [Fact]
+    public void Encode_Decode_EmptyModuleVariants()
+    {
+        // 全部空集合
+        {
+            var original = new NyarModuleData
+            {
+                Name = "all_empty",
+                Constants = [],
+                Functions = [],
+                Imports = [],
+                Exports = []
+            };
+
+            var encoder = new NyarEncoder();
+            var bytes = encoder.Encode(original);
+
+            var decoder = new NyarDecoder();
+            var decoded = decoder.Decode(bytes);
+
+            Assert.Equal("all_empty", decoded.Name);
+            Assert.Empty(decoded.Constants);
+            Assert.Empty(decoded.Functions);
+            Assert.Empty(decoded.Imports);
+            Assert.Empty(decoded.Exports);
+        }
+
+        // 空名称 + 空集合
+        {
+            var original = new NyarModuleData
+            {
+                Name = "",
+                Constants = [],
+                Functions = [],
+                Imports = [],
+                Exports = []
+            };
+
+            var encoder = new NyarEncoder();
+            var bytes = encoder.Encode(original);
+
+            var decoder = new NyarDecoder();
+            var decoded = decoder.Decode(bytes);
+
+            Assert.Equal("", decoded.Name);
+        }
+
+        // 仅有一个常量，其余为空
+        {
+            var original = new NyarModuleData
+            {
+                Name = "only_const",
+                Constants = [new NyarConstant { Kind = NyarConstantKind.Int32, Value = 99 }],
+                Functions = [],
+                Imports = [],
+                Exports = []
+            };
+
+            var encoder = new NyarEncoder();
+            var bytes = encoder.Encode(original);
+
+            var decoder = new NyarDecoder();
+            var decoded = decoder.Decode(bytes);
+
+            Assert.Single(decoded.Constants);
+            Assert.Equal(NyarConstantKind.Int32, decoded.Constants[0].Kind);
+            Assert.Equal(99, decoded.Constants[0].Value);
+            Assert.Empty(decoded.Functions);
+            Assert.Empty(decoded.Imports);
+            Assert.Empty(decoded.Exports);
+        }
+
+        // 仅导入 + 导出，无函数无常量
+        {
+            var original = new NyarModuleData
+            {
+                Name = "only_import_export",
+                Constants = [],
+                Functions = [],
+                Imports =
+                [
+                    new NyarImport { Kind = NyarImportKind.Function, ModuleName = "lib", SymbolName = "fn" }
+                ],
+                Exports =
+                [
+                    new NyarExport { Kind = NyarExportKind.Global, SymbolName = "VERSION", FunctionIndex = -1 }
+                ]
+            };
+
+            var encoder = new NyarEncoder();
+            var bytes = encoder.Encode(original);
+
+            var decoder = new NyarDecoder();
+            var decoded = decoder.Decode(bytes);
+
+            Assert.Empty(decoded.Constants);
+            Assert.Empty(decoded.Functions);
+            Assert.Single(decoded.Imports);
+            Assert.Single(decoded.Exports);
+            Assert.Equal("lib", decoded.Imports[0].ModuleName);
+            Assert.Equal("fn", decoded.Imports[0].SymbolName);
+            Assert.Equal("VERSION", decoded.Exports[0].SymbolName);
+        }
+    }
+
+    [Fact]
+    public void Decode_WrongMagic_ThrowsInvalidNyarDataException()
+    {
+        var original = new NyarModuleData
+        {
+            Name = "magic_test",
+            Constants = [],
+            Functions = [],
+            Imports = [],
+            Exports = []
+        };
+
+        var encoder = new NyarEncoder();
+        var bytes = encoder.Encode(original);
+
+        // 破坏魔数字节，写入错误的标识
+        bytes[0] = 0xDE;
+        bytes[1] = 0xAD;
+        bytes[2] = 0xBE;
+        bytes[3] = 0xEF;
+
+        var decoder = new NyarDecoder();
+
+        var ex = Assert.Throws<InvalidNyarDataException>(() => decoder.Decode(bytes));
+        Assert.Contains("无效的 .nyar 文件头", ex.Message);
+    }
 }
 
 public class NyarScannerTests
