@@ -11,9 +11,6 @@ namespace Acorn.MachO.Encode;
 /// </summary>
 public sealed class MachOEncoder
 {
-    private const uint LC_SEGMENT = 0x1;
-    private const uint LC_SEGMENT_64 = 0x19;
-
     /// <summary>
     ///     编码 Mach-O 文件数据为字节数组。
     /// </summary>
@@ -62,11 +59,11 @@ public sealed class MachOEncoder
             WriteU32(ref writer, cmd.Command, isLE);
             WriteU32(ref writer, cmd.Size, isLE);
 
-            if (cmd.Command == LC_SEGMENT_64 && is64)
+            if (cmd.Command == MachOConstants.LcSegment64 && is64)
             {
                 WriteSegment64Command(ref writer, cmd, data.Sections, isLE);
             }
-            else if (cmd.Command == LC_SEGMENT && !is64)
+            else if (cmd.Command == MachOConstants.LcSegment && !is64)
             {
                 WriteSegmentCommand(ref writer, cmd, data.Sections, isLE);
             }

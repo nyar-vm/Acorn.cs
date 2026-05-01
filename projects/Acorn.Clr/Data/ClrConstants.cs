@@ -56,6 +56,16 @@ public static class ClrConstants
     public const int TableCount = 64;
 
     /// <summary>
+    ///     双字节操作码前缀字节（所有 >= 0xFE00 的操作码以此字节开头）。
+    /// </summary>
+    public const byte TwoByteOpcodePrefix = 0xFE;
+
+    /// <summary>
+    ///     双字节操作码基值（操作码 >= 此值使用双字节编码）。
+    /// </summary>
+    public const ushort TwoByteOpcodeBase = 0xFE00;
+
+    /// <summary>
     ///     #Strings 流名称。
     /// </summary>
     public const string StringsStreamName = "#Strings";

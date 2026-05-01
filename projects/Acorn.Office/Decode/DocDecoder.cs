@@ -52,14 +52,14 @@ public ref struct DocDecoder
         _buffer.Position = 0;
         var wIdent = _buffer.ReadU16LE();
 
-        if (wIdent != 0xA5EC)
+        if (wIdent != OfficeConstants.WordDoc.FileMagic)
         {
             return string.Empty;
         }
 
         var nFib = _buffer.ReadU16LE();
 
-        _buffer.Position = 0x00A2;
+        _buffer.Position = (int)OfficeConstants.WordDoc.ClxOffsetPosition;
         var clxOffset = _buffer.ReadU32LE();
 
         if (clxOffset == 0 || clxOffset >= _buffer.Length)
@@ -73,13 +73,13 @@ public ref struct DocDecoder
         {
             var type = _buffer.ReadU8();
 
-            if (type == 0x01)
+            if (type == OfficeConstants.WordStreamType.Grpprl)
             {
                 _buffer.Advance(1);
                 var cbGrpprl = _buffer.ReadU16LE();
                 _buffer.Advance(cbGrpprl);
             }
-            else if (type == 0x02)
+            else if (type == OfficeConstants.WordStreamType.PieceTable)
             {
                 var cb = _buffer.ReadU32LE();
 

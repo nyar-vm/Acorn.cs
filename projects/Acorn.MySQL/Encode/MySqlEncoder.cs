@@ -66,18 +66,18 @@ public ref struct MySqlEncoder
             var passwordBytes = System.Text.Encoding.UTF8.GetBytes(password);
             var pwLength = passwordBytes.Length;
 
-            if (pwLength < 0xFB)
+            if (pwLength <= MySqlConstants.LengthEncodedMaxSingle)
             {
                 writer.WriteU8((byte)pwLength);
             }
-            else if (pwLength < 0x10000)
+            else if (pwLength < MySqlConstants.LengthEncodedInt16Threshold)
             {
-                writer.WriteU8(0xFC);
+                writer.WriteU8(MySqlConstants.LengthEncodedInt16);
                 writer.WriteU16LE((ushort)pwLength);
             }
             else
             {
-                writer.WriteU8(0xFD);
+                writer.WriteU8(MySqlConstants.LengthEncodedInt24);
                 writer.WriteU32LE((uint)pwLength);
             }
 

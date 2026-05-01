@@ -27,6 +27,11 @@ public static class OfficeConstants
         ///     Beginning of File（BIFF8 Workbook）。
         /// </summary>
         public const ushort Bof8 = 0x0809;
+
+        /// <summary>
+        ///     文件类型 — 工作簿全局（BIFF BOFTYPE）。
+        /// </summary>
+        public const ushort BofTypeWorkbook = 0x0005;
         
         /// <summary>
         ///     End of File。
@@ -77,6 +82,78 @@ public static class OfficeConstants
         ///     工作簿 BOF（BIFF8 Workbook）。
         /// </summary>
         public const ushort BofWorkbook = 0x0809;
+
+        /// <summary>
+        ///     BIFF 版本。
+        /// </summary>
+        public const ushort BiffVersion = 0x0600;
+
+        /// <summary>
+        ///     构建年份。
+        /// </summary>
+        public const ushort BuildYear = 0x09CD;
+
+        /// <summary>
+        ///     构建标识符。
+        /// </summary>
+        public const ushort BuildIdentifier = 0x07C9;
+
+        /// <summary>
+        ///     写入访问记录。
+        /// </summary>
+        public const ushort WriteAccess = 0x005C;
+
+        /// <summary>
+        ///     代码页记录。
+        /// </summary>
+        public const ushort CodePage = 0x0042;
+
+        /// <summary>
+        ///     UTF-16LE 代码页值。
+        /// </summary>
+        public const ushort CodePageUtf16LE = 0x04E4;
+
+        /// <summary>
+        ///     双精度存储文件记录。
+        /// </summary>
+        public const ushort Dsf = 0x0161;
+
+        /// <summary>
+        ///     工作表状态 — 可见。
+        /// </summary>
+        public const byte SheetStateVisible = 0x01;
+    }
+
+    /// <summary>
+    ///     Word DOC 流类型。
+    /// </summary>
+    public static class WordStreamType
+    {
+        /// <summary>
+        ///     Grpprl 属性列表。
+        /// </summary>
+        public const byte Grpprl = 0x01;
+
+        /// <summary>
+        ///     PieceTable 片段表。
+        /// </summary>
+        public const byte PieceTable = 0x02;
+    }
+
+    /// <summary>
+    ///     Word DOC 格式常量。
+    /// </summary>
+    public static class WordDoc
+    {
+        /// <summary>
+        ///     Word 二进制文件标识符（wIdent）。
+        /// </summary>
+        public const ushort FileMagic = 0xA5EC;
+
+        /// <summary>
+        ///     CLX 偏移量在文件中的位置。
+        /// </summary>
+        public const uint ClxOffsetPosition = 0x00A2;
     }
     
     /// <summary>

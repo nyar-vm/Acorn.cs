@@ -47,17 +47,17 @@ public ref struct MySqlDecoder
         {
             var firstByte = data[0];
 
-            if (firstByte == 0x00)
+            if (firstByte == MySqlConstants.PacketMarkerOk)
             {
                 packet.Type = MySqlPacketType.Result;
                 DecodeResultPacket(packet);
             }
-            else if (firstByte == 0xFF)
+            else if (firstByte == MySqlConstants.PacketMarkerError)
             {
                 packet.Type = MySqlPacketType.Error;
                 DecodeErrorPacket(packet);
             }
-            else if (firstByte == 0xFE)
+            else if (firstByte == MySqlConstants.PacketMarkerEof)
             {
                 packet.Type = MySqlPacketType.Eof;
             }
@@ -65,7 +65,7 @@ public ref struct MySqlDecoder
             {
                 packet.Type = MySqlPacketType.Handshake;
             }
-            else if (firstByte >= 0x01 && firstByte <= 0x1F)
+            else if (firstByte >= MySqlConstants.CommandTypeMin && firstByte <= MySqlConstants.CommandTypeMax)
             {
                 packet.Type = MySqlPacketType.Command;
                 packet.CommandType = (MySqlConstants.CommandType)firstByte;
@@ -130,19 +130,19 @@ public ref struct MySqlDecoder
     {
         var firstByte = buffer.ReadU8();
 
-        if (firstByte < 0xFB)
+        if (firstByte <= MySqlConstants.LengthEncodedMaxSingle)
         {
             return firstByte;
         }
-        else if (firstByte == 0xFB)
+        else if (firstByte == MySqlConstants.LengthEncodedNull)
         {
             return 0;
         }
-        else if (firstByte == 0xFC)
+        else if (firstByte == MySqlConstants.LengthEncodedInt16)
         {
             return buffer.ReadU16LE();
         }
-        else if (firstByte == 0xFD)
+        else if (firstByte == MySqlConstants.LengthEncodedInt24)
         {
             return buffer.ReadU32LE();
         }

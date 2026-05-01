@@ -293,9 +293,9 @@ public static class WasmDecoder
     {
         var form = buffer.ReadU8();
 
-        if (form != 0x60)
+        if (form != WasmConstants.FunctionTypeForm)
         {
-            throw new InvalidDataException($"无效的函数类型标记：0x{form:X2}，期望 0x60");
+            throw new InvalidDataException($"无效的函数类型标记：0x{form:X2}，期望 0x{WasmConstants.FunctionTypeForm:X2}");
         }
 
         var paramCount = buffer.ReadLeb128U32();
@@ -380,7 +380,7 @@ public static class WasmDecoder
     private static WasmGlobalType ReadGlobalType(ByteBuffer buffer)
     {
         var valueType = ReadValueType(buffer);
-        var mutable = buffer.ReadU8() == 0x01;
+        var mutable = buffer.ReadU8() == WasmConstants.GlobalMutable;
 
         return new WasmGlobalType
         {
@@ -554,34 +554,34 @@ public static class WasmDecoder
             var opcode = buffer.ReadU8();
             ms.WriteByte(opcode);
 
-            if (opcode == 0x0B)
+            if (opcode == (byte)WasmInitOpCode.End)
             {
                 break;
             }
 
-            switch (opcode)
+            switch ((WasmInitOpCode)opcode)
             {
-                case 0x41:
+                case WasmInitOpCode.I32Const:
                     var i32Value = buffer.ReadLeb128I32();
                     var i32Writer = new ByteBufferWriter(temp);
                     i32Writer.WriteLeb128I32(i32Value);
                     ms.Write(temp.Slice(0, i32Writer.Position).ToArray());
                     break;
-                case 0x42:
+                case WasmInitOpCode.I64Const:
                     var i64Value = buffer.ReadLeb128I32();
                     var i64Writer = new ByteBufferWriter(temp);
                     i64Writer.WriteLeb128I32(i64Value);
                     ms.Write(temp.Slice(0, i64Writer.Position).ToArray());
                     break;
-                case 0x43:
+                case WasmInitOpCode.F32Const:
                     var f32Bytes = buffer.ReadBytes(4).ToArray();
                     ms.Write(f32Bytes);
                     break;
-                case 0x44:
+                case WasmInitOpCode.F64Const:
                     var f64Bytes = buffer.ReadBytes(8).ToArray();
                     ms.Write(f64Bytes);
                     break;
-                case 0x23:
+                case WasmInitOpCode.GlobalGet:
                     var globalIdx = buffer.ReadLeb128U32();
                     var globalIdxWriter = new ByteBufferWriter(temp);
                     globalIdxWriter.WriteLeb128U32(globalIdx);

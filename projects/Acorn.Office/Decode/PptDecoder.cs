@@ -47,7 +47,7 @@ public ref struct PptDecoder
 
             var recordData = _buffer.ReadBytes((int)recordLength);
 
-            if (recordType == 0x0FBA)
+            if (recordType == OfficeConstants.PptRecordType.TextCharsAtom)
             {
                 var text = ParseTextRecord(recordData);
 

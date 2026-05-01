@@ -22,7 +22,7 @@ public sealed class XlsEncoder
     {
         var writer = new ByteBufferWriter(256);
 
-        WriteBOF(ref writer, 0x0005);
+        WriteBOF(ref writer, OfficeConstants.XlsRecordType.BofTypeWorkbook);
         WriteWriteAccess(ref writer);
         WriteCodePage(ref writer);
         WriteDSF(ref writer);
@@ -41,19 +41,19 @@ public sealed class XlsEncoder
 
     private static void WriteBOF(ref ByteBufferWriter writer, ushort biffType)
     {
-        writer.WriteU16LE(0x0809);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.Bof8);
         writer.WriteU16LE(16);
-        writer.WriteU16LE(0x0600);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.BiffVersion);
         writer.WriteU16LE(biffType);
-        writer.WriteU16LE(0x09CD);
-        writer.WriteU16LE(0x07C9);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.BuildYear);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.BuildIdentifier);
         writer.WriteU32LE(0x00000000);
         writer.WriteU32LE(0x00000000);
     }
 
     private static void WriteWriteAccess(ref ByteBufferWriter writer)
     {
-        writer.WriteU16LE(0x005C);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.WriteAccess);
         writer.WriteU16LE(112);
 
         var userName = Encoding.ASCII.GetBytes("Acorn.Xls");
@@ -63,20 +63,20 @@ public sealed class XlsEncoder
 
         for (var i = 0; i < padding; i++)
         {
-            writer.WriteU8(0x20);
+            writer.WriteU8((byte)' ');
         }
     }
 
     private static void WriteCodePage(ref ByteBufferWriter writer)
     {
-        writer.WriteU16LE(0x0042);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.CodePage);
         writer.WriteU16LE(2);
-        writer.WriteU16LE(0x04E4);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.CodePageUtf16LE);
     }
 
     private static void WriteDSF(ref ByteBufferWriter writer)
     {
-        writer.WriteU16LE(0x0161);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.Dsf);
         writer.WriteU16LE(2);
         writer.WriteU16LE(0x0000);
     }
@@ -86,19 +86,19 @@ public sealed class XlsEncoder
         var nameBytes = Encoding.Unicode.GetBytes(sheet.Name);
         var recordLength = 4 + 1 + 1 + 1 + 1 + nameBytes.Length;
 
-        writer.WriteU16LE(0x0085);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.BoundSheet);
         writer.WriteU16LE((ushort)recordLength);
         writer.WriteU32LE(0);
         writer.WriteU8(0);
         writer.WriteU8(0);
         writer.WriteU8((byte)sheet.Name.Length);
-        writer.WriteU8(0x01);
+        writer.WriteU8(OfficeConstants.XlsRecordType.SheetStateVisible);
         writer.Write(nameBytes);
     }
 
     private static void WriteEOF(ref ByteBufferWriter writer)
     {
-        writer.WriteU16LE(0x000A);
+        writer.WriteU16LE(OfficeConstants.XlsRecordType.Eof);
         writer.WriteU16LE(0);
     }
 

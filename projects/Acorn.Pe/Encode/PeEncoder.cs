@@ -36,7 +36,8 @@ public sealed class PeEncoder
     {
         writer.WriteU16LE(header.DosMagic);
 
-        for (var i = 0; i < 58; i++)
+        // DOS 头从偏移 2 到偏移 59（共 58 字节）填零，偏移 0x3C(60) 处写入 PE 偏移
+        for (var i = 0; i < 29; i++)
         {
             writer.WriteU16LE(0);
         }

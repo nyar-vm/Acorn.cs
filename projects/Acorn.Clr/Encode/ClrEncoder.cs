@@ -99,7 +99,7 @@ public sealed class ClrEncoder
 
     private static int GetOpcodeSize(ClrOpcode opcode)
     {
-        return (ushort)opcode >= 0xFE00 ? 2 : 1;
+        return (ushort)opcode >= ClrConstants.TwoByteOpcodeBase ? 2 : 1;
     }
 
     private static int GetOperandSize(ClrOpcode opcode, ClrOperand? operand)
@@ -130,9 +130,9 @@ public sealed class ClrEncoder
     {
         var value = (ushort)opcode;
 
-        if (value >= 0xFE00)
+        if (value >= ClrConstants.TwoByteOpcodeBase)
         {
-            writer.WriteU8(0xFE);
+            writer.WriteU8(ClrConstants.TwoByteOpcodePrefix);
             writer.WriteU8((byte)(value & 0xFF));
         }
         else

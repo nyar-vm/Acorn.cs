@@ -47,10 +47,10 @@ public ref struct XlsDecoder
 
             switch (recordType)
             {
-                case 0x0085:
+                case OfficeConstants.XlsRecordType.BoundSheet:
                     ParseBoundSheet(recordData, sheets);
                     break;
-                case 0x00FC:
+                case OfficeConstants.XlsRecordType.Sst:
                     ParseSST(recordData, strings);
                     break;
             }

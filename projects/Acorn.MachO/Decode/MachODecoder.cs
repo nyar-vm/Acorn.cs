@@ -119,7 +119,7 @@ public sealed class MachODecoder
 
         foreach (var cmd in loadCommands)
         {
-            if (cmd.Command == 0x01 || cmd.Command == 0x19)
+            if (cmd.Command == MachOConstants.LcSegment || cmd.Command == MachOConstants.LcSegment64)
             {
                 var sectionBuffer = new ByteBuffer(cmd.Data);
 

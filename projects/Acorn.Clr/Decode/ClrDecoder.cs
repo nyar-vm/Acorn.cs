@@ -908,10 +908,10 @@ public sealed class ClrDecoder
             var firstByte = buffer.ReadU8();
             ClrOpcode opcode;
 
-            if (firstByte == 0xFE)
+            if (firstByte == ClrConstants.TwoByteOpcodePrefix)
             {
                 var secondByte = buffer.ReadU8();
-                opcode = (ClrOpcode)(0xFE00 | secondByte);
+                opcode = (ClrOpcode)(ClrConstants.TwoByteOpcodeBase | secondByte);
                 offset += 2;
             }
             else

@@ -9,6 +9,56 @@ public static class MySqlConstants
     ///     MySQL 协议版本。
     /// </summary>
     public const int ProtocolVersion = 10;
+
+    /// <summary>
+    ///     数据包首字节 — OK 包标记。
+    /// </summary>
+    public const byte PacketMarkerOk = 0x00;
+
+    /// <summary>
+    ///     数据包首字节 — 错误包标记。
+    /// </summary>
+    public const byte PacketMarkerError = 0xFF;
+
+    /// <summary>
+    ///     数据包首字节 — EOF 包标记。
+    /// </summary>
+    public const byte PacketMarkerEof = 0xFE;
+
+    /// <summary>
+    ///     长度编码整数 — NULL 标记。
+    /// </summary>
+    public const byte LengthEncodedNull = 0xFB;
+
+    /// <summary>
+    ///     长度编码整数 — UInt16 长度前缀。
+    /// </summary>
+    public const byte LengthEncodedInt16 = 0xFC;
+
+    /// <summary>
+    ///     长度编码整数 — UInt16 最大值的下一值（即 Int24 编码阈值）。
+    /// </summary>
+    public const int LengthEncodedInt16Threshold = 0x10000;
+
+    /// <summary>
+    ///     长度编码整数 — UInt24 长度前缀。
+    /// </summary>
+    public const byte LengthEncodedInt24 = 0xFD;
+
+    /// <summary>
+    ///     长度编码整数 — 单字节最大值（含）。
+    /// </summary>
+    public const byte LengthEncodedMaxSingle = 0xFA;
+
+    /// <summary>
+    ///     命令类型 — 最小值。
+    /// </summary>
+    public const byte CommandTypeMin = 0x01;
+
+    /// <summary>
+    ///     命令类型 — 最大值。
+    /// </summary>
+    public const byte CommandTypeMax = 0x1F;
     
     /// <summary>
     ///     服务器状态标志。
