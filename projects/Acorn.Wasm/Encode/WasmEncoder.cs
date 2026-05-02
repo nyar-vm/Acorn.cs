@@ -40,13 +40,19 @@ public static class WasmEncoder
 
         #region Type Section
 
-        if (module.Types.Count > 0)
+        if (module.Types.Count > 0 || module.GcSubTypes is { Count: > 0 })
         {
+            var funcTypeCount = (uint)module.Types.Count;
+            var hasGcType = module.GcSubTypes is { Count: > 0 };
+            var totalTypeCount = funcTypeCount + (hasGcType ? 1u : 0u);
+
             var sectionData = BuildBytes(w =>
             {
-                w.WriteLEB128((uint)module.Types.Count);
-                foreach (var type in module.Types)
+                w.WriteLEB128(totalTypeCount);
+
+                for (var idx = 0; idx < funcTypeCount; idx++)
                 {
+                    var type = module.Types[idx];
                     w.Write((byte)WasmConstants.FunctionTypeForm);
                     w.WriteLEB128((uint)type.Parameters.Count);
                     foreach (var param in type.Parameters)
@@ -58,6 +64,16 @@ public static class WasmEncoder
                     foreach (var result in type.Results)
                     {
                         w.Write((byte)result);
+                    }
+                }
+
+                if (hasGcType)
+                {
+                    w.Write(WasmConstants.RecTypeForm);
+                    w.WriteLEB128((uint)module.GcSubTypes!.Count);
+                    foreach (var subType in module.GcSubTypes)
+                    {
+                        EncodeSubType(w, subType);
                     }
                 }
             });
@@ -359,6 +375,111 @@ public static class WasmEncoder
         w.Flush();
         return ms.ToArray();
     }
+
+    #region GC 类型编码方法
+
+    /// <summary>
+    ///     编码 WASM GC 子类型。
+    /// </summary>
+    private static void EncodeSubType(BinaryWriter writer, WasmSubType subType)
+    {
+        writer.Write(WasmConstants.SubTypeForm);
+        writer.Write(subType.Final ? WasmConstants.FinalType : WasmConstants.NonFinalType);
+
+        if (subType.SuperTypeIndex.HasValue)
+        {
+            writer.WriteLEB128(subType.SuperTypeIndex.Value);
+        }
+
+        EncodeCompositeType(writer, subType.Type);
+    }
+
+    /// <summary>
+    ///     编码 WASM GC 复合类型。
+    /// </summary>
+    private static void EncodeCompositeType(BinaryWriter writer, WasmCompositeType type)
+    {
+        switch (type.Kind)
+        {
+            case WasmCompositeTypeKind.Struct:
+                writer.Write(WasmConstants.StructTypeForm);
+                writer.WriteLEB128((uint)(type.Fields?.Count ?? 0));
+                if (type.Fields is { } fields)
+                {
+                    foreach (var field in fields)
+                    {
+                        EncodeStorageType(writer, field.StorageType);
+                        writer.Write(field.Mutable ? WasmConstants.FieldMutable : WasmConstants.FieldImmutable);
+                    }
+                }
+
+                break;
+
+            case WasmCompositeTypeKind.Array:
+                writer.Write(WasmConstants.ArrayTypeForm);
+                if (type.ElementType is { } elemType)
+                {
+                    EncodeStorageType(writer, elemType);
+                }
+                else
+                {
+                    writer.Write((byte)WasmValueType.Int32);
+                }
+
+                writer.Write(WasmConstants.FieldMutable);
+                break;
+
+            case WasmCompositeTypeKind.Rec:
+                writer.Write(WasmConstants.RecTypeForm);
+                writer.WriteLEB128((uint)(type.SubTypes?.Count ?? 0));
+                if (type.SubTypes is { } subTypes)
+                {
+                    foreach (var sub in subTypes)
+                    {
+                        EncodeSubType(writer, sub);
+                    }
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>
+    ///     编码 WASM GC 存储类型。
+    /// </summary>
+    private static void EncodeStorageType(BinaryWriter writer, WasmStorageType storageType)
+    {
+        if (storageType.PackedType.HasValue)
+        {
+            writer.Write((byte)storageType.PackedType.Value);
+        }
+        else
+        {
+            writer.Write((byte)storageType.ValueType);
+        }
+    }
+
+    #endregion
+
+    #region Component Model 编码
+
+    /// <summary>
+    ///     将 WASM 组件数据编码为字节数组（Component Model 二进制格式）。
+    ///     当前为骨架实现，将在后续阶段完善完整的组件编码。
+    /// </summary>
+    public static byte[] EncodeComponent(WasmComponentData component)
+    {
+        using var stream = new MemoryStream();
+        using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
+
+        writer.Write(WasmConstants.MagicNumber);
+        writer.WriteLE(WasmConstants.ComponentVersion);
+
+        writer.Flush();
+        return stream.ToArray();
+    }
+
+    #endregion
 
     #region BinaryWriter 扩展方法
 

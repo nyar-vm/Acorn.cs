@@ -48,6 +48,51 @@ public static class WasmConstants
     public const byte GlobalMutable = 0x01;
 
     /// <summary>
+    ///     递归类型组标记字节。
+    /// </summary>
+    public const byte RecTypeForm = 0x4E;
+
+    /// <summary>
+    ///     子类型标记字节。
+    /// </summary>
+    public const byte SubTypeForm = 0x50;
+
+    /// <summary>
+    ///     复合类型结构体标记字节。
+    /// </summary>
+    public const byte StructTypeForm = 0x5F;
+
+    /// <summary>
+    ///     复合类型数组标记字节。
+    /// </summary>
+    public const byte ArrayTypeForm = 0x5E;
+
+    /// <summary>
+    ///     最终类型标记字节（不可被继承）。
+    /// </summary>
+    public const byte FinalType = 0x00;
+
+    /// <summary>
+    ///     非最终类型标记字节（可被继承）。
+    /// </summary>
+    public const byte NonFinalType = 0x01;
+
+    /// <summary>
+    ///     字段不可变标记字节。
+    /// </summary>
+    public const byte FieldImmutable = 0x00;
+
+    /// <summary>
+    ///     字段可变标记字节。
+    /// </summary>
+    public const byte FieldMutable = 0x01;
+
+    /// <summary>
+    ///     Component Model 版本号。
+    /// </summary>
+    public const uint ComponentVersion = 0x0A;
+
+    /// <summary>
     ///     JSON 填充字节（空格）。
     /// </summary>
     public const byte PaddingByte = 0x20;

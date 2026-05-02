@@ -38,4 +38,6 @@
 
     <Project Path="examples\Acorn.Psd.Tests\Acorn.Psd.Tests.csproj" />
     <Project Path="examples\Acorn.Office.Tests\Acorn.Office.Tests.csproj" />
+    <Project Path="examples\Acorn.Tests\Acorn.Tests.csproj" />
+    <Project Path="examples\Acorn.Native.Tests\Acorn.Native.Tests.csproj" />
 </Solution>

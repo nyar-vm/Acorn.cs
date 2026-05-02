@@ -16,6 +16,12 @@ public sealed class WasmModuleData
     public IReadOnlyList<WasmFunctionType> Types { get; init; } = [];
 
     /// <summary>
+    ///     GC 子类型定义列表（WASM GC 提案）。
+    ///     null 表示不发射 GC 类型段，兼容 MVP 模式。
+    /// </summary>
+    public IReadOnlyList<WasmSubType>? GcSubTypes { get; set; }
+
+    /// <summary>
     ///     导入段，包含所有外部导入项。
     /// </summary>
     public IReadOnlyList<WasmImport> Imports { get; init; } = [];
@@ -104,7 +110,47 @@ public enum WasmValueType : byte
     /// <summary>
     ///     外部引用。
     /// </summary>
-    ExternRef = 0x6F
+    ExternRef = 0x6F,
+
+    /// <summary>
+    ///     任意 GC 对象引用。
+    /// </summary>
+    AnyRef = 0x6E,
+
+    /// <summary>
+    ///     支持相等比较的 GC 对象引用。
+    /// </summary>
+    EqRef = 0x6D,
+
+    /// <summary>
+    ///     31 位整数引用。
+    /// </summary>
+    I31Ref = 0x6C,
+
+    /// <summary>
+    ///     结构体引用。
+    /// </summary>
+    StructRef = 0x6B,
+
+    /// <summary>
+    ///     数组引用。
+    /// </summary>
+    ArrayRef = 0x6A,
+
+    /// <summary>
+    ///     空引用。
+    /// </summary>
+    NullRef = 0x69,
+
+    /// <summary>
+    ///     空函数引用。
+    /// </summary>
+    NullFuncRef = 0x68,
+
+    /// <summary>
+    ///     空外部引用。
+    /// </summary>
+    NullExternRef = 0x67
 }
 
 /// <summary>
@@ -354,6 +400,11 @@ public sealed class WasmCode
     ///     函数体字节码（不含局部变量声明）。
     /// </summary>
     public byte[] Body { get; init; } = [];
+
+    /// <summary>
+    ///     函数体指令编码的总字节数（含 end 操作码），用于解码器预分配缓冲区。
+    /// </summary>
+    public uint MaxLength { get; init; }
 }
 
 /// <summary>
