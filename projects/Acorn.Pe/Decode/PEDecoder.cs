@@ -1,3 +1,4 @@
+using System.Text;
 using Acorn.Codec;
 using Acorn.Frame;
 using Acorn.Pe.Data;
@@ -6,6 +7,7 @@ namespace Acorn.Pe.Decode;
 
 /// <summary>
 ///     PE 文件解码器，解析 Windows 可执行文件（.exe, .dll）格式。
+///     支持 DOS 头、PE 头、可选头、节区表、节区内容、导入表和重定位表解码。
 /// </summary>
 public sealed class PeDecoder
 {
@@ -31,12 +33,32 @@ public sealed class PeDecoder
         var optionalHeader = ReadOptionalHeader(ref buffer);
         var sections = ReadSections(ref buffer, peHeader.NumberOfSections);
 
-        return new PeFileData
+        var mergedHeader = new PeHeaderData
         {
-            Header = peHeader,
+            DosMagic = dosHeader.DosMagic,
+            PeHeaderOffset = dosHeader.PeHeaderOffset,
+            PeMagic = peHeader.PeMagic,
+            Machine = peHeader.Machine,
+            NumberOfSections = peHeader.NumberOfSections,
+            TimeDateStamp = peHeader.TimeDateStamp,
+            PointerToSymbolTable = peHeader.PointerToSymbolTable,
+            NumberOfSymbols = peHeader.NumberOfSymbols,
+            SizeOfOptionalHeader = peHeader.SizeOfOptionalHeader,
+            Characteristics = peHeader.Characteristics
+        };
+
+        var result = new PeFileData
+        {
+            Header = mergedHeader,
             OptionalHeader = optionalHeader,
             Sections = sections
         };
+
+        ReadSectionContents(ref buffer, result);
+        result.Imports = ReadImportTable(ref buffer, result);
+        result.Relocations = ReadRelocations(ref buffer, result);
+
+        return result;
     }
 
     /// <summary>
@@ -258,5 +280,223 @@ public sealed class PeDecoder
         }
 
         return sections;
+    }
+
+    /// <summary>
+    ///     读取所有节区的原始内容。
+    /// </summary>
+    private void ReadSectionContents(ref ByteBuffer buffer, PeFileData data)
+    {
+        for (var i = 0; i < data.Sections.Count; i++)
+        {
+            var section = data.Sections[i];
+
+            if (section.PointerToRawData == 0 || section.SizeOfRawData == 0)
+            {
+                continue;
+            }
+
+            var offset = (int)section.PointerToRawData;
+            var rawSize = (int)section.SizeOfRawData;
+            var contentSize = (int)Math.Min(section.VirtualSize, section.SizeOfRawData);
+
+            if (contentSize == 0)
+            {
+                continue;
+            }
+
+            if (offset + contentSize > buffer.Length)
+            {
+                continue;
+            }
+
+            buffer.Position = offset;
+            var content = buffer.ReadBytes(contentSize).ToArray();
+
+            if (content.Length > 0)
+            {
+                data.SectionContents[i] = content;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     读取导入表。
+    /// </summary>
+    private List<PeImportDescriptor> ReadImportTable(ref ByteBuffer buffer, PeFileData data)
+    {
+        var imports = new List<PeImportDescriptor>();
+        var importDir = data.GetDataDirectory(PeDataDirectoryIndex.ImportTable);
+
+        if (importDir.IsEmpty)
+        {
+            return imports;
+        }
+
+        var is64 = data.Is64Bit;
+        var thunkSize = is64 ? PeConstants.ImportThunkSize64 : PeConstants.ImportThunkSize32;
+        var ordinalFlag = is64 ? PeConstants.ImportOrdinalFlag64 : PeConstants.ImportOrdinalFlag32;
+        var descOffset = data.RvaToOffset(importDir.Rva);
+
+        buffer.Position = descOffset;
+
+        while (true)
+        {
+            var originalFirstThunk = buffer.ReadU32LE();
+            var timeDateStamp = buffer.ReadU32LE();
+            var forwarderChain = buffer.ReadU32LE();
+            var nameRva = buffer.ReadU32LE();
+            var firstThunk = buffer.ReadU32LE();
+
+            if (originalFirstThunk == 0 && firstThunk == 0)
+            {
+                break;
+            }
+
+            var nameOffset = data.RvaToOffset(nameRva);
+            var savedPos = buffer.Position;
+
+            buffer.Position = nameOffset;
+            var dllName = ReadNullTerminatedAscii(ref buffer);
+            buffer.Position = savedPos;
+
+            var iltOffset = data.RvaToOffset(originalFirstThunk);
+            buffer.Position = iltOffset;
+
+            var thunks = new List<PeImportThunk>();
+
+            while (true)
+            {
+                ulong thunkValue;
+
+                if (is64)
+                {
+                    thunkValue = buffer.ReadU64LE();
+                }
+                else
+                {
+                    thunkValue = buffer.ReadU32LE();
+                }
+
+                if (thunkValue == 0)
+                {
+                    break;
+                }
+
+                var isOrdinal = (thunkValue & ordinalFlag) != 0;
+                ushort ordinal = 0;
+                var funcName = "";
+
+                if (isOrdinal)
+                {
+                    ordinal = (ushort)(thunkValue & 0xFFFF);
+                }
+                else
+                {
+                    var hintNameOffset = data.RvaToOffset((uint)thunkValue);
+                    savedPos = buffer.Position;
+
+                    buffer.Position = hintNameOffset;
+                    buffer.ReadU16LE();
+                    funcName = ReadNullTerminatedAscii(ref buffer);
+                    buffer.Position = savedPos;
+                }
+
+                thunks.Add(new PeImportThunk
+                {
+                    Value = thunkValue,
+                    IsOrdinal = isOrdinal,
+                    Ordinal = ordinal,
+                    Name = funcName
+                });
+            }
+
+            imports.Add(new PeImportDescriptor
+            {
+                OriginalFirstThunk = originalFirstThunk,
+                TimeDateStamp = timeDateStamp,
+                ForwarderChain = forwarderChain,
+                NameRva = nameRva,
+                FirstThunk = firstThunk,
+                Name = dllName,
+                Thunks = thunks
+            });
+
+            buffer.Position = descOffset + imports.Count * PeConstants.ImportDescriptorSize;
+        }
+
+        return imports;
+    }
+
+    /// <summary>
+    ///     读取重定位表。
+    /// </summary>
+    private List<PeBaseRelocationBlock> ReadRelocations(ref ByteBuffer buffer, PeFileData data)
+    {
+        var relocs = new List<PeBaseRelocationBlock>();
+        var relocDir = data.GetDataDirectory(PeDataDirectoryIndex.BaseRelocationTable);
+
+        if (relocDir.IsEmpty)
+        {
+            return relocs;
+        }
+
+        var offset = data.RvaToOffset(relocDir.Rva);
+        var endOffset = Math.Min(offset + (int)relocDir.Size, buffer.Length);
+
+        buffer.Position = offset;
+
+        while (buffer.Position < endOffset)
+        {
+            var virtualAddress = buffer.ReadU32LE();
+            var sizeOfBlock = buffer.ReadU32LE();
+
+            if (sizeOfBlock == 0)
+            {
+                break;
+            }
+
+            var entryCount = ((int)sizeOfBlock - PeConstants.RelocationBlockHeaderSize) / PeConstants.RelocationEntrySize;
+            var entries = new List<PeBaseRelocationEntry>();
+
+            for (var i = 0; i < entryCount; i++)
+            {
+                var encoded = buffer.ReadU16LE();
+                var type = (byte)(encoded >> 12);
+                var relOffset = (ushort)(encoded & 0xFFF);
+
+                entries.Add(new PeBaseRelocationEntry { Type = type, Offset = relOffset });
+            }
+
+            relocs.Add(new PeBaseRelocationBlock
+            {
+                VirtualAddress = virtualAddress,
+                Entries = entries
+            });
+        }
+
+        return relocs;
+    }
+
+    /// <summary>
+    ///     从缓冲区当前位置读取 null 终止的 ASCII 字符串。
+    /// </summary>
+    private static string ReadNullTerminatedAscii(ref ByteBuffer buffer)
+    {
+        var bytes = new List<byte>();
+
+        while (true)
+        {
+            var b = buffer.ReadU8();
+
+            if (b == 0)
+            {
+                break;
+            }
+
+            bytes.Add(b);
+        }
+
+        return Encoding.ASCII.GetString(bytes.ToArray());
     }
 }

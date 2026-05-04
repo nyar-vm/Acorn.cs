@@ -267,6 +267,105 @@ public enum PeDataDirectoryIndex
 }
 
 /// <summary>
+///     导入描述符，对应 IMAGE_IMPORT_DESCRIPTOR。
+/// </summary>
+public sealed class PeImportDescriptor
+{
+    /// <summary>
+    ///     原始 IAT（Import Name Table）的 RVA。
+    /// </summary>
+    public uint OriginalFirstThunk { get; init; }
+
+    /// <summary>
+    ///     时间戳。
+    /// </summary>
+    public uint TimeDateStamp { get; init; }
+
+    /// <summary>
+    ///     转发链索引。
+    /// </summary>
+    public uint ForwarderChain { get; init; }
+
+    /// <summary>
+    ///     DLL 名称字符串的 RVA。
+    /// </summary>
+    public uint NameRva { get; init; }
+
+    /// <summary>
+    ///     IAT（Import Address Table）的 RVA。
+    /// </summary>
+    public uint FirstThunk { get; init; }
+
+    /// <summary>
+    ///     DLL 名称（解码后填充）。
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     导入函数列表。
+    /// </summary>
+    public IReadOnlyList<PeImportThunk> Thunks { get; init; } = [];
+}
+
+/// <summary>
+///     导入 thunk 条目，对应 IMAGE_THUNK_DATA。
+/// </summary>
+public sealed class PeImportThunk
+{
+    /// <summary>
+    ///     原始 thunk 值（ordinal flag + RVA 或 ordinal）。
+    /// </summary>
+    public ulong Value { get; init; }
+
+    /// <summary>
+    ///     是否为按序数导入。
+    /// </summary>
+    public bool IsOrdinal { get; init; }
+
+    /// <summary>
+    ///     序数值（仅当 IsOrdinal 为 true 时有效）。
+    /// </summary>
+    public ushort Ordinal { get; init; }
+
+    /// <summary>
+    ///     函数名称（按名称导入时填充）。
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+}
+
+/// <summary>
+///     PE 重定位块，对应 IMAGE_BASE_RELOCATION。
+/// </summary>
+public sealed class PeBaseRelocationBlock
+{
+    /// <summary>
+    ///     页的 RVA 基址。
+    /// </summary>
+    public uint VirtualAddress { get; init; }
+
+    /// <summary>
+    ///     重定位条目列表。
+    /// </summary>
+    public IReadOnlyList<PeBaseRelocationEntry> Entries { get; init; } = [];
+}
+
+/// <summary>
+///     PE 重定位条目。
+/// </summary>
+public sealed class PeBaseRelocationEntry
+{
+    /// <summary>
+    ///     重定位类型（如 HIGHLOW=3, DIR64=10）。
+    /// </summary>
+    public byte Type { get; init; }
+
+    /// <summary>
+    ///     页内偏移（低 12 位）。
+    /// </summary>
+    public ushort Offset { get; init; }
+}
+
+/// <summary>
 ///     PE 节区数据。
 /// </summary>
 [BinarySerializable(Endianness = Endianness.LittleEndian)]
@@ -377,6 +476,16 @@ public sealed class PeFileData
     ///     是否为 64 位。
     /// </summary>
     public bool Is64Bit => OptionalHeader.Magic == PeConstants.OptionalMagicPE32Plus;
+
+    /// <summary>
+    ///     导入表列表。
+    /// </summary>
+    public IReadOnlyList<PeImportDescriptor> Imports { get; set; } = [];
+
+    /// <summary>
+    ///     重定位块列表。
+    /// </summary>
+    public IReadOnlyList<PeBaseRelocationBlock> Relocations { get; set; } = [];
 
     /// <summary>
     ///     获取指定索引的数据目录条目。索引不存在时返回空条目。

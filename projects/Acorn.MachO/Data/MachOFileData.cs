@@ -140,7 +140,7 @@ public sealed class MachOSectionData
     /// <summary>
     ///     节区原始内容数据。
     /// </summary>
-    public byte[] Content { get; init; } = [];
+    public byte[] Content { get; set; } = [];
 }
 
 /// <summary>

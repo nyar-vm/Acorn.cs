@@ -174,7 +174,69 @@ public sealed class ELFSectionHeaderData
     /// <summary>
     ///     节区原始内容数据。
     /// </summary>
-    public byte[] Content { get; init; } = [];
+    public byte[] Content { get; set; } = [];
+}
+
+/// <summary>
+///     ELF 符号表条目数据，对应 Elf32_Sym / Elf64_Sym。
+/// </summary>
+public sealed class ELFSymbolData
+{
+    /// <summary>
+    ///     符号名称在字符串表中的索引。
+    /// </summary>
+    public uint NameIndex { get; init; }
+
+    /// <summary>
+    ///     st_info 字段：高 4 位为绑定类型，低 4 位为符号类型。
+    /// </summary>
+    public byte Info { get; init; }
+
+    /// <summary>
+    ///     st_other 字段，通常为 0。
+    /// </summary>
+    public byte Other { get; init; }
+
+    /// <summary>
+    ///     关联的节区索引。
+    /// </summary>
+    public ushort SectionIndex { get; init; }
+
+    /// <summary>
+    ///     符号值（地址或偏移）。
+    /// </summary>
+    public ulong Value { get; init; }
+
+    /// <summary>
+    ///     符号大小（字节）。
+    /// </summary>
+    public ulong Size { get; init; }
+
+    /// <summary>
+    ///     符号名称（解码后从字符串表填充）。
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     符号绑定类型（STB_LOCAL / STB_GLOBAL / STB_WEAK）。
+    /// </summary>
+    public byte Bind => (byte)(Info >> 4);
+
+    /// <summary>
+    ///     符号类型（STT_NOTYPE / STT_OBJECT / STT_FUNC / STT_SECTION / STT_FILE）。
+    /// </summary>
+    public byte Type => (byte)(Info & 0x0F);
+}
+
+/// <summary>
+///     ELF 符号表数据。
+/// </summary>
+public sealed class ELFSymbolTableData
+{
+    /// <summary>
+    ///     符号条目列表。
+    /// </summary>
+    public IReadOnlyList<ELFSymbolData> Symbols { get; init; } = [];
 }
 
 /// <summary>
@@ -242,6 +304,11 @@ public sealed class ELFFileData
     ///     程序头列表。
     /// </summary>
     public IReadOnlyList<ELFProgramHeaderData> ProgramHeaders { get; init; } = [];
+
+    /// <summary>
+    ///     符号表数据（可为 null）。
+    /// </summary>
+    public ELFSymbolTableData? SymbolTable { get; init; }
 
     /// <summary>
     ///     是否为可执行文件。

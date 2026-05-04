@@ -80,7 +80,7 @@ public sealed class MachOEncoder
         var segmentName = ReadString(cmd.Data, 0, 16);
         WritePaddedName(ref writer, segmentName, 16);
 
-        if (cmd.Data.Length >= 80)
+        if (cmd.Data.Length >= 16 + 48)
         {
             WriteU64(ref writer, ReadU64BE(cmd.Data, 16), isLE);
             WriteU64(ref writer, ReadU64BE(cmd.Data, 24), isLE);
@@ -90,15 +90,12 @@ public sealed class MachOEncoder
             WriteU32(ref writer, ReadU32BE(cmd.Data, 48), isLE);
             WriteU32(ref writer, ReadU32BE(cmd.Data, 52), isLE);
 
-            var numberOfSections = ReadU32BE(cmd.Data, 56);
-            WriteU32(ref writer, numberOfSections, isLE);
+            WriteU32(ref writer, (uint)sections.Count, isLE);
             WriteU32(ref writer, ReadU32BE(cmd.Data, 60), isLE);
 
-            var sectionStart = 64;
-            for (var i = 0; i < numberOfSections && sectionStart + 80 <= cmd.Data.Length; i++)
+            for (var i = 0; i < sections.Count; i++)
             {
                 WriteSection64(ref writer, sections, i, isLE);
-                sectionStart += 80;
             }
         }
         else
@@ -113,7 +110,7 @@ public sealed class MachOEncoder
         var segmentName = ReadString(cmd.Data, 0, 16);
         WritePaddedName(ref writer, segmentName, 16);
 
-        if (cmd.Data.Length >= 56)
+        if (cmd.Data.Length >= 16 + 32)
         {
             WriteU32(ref writer, ReadU32BE(cmd.Data, 16), isLE);
             WriteU32(ref writer, ReadU32BE(cmd.Data, 20), isLE);
@@ -123,15 +120,12 @@ public sealed class MachOEncoder
             WriteU32(ref writer, ReadU32BE(cmd.Data, 36), isLE);
             WriteU32(ref writer, ReadU32BE(cmd.Data, 40), isLE);
 
-            var numberOfSections = ReadU32BE(cmd.Data, 44);
-            WriteU32(ref writer, numberOfSections, isLE);
+            WriteU32(ref writer, (uint)sections.Count, isLE);
             WriteU32(ref writer, ReadU32BE(cmd.Data, 48), isLE);
 
-            var sectionStart = 52;
-            for (var i = 0; i < numberOfSections && sectionStart + 68 <= cmd.Data.Length; i++)
+            for (var i = 0; i < sections.Count; i++)
             {
                 WriteSection32(ref writer, sections, i, isLE);
-                sectionStart += 68;
             }
         }
         else

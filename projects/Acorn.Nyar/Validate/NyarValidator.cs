@@ -173,8 +173,6 @@ public sealed class NyarValidator
             NyarOpcode.NewClosure => 5,
             NyarOpcode.GetUpvalue => 5,
             NyarOpcode.SetUpvalue => 5,
-            NyarOpcode.Print => 1,
-            NyarOpcode.Println => 1,
             NyarOpcode.Exit => 1,
             NyarOpcode.GetTime => 1,
             NyarOpcode.Sleep => 1,

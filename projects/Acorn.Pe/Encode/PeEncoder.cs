@@ -1,3 +1,4 @@
+using System.Text;
 using Acorn.Frame;
 using Acorn.Pe.Data;
 
@@ -6,12 +7,12 @@ namespace Acorn.Pe.Encode;
 /// <summary>
 ///     PE 文件编码器，将 PeFileData 编码为 PE 二进制格式。
 ///     PE 格式固定使用小端序。
-///     支持节区内容编码和数据目录正确写入。
+///     支持节区内容、导入表和重定位表编码。
 /// </summary>
 public sealed class PeEncoder
 {
     /// <summary>
-    ///     编码 PE 文件数据为字节数组
+    ///     编码 PE 文件数据为字节数组。
     /// </summary>
     public byte[] Encode(PeFileData data)
     {
@@ -24,8 +25,9 @@ public sealed class PeEncoder
         WriteCoffHeader(ref writer, data.Header);
         WriteOptionalHeader(ref writer, data.OptionalHeader, is64);
         WriteSectionHeaders(ref writer, data.Sections);
-
         WriteSectionContents(ref writer, data);
+        WriteImportTable(ref writer, data);
+        WriteRelocationTable(ref writer, data);
 
         return writer.ToArray();
     }
@@ -36,13 +38,14 @@ public sealed class PeEncoder
     {
         writer.WriteU16LE(header.DosMagic);
 
-        // DOS 头从偏移 2 到偏移 59（共 58 字节）填零，偏移 0x3C(60) 处写入 PE 偏移
         for (var i = 0; i < 29; i++)
         {
             writer.WriteU16LE(0);
         }
 
         writer.WriteU32LE(header.PeHeaderOffset);
+
+        WriteToOffset(ref writer, (int)header.PeHeaderOffset);
     }
 
     #endregion
@@ -171,28 +174,197 @@ public sealed class PeEncoder
     {
         for (var i = 0; i < data.Sections.Count; i++)
         {
-            if (!data.SectionContents.TryGetValue(i, out var content)) continue;
-            if (content.Length == 0) continue;
+            if (!data.SectionContents.TryGetValue(i, out var content))
+            {
+                continue;
+            }
+
+            if (content.Length == 0)
+            {
+                continue;
+            }
 
             var section = data.Sections[i];
             var targetOffset = (int)section.PointerToRawData;
 
-            var currentPos = writer.Position;
-            if (currentPos < targetOffset)
+            WriteToOffset(ref writer, targetOffset);
+            writer.Write(content);
+        }
+    }
+
+    #endregion
+
+    #region 导入表
+
+    private static void WriteImportTable(ref ByteBufferWriter writer, PeFileData data)
+    {
+        if (data.Imports.Count == 0)
+        {
+            return;
+        }
+
+        var is64 = data.Is64Bit;
+        var importDir = data.GetDataDirectory(PeDataDirectoryIndex.ImportTable);
+
+        if (importDir.IsEmpty)
+        {
+            return;
+        }
+
+        var importFileOffset = data.RvaToOffset(importDir.Rva);
+        WriteToOffset(ref writer, importFileOffset);
+
+        var thunkSize = is64 ? PeConstants.ImportThunkSize64 : PeConstants.ImportThunkSize32;
+        var ordinalFlag = is64 ? PeConstants.ImportOrdinalFlag64 : PeConstants.ImportOrdinalFlag32;
+
+        var descriptorStartRva = importDir.Rva;
+        var descriptorEndRva = descriptorStartRva + (uint)((data.Imports.Count + 1) * PeConstants.ImportDescriptorSize);
+        uint currentRva = descriptorEndRva;
+
+        var dllLayouts = new List<(uint iltRva, uint iatRva, uint nameRva, List<uint> hintNameRvas)>();
+
+        foreach (var dll in data.Imports)
+        {
+            var iltRva = currentRva;
+            var iltSize = (uint)((dll.Thunks.Count + 1) * thunkSize);
+            currentRva += iltSize;
+
+            var iatRva = currentRva;
+            currentRva += iltSize;
+
+            var nameRva = currentRva;
+            currentRva += (uint)(Encoding.ASCII.GetByteCount(dll.Name) + 1);
+
+            var hintNameRvas = new List<uint>();
+
+            foreach (var thunk in dll.Thunks)
             {
-                WritePadding(ref writer, targetOffset - currentPos);
+                if (!thunk.IsOrdinal)
+                {
+                    hintNameRvas.Add(currentRva);
+                    currentRva += (uint)(2 + Encoding.ASCII.GetByteCount(thunk.Name) + 1);
+                }
             }
 
-            writer.Write(content);
+            dllLayouts.Add((iltRva, iatRva, nameRva, hintNameRvas));
+        }
 
-            var fileAlignment = data.OptionalHeader.FileAlignment;
-            if (fileAlignment > 0)
+        for (var d = 0; d < data.Imports.Count; d++)
+        {
+            var layout = dllLayouts[d];
+            writer.WriteU32LE(layout.iltRva);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(0);
+            writer.WriteU32LE(layout.nameRva);
+            writer.WriteU32LE(layout.iatRva);
+        }
+
+        for (var i = 0; i < PeConstants.ImportDescriptorSize; i++)
+        {
+            writer.WriteU8(0);
+        }
+
+        for (var d = 0; d < data.Imports.Count; d++)
+        {
+            var dll = data.Imports[d];
+            var layout = dllLayouts[d];
+            var hintIdx = 0;
+
+            WriteThunkArray(dll.Thunks, layout.hintNameRvas, ref hintIdx, is64, ordinalFlag, ref writer);
+
+            hintIdx = 0;
+
+            WriteThunkArray(dll.Thunks, layout.hintNameRvas, ref hintIdx, is64, ordinalFlag, ref writer);
+
+            hintIdx = 0;
+
+            writer.Write(Encoding.ASCII.GetBytes(dll.Name));
+            writer.WriteU8(0);
+
+            foreach (var thunk in dll.Thunks)
             {
-                var aligned = (writer.Position + (int)fileAlignment - 1) & ~((int)fileAlignment - 1);
-                if (aligned > writer.Position)
+                if (!thunk.IsOrdinal)
                 {
-                    WritePadding(ref writer, aligned - writer.Position);
+                    writer.WriteU16LE(0);
+                    writer.Write(Encoding.ASCII.GetBytes(thunk.Name));
+                    writer.WriteU8(0);
                 }
+            }
+        }
+    }
+
+    private static void WriteThunkArray(IReadOnlyList<PeImportThunk> thunks, List<uint> hintNameRvas, ref int hintIdx, bool is64, ulong ordinalFlag, ref ByteBufferWriter writer)
+    {
+        foreach (var thunk in thunks)
+        {
+            if (thunk.IsOrdinal)
+            {
+                if (is64)
+                {
+                    writer.WriteU64LE(ordinalFlag | thunk.Ordinal);
+                }
+                else
+                {
+                    writer.WriteU32LE((uint)(ordinalFlag | thunk.Ordinal));
+                }
+            }
+            else
+            {
+                var hintNameRva = hintNameRvas[hintIdx++];
+
+                if (is64)
+                {
+                    writer.WriteU64LE(hintNameRva);
+                }
+                else
+                {
+                    writer.WriteU32LE(hintNameRva);
+                }
+            }
+        }
+
+        if (is64)
+        {
+            writer.WriteU64LE(0);
+        }
+        else
+        {
+            writer.WriteU32LE(0);
+        }
+    }
+
+    #endregion
+
+    #region 重定位表
+
+    private static void WriteRelocationTable(ref ByteBufferWriter writer, PeFileData data)
+    {
+        if (data.Relocations.Count == 0)
+        {
+            return;
+        }
+
+        var relocDir = data.GetDataDirectory(PeDataDirectoryIndex.BaseRelocationTable);
+
+        if (relocDir.IsEmpty)
+        {
+            return;
+        }
+
+        var relocFileOffset = data.RvaToOffset(relocDir.Rva);
+        WriteToOffset(ref writer, relocFileOffset);
+
+        foreach (var block in data.Relocations)
+        {
+            var blockSize = (uint)(PeConstants.RelocationBlockHeaderSize + block.Entries.Count * PeConstants.RelocationEntrySize);
+
+            writer.WriteU32LE(block.VirtualAddress);
+            writer.WriteU32LE(blockSize);
+
+            foreach (var entry in block.Entries)
+            {
+                var encoded = (ushort)(((uint)entry.Type << 12) | (entry.Offset & 0xFFF));
+                writer.WriteU16LE(encoded);
             }
         }
     }
@@ -201,9 +373,9 @@ public sealed class PeEncoder
 
     #region 辅助方法
 
-    private static void WritePadding(ref ByteBufferWriter writer, int count)
+    private static void WriteToOffset(ref ByteBufferWriter writer, int targetOffset)
     {
-        for (var i = 0; i < count; i++)
+        while (writer.Position < targetOffset)
         {
             writer.WriteU8(0);
         }
@@ -224,17 +396,68 @@ public sealed class PeEncoder
         var sectionHeaderSize = data.Sections.Count * 40;
 
         var sectionContentSize = 0;
-        foreach (var (index, content) in data.SectionContents)
+
+        foreach (var content in data.SectionContents.Values)
         {
             sectionContentSize += content.Length;
-            var fileAlignment = (int)data.OptionalHeader.FileAlignment;
-            if (fileAlignment > 0)
+        }
+
+        var importSize = EstimateImportSize(data);
+        var relocationSize = EstimateRelocationSize(data);
+
+        return dosHeaderSize + peSignatureSize + coffHeaderSize + optionalHeaderSize + dataDirSize + sectionHeaderSize + sectionContentSize + importSize + relocationSize + 4096;
+    }
+
+    private static int EstimateImportSize(PeFileData data)
+    {
+        if (data.Imports.Count == 0)
+        {
+            return 0;
+        }
+
+        var is64 = data.Is64Bit;
+        var thunkSize = is64 ? PeConstants.ImportThunkSize64 : PeConstants.ImportThunkSize32;
+        var total = 0;
+
+        foreach (var dll in data.Imports)
+        {
+            total += (dll.Thunks.Count + 1) * thunkSize * 2;
+            total += dll.Name.Length + 1;
+
+            foreach (var thunk in dll.Thunks)
             {
-                sectionContentSize = (sectionContentSize + fileAlignment - 1) & ~(fileAlignment - 1);
+                if (!thunk.IsOrdinal)
+                {
+                    total += 2 + thunk.Name.Length + 1;
+                }
             }
         }
 
-        return dosHeaderSize + peSignatureSize + coffHeaderSize + optionalHeaderSize + dataDirSize + sectionHeaderSize + sectionContentSize + 4096;
+        total += (data.Imports.Count + 1) * PeConstants.ImportDescriptorSize;
+        total += 256;
+
+        return total;
+    }
+
+    private static int EstimateRelocationSize(PeFileData data)
+    {
+        if (data.Relocations.Count == 0)
+        {
+            return 0;
+        }
+
+        var total = 0;
+
+        foreach (var block in data.Relocations)
+        {
+            var blockSize = PeConstants.RelocationBlockHeaderSize + block.Entries.Count * PeConstants.RelocationEntrySize;
+            blockSize = (blockSize + 3) & ~3;
+            total += blockSize;
+        }
+
+        total += 256;
+
+        return total;
     }
 
     #endregion

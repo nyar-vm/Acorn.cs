@@ -27,6 +27,8 @@ public sealed class MachODecoder
         var loadCommands = ReadLoadCommands(ref buffer, header, isLittleEndian);
         var sections = ReadSections(header, loadCommands, isLittleEndian);
 
+        ReadSectionContents(ref buffer, sections);
+
         return new MachOFileData
         {
             Header = header,
@@ -127,7 +129,7 @@ public sealed class MachODecoder
 
                 if (header.Is64Bit)
                 {
-                    sectionBuffer.Advance(32);
+                    sectionBuffer.Advance(40);
                 }
                 else
                 {
@@ -189,6 +191,31 @@ public sealed class MachODecoder
         }
 
         return sections;
+    }
+
+    /// <summary>
+    ///     读取节区原始内容数据。
+    /// </summary>
+    private static void ReadSectionContents(ref ByteBuffer buffer, List<MachOSectionData> sections)
+    {
+        foreach (var section in sections)
+        {
+            if (section.Offset == 0 || section.Size == 0)
+            {
+                continue;
+            }
+
+            var offset = (int)section.Offset;
+            var size = (int)section.Size;
+
+            if (offset + size > buffer.Length)
+            {
+                continue;
+            }
+
+            buffer.Position = offset;
+            section.Content = buffer.ReadBytes(size).ToArray();
+        }
     }
 
     /// <summary>

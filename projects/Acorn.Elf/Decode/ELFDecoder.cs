@@ -1,3 +1,4 @@
+using System.Text;
 using Acorn.ELF.Data;
 using Acorn.Frame;
 
@@ -25,12 +26,15 @@ public sealed class ELFDecoder
         var header = ReadELFHeader(ref buffer);
         var sectionHeaders = ReadSectionHeaders(ref buffer, header);
         var programHeaders = ReadProgramHeaders(ref buffer, header);
+        var symbolTable = ReadSymbolTable(ref buffer, sectionHeaders, header);
+        ReadSectionContents(ref buffer, sectionHeaders);
 
         return new ELFFileData
         {
             Header = header,
             SectionHeaders = sectionHeaders,
-            ProgramHeaders = programHeaders
+            ProgramHeaders = programHeaders,
+            SymbolTable = symbolTable
         };
     }
 
@@ -256,5 +260,146 @@ public sealed class ELFDecoder
     private static ulong ReadUInt64(ref ByteBuffer buffer, byte dataEncoding)
     {
         return dataEncoding == ElfConstants.DataEncodingLittleEndian ? buffer.ReadU64LE() : buffer.ReadU64BE();
+    }
+
+    /// <summary>
+    ///     读取符号表。
+    /// </summary>
+    /// <param name="buffer">数据缓冲区。</param>
+    /// <param name="sectionHeaders">节区头列表。</param>
+    /// <param name="header">ELF 头数据。</param>
+    /// <returns>符号表数据，若无符号表则返回 null。</returns>
+    private ELFSymbolTableData? ReadSymbolTable(ref ByteBuffer buffer, IReadOnlyList<ELFSectionHeaderData> sectionHeaders, ELFHeaderData header)
+    {
+        ELFSectionHeaderData? symtabSection = null;
+
+        for (var i = 0; i < sectionHeaders.Count; i++)
+        {
+            if (sectionHeaders[i].Type == 2)
+            {
+                symtabSection = sectionHeaders[i];
+                break;
+            }
+        }
+
+        if (symtabSection == null)
+        {
+            return null;
+        }
+
+        var strtabIndex = (int)symtabSection.Link;
+
+        if (strtabIndex < 0 || strtabIndex >= sectionHeaders.Count)
+        {
+            return null;
+        }
+
+        var strtabSection = sectionHeaders[strtabIndex];
+
+        buffer.Position = (int)strtabSection.Offset;
+        var strTabBytes = buffer.ReadBytes((int)strtabSection.Size).ToArray();
+
+        buffer.Position = (int)symtabSection.Offset;
+        var entrySize = header.Is64Bit ? ElfConstants.SymbolEntrySize64 : ElfConstants.SymbolEntrySize32;
+        var symbolCount = (int)(symtabSection.Size / (ulong)entrySize);
+        var symbols = new List<ELFSymbolData>(symbolCount);
+
+        for (var i = 0; i < symbolCount; i++)
+        {
+            uint nameIndex;
+            byte info;
+            byte other;
+            ushort sectionIndex;
+            ulong value;
+            ulong size;
+
+            if (header.Is64Bit)
+            {
+                nameIndex = ReadUInt32(ref buffer, header.DataEncoding);
+                info = buffer.ReadU8();
+                other = buffer.ReadU8();
+                sectionIndex = ReadUInt16(ref buffer, header.DataEncoding);
+                value = ReadUInt64(ref buffer, header.DataEncoding);
+                size = ReadUInt64(ref buffer, header.DataEncoding);
+            }
+            else
+            {
+                nameIndex = ReadUInt32(ref buffer, header.DataEncoding);
+                value = ReadUInt32(ref buffer, header.DataEncoding);
+                size = ReadUInt32(ref buffer, header.DataEncoding);
+                info = buffer.ReadU8();
+                other = buffer.ReadU8();
+                sectionIndex = ReadUInt16(ref buffer, header.DataEncoding);
+            }
+
+            var name = ReadStringFromTable(strTabBytes, nameIndex);
+
+            symbols.Add(new ELFSymbolData
+            {
+                NameIndex = nameIndex,
+                Info = info,
+                Other = other,
+                SectionIndex = sectionIndex,
+                Value = value,
+                Size = size,
+                Name = name
+            });
+        }
+
+        return new ELFSymbolTableData
+        {
+            Symbols = symbols
+        };
+    }
+
+    /// <summary>
+    ///     从字符串表数据中读取以 null 结尾的字符串。
+    /// </summary>
+    /// <param name="strTabData">字符串表原始数据。</param>
+    /// <param name="nameIndex">字符串起始索引。</param>
+    /// <returns>解码后的字符串。</returns>
+    private static string ReadStringFromTable(ReadOnlySpan<byte> strTabData, uint nameIndex)
+    {
+        var index = (int)nameIndex;
+
+        if (index < 0 || index >= strTabData.Length)
+        {
+            return string.Empty;
+        }
+
+        var end = index;
+
+        while (end < strTabData.Length && strTabData[end] != 0)
+        {
+            end++;
+        }
+
+        if (end == index)
+        {
+            return string.Empty;
+        }
+
+        return Encoding.UTF8.GetString(strTabData.Slice(index, end - index));
+    }
+
+    /// <summary>
+    ///     读取所有节区的原始内容。
+    /// </summary>
+    /// <param name="buffer">数据缓冲区。</param>
+    /// <param name="sectionHeaders">节区头列表。</param>
+    private void ReadSectionContents(ref ByteBuffer buffer, List<ELFSectionHeaderData> sectionHeaders)
+    {
+        for (var i = 0; i < sectionHeaders.Count; i++)
+        {
+            var section = sectionHeaders[i];
+
+            if (section.Offset == 0 || section.Size == 0)
+            {
+                continue;
+            }
+
+            buffer.Position = (int)section.Offset;
+            section.Content = buffer.ReadBytes((int)section.Size).ToArray();
+        }
     }
 }

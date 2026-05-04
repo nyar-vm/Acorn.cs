@@ -270,7 +270,6 @@ public sealed class NyarValidatorTests
     [InlineData(NyarOpcode.NewObject, 0xA0)]
     [InlineData(NyarOpcode.StringConcat, 0xB0)]
     [InlineData(NyarOpcode.BigIntAdd, 0xC0)]
-    [InlineData(NyarOpcode.Print, 0xD0)]
     [InlineData(NyarOpcode.BuiltinCall, 0xE0)]
     public void NyarOpcode_HasCorrectValue(NyarOpcode opcode, byte expectedValue)
     {

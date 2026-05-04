@@ -284,7 +284,7 @@ public sealed class PeEncoderAdvancedTests
 
         for (var i = 0; i < numSections; i++)
         {
-            var nameSpan = $".s{i}\0\0\0\0"u8;
+            var nameSpan = System.Text.Encoding.UTF8.GetBytes($".s{i}\0\0\0\0");
             var nameBytes = FixedBytes8.FromSpan(nameSpan);
 
             sections.Add(new PeSectionData

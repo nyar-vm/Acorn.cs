@@ -311,10 +311,6 @@ public enum NyarOpcode : byte
 
     #endregion
 
-    #region 内置函数
-
-    Print = 0xD0,
-    Println = 0xD1,
     Exit = 0xD2,
     GetTime = 0xD3,
     Sleep = 0xD4,
@@ -322,7 +318,5 @@ public enum NyarOpcode : byte
     MathCos = 0xD9,
     MathSqrt = 0xDA,
     MathAbs = 0xDB,
-    MathRand = 0xDC,
-
-    #endregion
+    MathRand = 0xDC
 }
