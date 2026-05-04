@@ -113,35 +113,36 @@ public sealed class MachODecoder
     }
 
     /// <summary>
-    ///     读取节区。
+    ///     从二进制缓冲区读取节区定义。
     /// </summary>
-    private List<MachOSectionData> ReadSections(MachOHeaderData header, List<MachOLoadCommandData> loadCommands, bool isLittleEndian)
+    private static List<MachOSectionData> ReadSections(ref ByteBuffer buffer, MachOHeaderData header,
+        List<MachOLoadCommandData> loadCommands, bool isLittleEndian)
     {
         var sections = new List<MachOSectionData>();
+        var headerSize = header.Is64Bit ? 32 : 28;
+        var cmdOffset = headerSize;
 
         foreach (var cmd in loadCommands)
         {
             if (cmd.Command == MachOConstants.LcSegment || cmd.Command == MachOConstants.LcSegment64)
             {
-                var sectionBuffer = new ByteBuffer(cmd.Data);
+                var nsectsOffset = header.Is64Bit
+                    ? cmdOffset + 8 + 56
+                    : cmdOffset + 8 + 40;
 
-                sectionBuffer.Advance(16);
+                buffer.Position = nsectsOffset;
+                var nsects = ReadUInt32(ref buffer, isLittleEndian);
 
-                if (header.Is64Bit)
-                {
-                    sectionBuffer.Advance(40);
-                }
-                else
-                {
-                    sectionBuffer.Advance(24);
-                }
+                var sectionsOffset = header.Is64Bit
+                    ? cmdOffset + 8 + 64
+                    : cmdOffset + 8 + 48;
 
-                var nsects = ReadUInt32(ref sectionBuffer, isLittleEndian);
+                buffer.Position = sectionsOffset;
 
                 for (var i = 0; i < nsects; i++)
                 {
-                    var sectionName = ReadString(ref sectionBuffer, 16);
-                    var segmentName = ReadString(ref sectionBuffer, 16);
+                    var sectionName = ReadString(ref buffer, 16);
+                    var segmentName = ReadString(ref buffer, 16);
 
                     ulong address;
                     ulong size;
@@ -153,25 +154,27 @@ public sealed class MachODecoder
 
                     if (header.Is64Bit)
                     {
-                        address = ReadUInt64(ref sectionBuffer, isLittleEndian);
-                        size = ReadUInt64(ref sectionBuffer, isLittleEndian);
-                        offset = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        alignment = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        relocationsOffset = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        numberOfRelocations = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        flags = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        sectionBuffer.Advance(12);
+                        address = ReadUInt64(ref buffer, isLittleEndian);
+                        size = ReadUInt64(ref buffer, isLittleEndian);
+                        offset = ReadUInt32(ref buffer, isLittleEndian);
+                        alignment = ReadUInt32(ref buffer, isLittleEndian);
+                        relocationsOffset = ReadUInt32(ref buffer, isLittleEndian);
+                        numberOfRelocations = ReadUInt32(ref buffer, isLittleEndian);
+                        flags = ReadUInt32(ref buffer, isLittleEndian);
+                        buffer.Advance(4);
+                        buffer.Advance(4);
                     }
                     else
                     {
-                        address = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        size = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        offset = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        alignment = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        relocationsOffset = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        numberOfRelocations = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        flags = ReadUInt32(ref sectionBuffer, isLittleEndian);
-                        sectionBuffer.Advance(8);
+                        address = ReadUInt32(ref buffer, isLittleEndian);
+                        size = ReadUInt32(ref buffer, isLittleEndian);
+                        offset = ReadUInt32(ref buffer, isLittleEndian);
+                        alignment = ReadUInt32(ref buffer, isLittleEndian);
+                        relocationsOffset = ReadUInt32(ref buffer, isLittleEndian);
+                        numberOfRelocations = ReadUInt32(ref buffer, isLittleEndian);
+                        flags = ReadUInt32(ref buffer, isLittleEndian);
+                        buffer.Advance(4);
+                        buffer.Advance(4);
                     }
 
                     sections.Add(new MachOSectionData
@@ -188,6 +191,8 @@ public sealed class MachODecoder
                     });
                 }
             }
+
+            cmdOffset += (int)cmd.Size;
         }
 
         return sections;
