@@ -33,6 +33,7 @@
     <ProjectReference Include="..\..\projects\Acorn.Zip\Acorn.Zip.csproj" />
     <ProjectReference Include="..\..\projects\Acorn.FlatBuffers\Acorn.FlatBuffers.csproj" />
     <ProjectReference Include="..\..\projects\Acorn.Coff\Acorn.Coff.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.BmFont\Acorn.BmFont.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net11.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <RootNamespace>Acorn.Tests</RootNamespace>
+        <Description>Acorn 二进制编解码基础设施单元测试</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0"/>
+        <PackageReference Include="NUnit" Version="4.0.0"/>
+        <PackageReference Include="NUnit3TestAdapter" Version="4.5.0"/>
+        <PackageReference Include="NUnit.Analyzers" Version="4.0.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\projects\Acorn\Acorn.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.Nyar\Acorn.Nyar.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.Wasm\Acorn.Wasm.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.SpirV\SpirV.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.Jvm\Acorn.Jvm.csproj"/>
+    </ItemGroup>
+
+</Project>
