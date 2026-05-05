@@ -18,27 +18,27 @@ public class PostgreSqlMessageData
     /// <summary>
     ///     获取或设置消息内容。
     /// </summary>
-    public byte[] Data { get; set; }
-    
+    public byte[] Data { get; set; } = null!;
+
     /// <summary>
     ///     获取或设置认证类型（仅适用于认证请求消息）。
     /// </summary>
     public PostgreSQLConstants.AuthenticationType? AuthenticationType { get; set; }
-    
+
     /// <summary>
     ///     获取或设置认证数据（仅适用于认证请求消息）。
     /// </summary>
-    public byte[] AuthenticationData { get; set; }
-    
+    public byte[] AuthenticationData { get; set; } = null!;
+
     /// <summary>
     ///     获取或设置错误消息（仅适用于错误响应消息）。
     /// </summary>
     public Dictionary<string, string> ErrorFields { get; set; } = new();
-    
+
     /// <summary>
     ///     获取或设置命令标签（仅适用于命令完成消息）。
     /// </summary>
-    public string CommandTag { get; set; }
+    public string CommandTag { get; set; } = null!;
     
     /// <summary>
     ///     获取或设置事务状态（仅适用于就绪消息）。
@@ -59,7 +59,7 @@ public class PostgreSqlFieldDescription
     /// <summary>
     ///     获取或设置字段名称。
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
     
     /// <summary>
     ///     获取或设置表 ID。

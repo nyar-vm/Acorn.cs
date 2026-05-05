@@ -25,7 +25,7 @@ public class MySqlPacketData
     /// <summary>
     ///     获取或设置包内容。
     /// </summary>
-    public byte[] Data { get; set; }
+    public byte[] Data { get; set; } = null!;
     
     /// <summary>
     ///     获取或设置命令类型（仅适用于命令包）。
@@ -40,7 +40,7 @@ public class MySqlPacketData
     /// <summary>
     ///     获取或设置错误消息（仅适用于错误包）。
     /// </summary>
-    public string ErrorMessage { get; set; }
+    public string ErrorMessage { get; set; } = null!;
     
     /// <summary>
     ///     获取或设置服务器状态（仅适用于结果包）。

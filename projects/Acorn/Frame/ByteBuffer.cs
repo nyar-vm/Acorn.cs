@@ -552,6 +552,19 @@ public ref struct ByteBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint ReadLeb128U32()
     {
+        if (_position >= _data.Length)
+        {
+            throw new InvalidOperationException("已到达数据末尾，LEB128 编码不完整");
+        }
+
+        var b = _data[_position];
+
+        if ((b & 0x80) == 0)
+        {
+            _position++;
+            return b;
+        }
+
         uint result = 0;
         var shift = 0;
 
@@ -562,7 +575,7 @@ public ref struct ByteBuffer
                 throw new InvalidOperationException("已到达数据末尾，LEB128 编码不完整");
             }
 
-            var b = _data[_position++];
+            b = _data[_position++];
             result |= (uint)(b & 0x7F) << shift;
 
             if ((b & 0x80) == 0)
@@ -587,6 +600,19 @@ public ref struct ByteBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong ReadLeb128U64()
     {
+        if (_position >= _data.Length)
+        {
+            throw new InvalidOperationException("已到达数据末尾，LEB128 编码不完整");
+        }
+
+        var b = _data[_position];
+
+        if ((b & 0x80) == 0)
+        {
+            _position++;
+            return b;
+        }
+
         ulong result = 0;
         var shift = 0;
 
@@ -597,7 +623,7 @@ public ref struct ByteBuffer
                 throw new InvalidOperationException("已到达数据末尾，LEB128 编码不完整");
             }
 
-            var b = _data[_position++];
+            b = _data[_position++];
             result |= (ulong)(b & 0x7F) << shift;
 
             if ((b & 0x80) == 0)
@@ -622,9 +648,27 @@ public ref struct ByteBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int ReadLeb128I32()
     {
+        if (_position >= _data.Length)
+        {
+            throw new InvalidOperationException("已到达数据末尾，LEB128 编码不完整");
+        }
+
+        var b = _data[_position];
+
+        if ((b & 0x80) == 0)
+        {
+            _position++;
+
+            if (b < 0x40)
+            {
+                return b;
+            }
+
+            return b - 0x100;
+        }
+
         int result = 0;
         var shift = 0;
-        byte b;
 
         do
         {
@@ -662,9 +706,27 @@ public ref struct ByteBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public long ReadLeb128I64()
     {
+        if (_position >= _data.Length)
+        {
+            throw new InvalidOperationException("已到达数据末尾，LEB128 编码不完整");
+        }
+
+        var b = _data[_position];
+
+        if ((b & 0x80) == 0)
+        {
+            _position++;
+
+            if (b < 0x40)
+            {
+                return b;
+            }
+
+            return b - 0x100;
+        }
+
         long result = 0;
         var shift = 0;
-        byte b;
 
         do
         {

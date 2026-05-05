@@ -20,10 +20,10 @@ public sealed class OnnxDecoder
     public OnnxModelData Decode(ReadOnlySpan<byte> data)
     {
         var buffer = new ByteBuffer(data);
-        return DecodeModel(buffer);
+        return DecodeModel(ref buffer);
     }
 
-    private OnnxModelData DecodeModel(ByteBuffer buffer)
+    private OnnxModelData DecodeModel(ref ByteBuffer buffer)
     {
         long irVersion = 0;
         var producerName = string.Empty;
@@ -36,19 +36,19 @@ public sealed class OnnxDecoder
 
         while (!buffer.IsEnd)
         {
-            var (fieldNumber, wireType) = ReadTag(buffer);
+            var (fieldNumber, wireType) = ReadTag(ref buffer);
 
             switch (fieldNumber)
             {
                 case 1: irVersion = (long)buffer.ReadLeb128U64(); break;
-                case 2: producerName = ReadString(buffer); break;
-                case 3: producerVersion = ReadString(buffer); break;
-                case 4: domain = ReadString(buffer); break;
+                case 2: producerName = ReadString(ref buffer); break;
+                case 3: producerVersion = ReadString(ref buffer); break;
+                case 4: domain = ReadString(ref buffer); break;
                 case 5: modelVersion = (long)buffer.ReadLeb128U64(); break;
-                case 6: docString = ReadString(buffer); break;
-                case 7: graph = DecodeGraph(buffer); break;
-                case 8: opsetImports.Add(DecodeOpsetImport(buffer)); break;
-                default: SkipField(buffer, wireType); break;
+                case 6: docString = ReadString(ref buffer); break;
+                case 7: graph = DecodeGraph(ref buffer); break;
+                case 8: opsetImports.Add(DecodeOpsetImport(ref buffer)); break;
+                default: SkipField(ref buffer, wireType); break;
             }
         }
 
@@ -65,7 +65,7 @@ public sealed class OnnxDecoder
         };
     }
 
-    private OnnxGraph DecodeGraph(ByteBuffer buffer)
+    private OnnxGraph DecodeGraph(ref ByteBuffer buffer)
     {
         var length = (int)buffer.ReadLeb128U32();
         var endPosition = buffer.Position + length;
@@ -80,18 +80,18 @@ public sealed class OnnxDecoder
 
         while (buffer.Position < endPosition)
         {
-            var (fieldNumber, wireType) = ReadTag(buffer);
+            var (fieldNumber, wireType) = ReadTag(ref buffer);
 
             switch (fieldNumber)
             {
-                case 1: nodes.Add(DecodeNode(buffer)); break;
-                case 2: name = ReadString(buffer); break;
-                case 3: inputs.Add(DecodeValueInfo(buffer)); break;
-                case 4: outputs.Add(DecodeValueInfo(buffer)); break;
-                case 5: valueInfos.Add(DecodeValueInfo(buffer)); break;
-                case 10: initializers.Add(DecodeTensor(buffer)); break;
-                case 12: docString = ReadString(buffer); break;
-                default: SkipField(buffer, wireType); break;
+                case 1: nodes.Add(DecodeNode(ref buffer)); break;
+                case 2: name = ReadString(ref buffer); break;
+                case 3: inputs.Add(DecodeValueInfo(ref buffer)); break;
+                case 4: outputs.Add(DecodeValueInfo(ref buffer)); break;
+                case 5: valueInfos.Add(DecodeValueInfo(ref buffer)); break;
+                case 10: initializers.Add(DecodeTensor(ref buffer)); break;
+                case 12: docString = ReadString(ref buffer); break;
+                default: SkipField(ref buffer, wireType); break;
             }
         }
 
@@ -107,7 +107,7 @@ public sealed class OnnxDecoder
         };
     }
 
-    private OnnxNode DecodeNode(ByteBuffer buffer)
+    private OnnxNode DecodeNode(ref ByteBuffer buffer)
     {
         var length = (int)buffer.ReadLeb128U32();
         var endPosition = buffer.Position + length;
@@ -122,18 +122,18 @@ public sealed class OnnxDecoder
 
         while (buffer.Position < endPosition)
         {
-            var (fieldNumber, wireType) = ReadTag(buffer);
+            var (fieldNumber, wireType) = ReadTag(ref buffer);
 
             switch (fieldNumber)
             {
-                case 1: input.Add(ReadString(buffer)); break;
-                case 2: output.Add(ReadString(buffer)); break;
-                case 3: name = ReadString(buffer); break;
-                case 4: opType = ReadString(buffer); break;
-                case 7: domain = ReadString(buffer); break;
-                case 8: attributes.Add(DecodeAttribute(buffer)); break;
-                case 10: docString = ReadString(buffer); break;
-                default: SkipField(buffer, wireType); break;
+                case 1: input.Add(ReadString(ref buffer)); break;
+                case 2: output.Add(ReadString(ref buffer)); break;
+                case 3: name = ReadString(ref buffer); break;
+                case 4: opType = ReadString(ref buffer); break;
+                case 7: domain = ReadString(ref buffer); break;
+                case 8: attributes.Add(DecodeAttribute(ref buffer)); break;
+                case 10: docString = ReadString(ref buffer); break;
+                default: SkipField(ref buffer, wireType); break;
             }
         }
 
@@ -149,7 +149,7 @@ public sealed class OnnxDecoder
         };
     }
 
-    private OnnxValueInfo DecodeValueInfo(ByteBuffer buffer)
+    private OnnxValueInfo DecodeValueInfo(ref ByteBuffer buffer)
     {
         var length = (int)buffer.ReadLeb128U32();
         var endPosition = buffer.Position + length;
@@ -160,18 +160,18 @@ public sealed class OnnxDecoder
 
         while (buffer.Position < endPosition)
         {
-            var (fieldNumber, wireType) = ReadTag(buffer);
+            var (fieldNumber, wireType) = ReadTag(ref buffer);
 
             switch (fieldNumber)
             {
-                case 1: name = ReadString(buffer); break;
+                case 1: name = ReadString(ref buffer); break;
                 case 2:
                     var typeLength = (int)buffer.ReadLeb128U32();
                     var typeEnd = buffer.Position + typeLength;
 
                     while (buffer.Position < typeEnd)
                     {
-                        var (tf, tw) = ReadTag(buffer);
+                        var (tf, tw) = ReadTag(ref buffer);
 
                         switch (tf)
                         {
@@ -181,7 +181,7 @@ public sealed class OnnxDecoder
 
                                 while (buffer.Position < tensorTypeEnd)
                                 {
-                                    var (ttf, ttw) = ReadTag(buffer);
+                                    var (ttf, ttw) = ReadTag(ref buffer);
 
                                     switch (ttf)
                                     {
@@ -192,7 +192,7 @@ public sealed class OnnxDecoder
 
                                             while (buffer.Position < shapeEnd)
                                             {
-                                                var (sf, sw) = ReadTag(buffer);
+                                                var (sf, sw) = ReadTag(ref buffer);
 
                                                 if (sf == 1)
                                                 {
@@ -201,7 +201,7 @@ public sealed class OnnxDecoder
 
                                                     while (buffer.Position < dimEnd)
                                                     {
-                                                        var (df, dw) = ReadTag(buffer);
+                                                        var (df, dw) = ReadTag(ref buffer);
 
                                                         if (df == 1)
                                                         {
@@ -209,28 +209,28 @@ public sealed class OnnxDecoder
                                                         }
                                                         else
                                                         {
-                                                            SkipField(buffer, dw);
+                                                            SkipField(ref buffer, dw);
                                                         }
                                                     }
                                                 }
                                                 else
                                                 {
-                                                    SkipField(buffer, sw);
+                                                    SkipField(ref buffer, sw);
                                                 }
                                             }
 
                                             break;
-                                        default: SkipField(buffer, ttw); break;
+                                        default: SkipField(ref buffer, ttw); break;
                                     }
                                 }
 
                                 break;
-                            default: SkipField(buffer, tw); break;
+                            default: SkipField(ref buffer, tw); break;
                         }
                     }
 
                     break;
-                default: SkipField(buffer, wireType); break;
+                default: SkipField(ref buffer, wireType); break;
             }
         }
 
@@ -242,7 +242,7 @@ public sealed class OnnxDecoder
         };
     }
 
-    private OnnxTensor DecodeTensor(ByteBuffer buffer)
+    private OnnxTensor DecodeTensor(ref ByteBuffer buffer)
     {
         var length = (int)buffer.ReadLeb128U32();
         var endPosition = buffer.Position + length;
@@ -258,7 +258,7 @@ public sealed class OnnxDecoder
 
         while (buffer.Position < endPosition)
         {
-            var (fieldNumber, wireType) = ReadTag(buffer);
+            var (fieldNumber, wireType) = ReadTag(ref buffer);
 
             switch (fieldNumber)
             {
@@ -271,12 +271,12 @@ public sealed class OnnxDecoder
                         rawData = buffer.ReadBytes(rawLen).ToArray();
                     }
                     break;
-                case 4: name = ReadString(buffer); break;
+                case 4: name = ReadString(ref buffer); break;
                 case 5: floatData.Add(buffer.ReadF32LE()); break;
                 case 7: int64Data.Add((long)buffer.ReadLeb128U64()); break;
                 case 9: doubleData.Add(buffer.ReadF64LE()); break;
-                case 6: int32Data.Add((int)buffer.ReadLeb128U32()); break;
-                default: SkipField(buffer, wireType); break;
+                case 6: int32Data.Add((int)buffer.ReadU32LE()); break;
+                default: SkipField(ref buffer, wireType); break;
             }
         }
 
@@ -293,7 +293,7 @@ public sealed class OnnxDecoder
         };
     }
 
-    private OnnxAttribute DecodeAttribute(ByteBuffer buffer)
+    private OnnxAttribute DecodeAttribute(ref ByteBuffer buffer)
     {
         var length = (int)buffer.ReadLeb128U32();
         var endPosition = buffer.Position + length;
@@ -310,20 +310,20 @@ public sealed class OnnxDecoder
 
         while (buffer.Position < endPosition)
         {
-            var (fieldNumber, wireType) = ReadTag(buffer);
+            var (fieldNumber, wireType) = ReadTag(ref buffer);
 
             switch (fieldNumber)
             {
-                case 1: name = ReadString(buffer); break;
+                case 1: name = ReadString(ref buffer); break;
                 case 20: type = (OnnxAttributeType)buffer.ReadLeb128U64(); break;
                 case 2: floatValue = buffer.ReadF32LE(); break;
                 case 3: intValue = (int)buffer.ReadLeb128U32(); break;
-                case 4: stringValue = ReadString(buffer); break;
-                case 5: tensorValue = DecodeTensor(buffer); break;
+                case 4: stringValue = ReadString(ref buffer); break;
+                case 5: tensorValue = DecodeTensor(ref buffer); break;
                 case 7: floats.Add(buffer.ReadF32LE()); break;
                 case 8: ints.Add((int)buffer.ReadLeb128U32()); break;
-                case 9: strings.Add(ReadString(buffer)); break;
-                default: SkipField(buffer, wireType); break;
+                case 9: strings.Add(ReadString(ref buffer)); break;
+                default: SkipField(ref buffer, wireType); break;
             }
         }
 
@@ -341,7 +341,7 @@ public sealed class OnnxDecoder
         };
     }
 
-    private OnnxOperatorSetId DecodeOpsetImport(ByteBuffer buffer)
+    private OnnxOperatorSetId DecodeOpsetImport(ref ByteBuffer buffer)
     {
         var length = (int)buffer.ReadLeb128U32();
         var endPosition = buffer.Position + length;
@@ -351,13 +351,13 @@ public sealed class OnnxDecoder
 
         while (buffer.Position < endPosition)
         {
-            var (fieldNumber, wireType) = ReadTag(buffer);
+            var (fieldNumber, wireType) = ReadTag(ref buffer);
 
             switch (fieldNumber)
             {
-                case 1: domain = ReadString(buffer); break;
+                case 1: domain = ReadString(ref buffer); break;
                 case 2: version = (long)buffer.ReadLeb128U64(); break;
-                default: SkipField(buffer, wireType); break;
+                default: SkipField(ref buffer, wireType); break;
             }
         }
 
@@ -370,19 +370,19 @@ public sealed class OnnxDecoder
 
     #region 辅助方法
 
-    private static (int FieldNumber, int WireType) ReadTag(ByteBuffer buffer)
+    private static (int FieldNumber, int WireType) ReadTag(ref ByteBuffer buffer)
     {
         var tag = buffer.ReadLeb128U64();
         return ((int)(tag >> 3), (int)(tag & 0x7));
     }
 
-    private static string ReadString(ByteBuffer buffer)
+    private static string ReadString(ref ByteBuffer buffer)
     {
         var length = (int)buffer.ReadLeb128U32();
         return buffer.ReadString(length);
     }
 
-    private static void SkipField(ByteBuffer buffer, int wireType)
+    private static void SkipField(ref ByteBuffer buffer, int wireType)
     {
         switch (wireType)
         {

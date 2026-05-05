@@ -13,12 +13,12 @@ public class RedisMessageData
     /// <summary>
     ///     获取或设置简单字符串值（仅适用于简单字符串类型）。
     /// </summary>
-    public string SimpleString { get; set; }
-    
+    public string SimpleString { get; set; } = null!;
+
     /// <summary>
     ///     获取或设置错误消息（仅适用于错误类型）。
     /// </summary>
-    public string Error { get; set; }
+    public string Error { get; set; } = null!;
     
     /// <summary>
     ///     获取或设置整数值（仅适用于整数类型）。
@@ -28,7 +28,7 @@ public class RedisMessageData
     /// <summary>
     ///     获取或设置批量字符串值（仅适用于批量字符串类型）。
     /// </summary>
-    public byte[] BulkString { get; set; }
+    public byte[] BulkString { get; set; } = null!;
     
     /// <summary>
     ///     获取或设置数组元素（仅适用于数组类型）。

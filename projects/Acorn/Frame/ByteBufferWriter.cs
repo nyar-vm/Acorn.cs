@@ -457,11 +457,27 @@ public ref struct ByteBufferWriter
     #region LEB128 写入
 
     /// <summary>
+    ///     直接写入一个字节到缓冲区指定位置，返回更新后的位置索引。不做容量检查，由调用方保证足够空间。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int WriteU8Internal(byte[] buffer, int position, byte value)
+    {
+        buffer[position] = value;
+        return position + 1;
+    }
+
+    /// <summary>
     ///     以 LEB128 编码写入一个无符号 32 位整数并前进相应字节数。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128U32(uint value)
     {
+        if (value < 0x80)
+        {
+            _position = WriteU8Internal(_buffer, _position, (byte)value);
+            return;
+        }
+
         EnsureCapacity(5);
 
         while (true)
@@ -480,6 +496,12 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128U64(ulong value)
     {
+        if (value < 0x80)
+        {
+            _position = WriteU8Internal(_buffer, _position, (byte)value);
+            return;
+        }
+
         EnsureCapacity(10);
 
         while (true)
@@ -498,6 +520,12 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128I32(int value)
     {
+        if (value >= 0 && value < 0x80)
+        {
+            _position = WriteU8Internal(_buffer, _position, (byte)value);
+            return;
+        }
+
         EnsureCapacity(5);
         var more = true;
 
@@ -525,6 +553,12 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128I64(long value)
     {
+        if (value >= 0 && value < 0x80)
+        {
+            _position = WriteU8Internal(_buffer, _position, (byte)value);
+            return;
+        }
+
         EnsureCapacity(10);
         var more = true;
 

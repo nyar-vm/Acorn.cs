@@ -7,7 +7,7 @@
     <AssemblyName>Acorn.FlatBuffers</AssemblyName>
     <Version>0.0.0</Version>
     <Authors>nyar-vm</Authors>
-    <Description>Acorn FlatBuffers 格式库，提供 FlatBuffers 零拷贝序列化的扫描和解码功能</Description>
+    <Description>Acorn FlatBuffers 格式库，提供 FlatBuffers 零拷贝序列化的扫描、解码和编码功能</Description>
     <PackageProjectUrl>https://github.com/nyar-vm/Acorn.cs</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nyar-vm/Acorn.cs</RepositoryUrl>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>

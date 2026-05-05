@@ -20,6 +20,14 @@ public sealed class NyarValidator
         diagnostics = new List<string>();
         var valid = true;
 
+        // 验证模块名称不为空
+        if (string.IsNullOrEmpty(module.Name))
+        {
+            diagnostics.Add("Module name is empty or null.");
+            valid = false;
+        }
+
+        // 验证函数
         foreach (var func in module.Functions)
         {
             if (!ValidateFunction(func, bytecode, diagnostics))
@@ -28,12 +36,37 @@ public sealed class NyarValidator
             }
         }
 
+        // 验证函数之间没有重叠
+        if (!ValidateFunctionOverlap(module.Functions, diagnostics))
+        {
+            valid = false;
+        }
+
+        // 验证导入
         foreach (var import in module.Imports)
         {
             if (string.IsNullOrEmpty(import.ModuleName) || string.IsNullOrEmpty(import.SymbolName))
             {
                 diagnostics.Add("Invalid import: module or symbol name is empty.");
                 valid = false;
+            }
+        }
+
+        // 验证导出
+        foreach (var export in module.Exports)
+        {
+            if (string.IsNullOrEmpty(export.SymbolName))
+            {
+                diagnostics.Add("Invalid export: symbol name is empty.");
+                valid = false;
+            }
+            if (export.Kind == NyarExportKind.Function)
+            {
+                if (export.FunctionIndex < 0 || export.FunctionIndex >= module.Functions.Count)
+                {
+                    diagnostics.Add($"Invalid export: function index {export.FunctionIndex} out of range [0, {module.Functions.Count}).");
+                    valid = false;
+                }
             }
         }
 
@@ -48,6 +81,13 @@ public sealed class NyarValidator
     private static bool ValidateFunction(NyarFunction func, byte[] bytecode, List<string> diagnostics)
     {
         var valid = true;
+
+        // 验证函数名称不为空
+        if (string.IsNullOrEmpty(func.Name))
+        {
+            diagnostics.Add("Function name is empty or null.");
+            valid = false;
+        }
 
         if (func.CodeOffset < 0 || func.CodeOffset >= bytecode.Length)
         {
@@ -79,18 +119,64 @@ public sealed class NyarValidator
         return valid;
     }
 
+    /// <summary>
+    ///     验证函数之间没有重叠
+    /// </summary>
+    private static bool ValidateFunctionOverlap(IReadOnlyList<NyarFunction> functions, List<string> diagnostics)
+    {
+        var valid = true;
+
+        for (var i = 0; i < functions.Count; i++)
+        {
+            for (var j = i + 1; j < functions.Count; j++)
+            {
+                var f1 = functions[i];
+                var f2 = functions[j];
+
+                var f1End = f1.CodeOffset + f1.CodeLength;
+                var f2End = f2.CodeOffset + f2.CodeLength;
+
+                // 检查是否有重叠
+                if (!(f1End <= f2.CodeOffset || f2End <= f1.CodeOffset))
+                {
+                    diagnostics.Add(
+                        $"Function overlap: '{f1.Name}' [{f1.CodeOffset}, {f1End}) and '{f2.Name}' [{f2.CodeOffset}, {f2End}).");
+                    valid = false;
+                }
+            }
+        }
+
+        return valid;
+    }
+
     #endregion
 
     #region 跳转目标验证
 
     /// <summary>
-    ///     验证跳转目标是否在函数代码范围内
+    ///     验证跳转目标是否在函数代码范围内且正好在指令起始位置
     /// </summary>
     private static bool ValidateJumpTargets(NyarFunction func, byte[] bytecode, List<string> diagnostics)
     {
         var valid = true;
         var end = func.CodeOffset + func.CodeLength;
+        var instructionOffsets = new HashSet<int>();
 
+        // 先收集所有指令起始位置
+        for (var pc = func.CodeOffset; pc < end;)
+        {
+            if (pc < 0 || pc >= bytecode.Length) break;
+
+            var op = bytecode[pc];
+            var opcode = (NyarOpcode)op;
+            if (!Enum.IsDefined(typeof(NyarOpcode), opcode)) break;
+
+            var instructionSize = GetInstructionSize(opcode);
+            instructionOffsets.Add(pc);
+            pc += instructionSize;
+        }
+
+        // 再验证跳转目标
         for (var pc = func.CodeOffset; pc < end;)
         {
             var op = bytecode[pc];
@@ -111,10 +197,16 @@ public sealed class NyarValidator
                 if (pc + 1 + 4 <= end)
                 {
                     var target = BitConverter.ToInt32(bytecode, pc + 1);
-                    if (target < func.CodeOffset || target >= end)
+                    if (target < func.CodeOffset || target > end)
                     {
                         diagnostics.Add(
-                            $"Function '{func.Name}': jump target {target} out of range [{func.CodeOffset}, {end}) at offset {pc}.");
+                            $"Function '{func.Name}': jump target {target} out of range [{func.CodeOffset}, {end}] at offset {pc}.");
+                        valid = false;
+                    }
+                    else if (target != end && !instructionOffsets.Contains(target))
+                    {
+                        diagnostics.Add(
+                            $"Function '{func.Name}': jump target {target} not aligned with instruction start at offset {pc}.");
                         valid = false;
                     }
                 }

@@ -42,7 +42,7 @@ public ref struct MsgPackDecoder
     public MsgPackType PeekType()
     {
         if (_buffer.IsEnd) return MsgPackType.Nil;
-        var b = _buffer.Peek();
+        var b = _buffer.Peek(1)[0];
         return ClassifyType(b);
     }
 
@@ -169,6 +169,7 @@ public ref struct MsgPackDecoder
         if (b >= MsgPackConstants.FixMapMin && b <= MsgPackConstants.FixMapMax) return MsgPackType.Map;
         if (b >= MsgPackConstants.FixArrayMin && b <= MsgPackConstants.FixArrayMax) return MsgPackType.Array;
         if (b >= MsgPackConstants.FixStrMin && b <= MsgPackConstants.FixStrMax) return MsgPackType.String;
+        if (b >= MsgPackConstants.FixExt1 && b <= MsgPackConstants.FixExt16) return MsgPackType.Extension;
         return b switch
         {
             MsgPackConstants.Nil => MsgPackType.Nil,
@@ -180,6 +181,7 @@ public ref struct MsgPackDecoder
             MsgPackConstants.Bin8 or MsgPackConstants.Bin16 or MsgPackConstants.Bin32 => MsgPackType.Binary,
             MsgPackConstants.Array16 or MsgPackConstants.Array32 => MsgPackType.Array,
             MsgPackConstants.Map16 or MsgPackConstants.Map32 => MsgPackType.Map,
+            MsgPackConstants.Ext8 or MsgPackConstants.Ext16 or MsgPackConstants.Ext32 => MsgPackType.Extension,
             _ => MsgPackType.Extension
         };
     }

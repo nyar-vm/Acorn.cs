@@ -60,7 +60,7 @@ public ref struct ZipScanner
 
         _scanner.Advance(4);
         _scanner.Advance(4);
-        _scanner.Advance(4);
+        _scanner.Advance(2);
 
         var centralDirEntryCount = _scanner.Buffer.ReadU16LE();
         var centralDirSize = _scanner.Buffer.ReadU32LE();

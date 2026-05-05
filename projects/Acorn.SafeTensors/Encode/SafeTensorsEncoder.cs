@@ -31,8 +31,7 @@ public sealed class SafeTensorsEncoder
         }
 
         var totalSize = 8 + headerBytes.Length + (data.Data?.Length ?? 0);
-        var buffer = new byte[totalSize];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(totalSize);
 
         writer.WriteU64LE((ulong)headerBytes.Length);
         writer.Write(headerBytes);
@@ -42,7 +41,7 @@ public sealed class SafeTensorsEncoder
             writer.Write(data.Data);
         }
 
-        return buffer[..writer.Position];
+        return writer.ToArray();
     }
 
     /// <summary>
@@ -62,8 +61,7 @@ public sealed class SafeTensorsEncoder
         }
 
         var totalSize = 8 + headerBytes.Length + CalculateTensorDataSize(tensors);
-        var buffer = new byte[totalSize];
-        var writer = new ByteBufferWriter(buffer);
+        var writer = new ByteBufferWriter(totalSize);
 
         writer.WriteU64LE((ulong)headerBytes.Length);
         writer.Write(headerBytes);
@@ -73,7 +71,7 @@ public sealed class SafeTensorsEncoder
             writer.Write(tensor.Data);
         }
 
-        return buffer[..writer.Position];
+        return writer.ToArray();
     }
 
     #region 私有编码方法

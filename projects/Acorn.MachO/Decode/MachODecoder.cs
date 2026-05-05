@@ -25,7 +25,7 @@ public sealed class MachODecoder
     {
         var header = ReadMachOHeader(ref buffer, out var isLittleEndian);
         var loadCommands = ReadLoadCommands(ref buffer, header, isLittleEndian);
-        var sections = ReadSections(header, loadCommands, isLittleEndian);
+        var sections = ReadSections(ref buffer, header, loadCommands, isLittleEndian);
 
         ReadSectionContents(ref buffer, sections);
 

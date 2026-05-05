@@ -17,14 +17,6 @@ public struct FixedBytes4
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> AsSpan() => MemoryMarshal.CreateReadOnlySpan(ref _element0, 4);
 
-    public byte this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => MemoryMarshal.CreateReadOnlySpan(ref _element0, 4)[index];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => MemoryMarshal.CreateSpan(ref _element0, 4)[index] = value;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FixedBytes4 FromSpan(ReadOnlySpan<byte> source)
     {
@@ -44,14 +36,6 @@ public struct FixedBytes8
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> AsSpan() => MemoryMarshal.CreateReadOnlySpan(ref _element0, 8);
-
-    public byte this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => MemoryMarshal.CreateReadOnlySpan(ref _element0, 8)[index];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => MemoryMarshal.CreateSpan(ref _element0, 8)[index] = value;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FixedBytes8 FromSpan(ReadOnlySpan<byte> source)
@@ -73,14 +57,6 @@ public struct FixedBytes16
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> AsSpan() => MemoryMarshal.CreateReadOnlySpan(ref _element0, 16);
 
-    public byte this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => MemoryMarshal.CreateReadOnlySpan(ref _element0, 16)[index];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => MemoryMarshal.CreateSpan(ref _element0, 16)[index] = value;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FixedBytes16 FromSpan(ReadOnlySpan<byte> source)
     {
@@ -100,14 +76,6 @@ public struct FixedBytes32
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> AsSpan() => MemoryMarshal.CreateReadOnlySpan(ref _element0, 32);
-
-    public byte this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => MemoryMarshal.CreateReadOnlySpan(ref _element0, 32)[index];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => MemoryMarshal.CreateSpan(ref _element0, 32)[index] = value;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FixedBytes32 FromSpan(ReadOnlySpan<byte> source)
@@ -129,14 +97,6 @@ public struct FixedBytes56
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> AsSpan() => MemoryMarshal.CreateReadOnlySpan(ref _element0, 56);
 
-    public byte this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => MemoryMarshal.CreateReadOnlySpan(ref _element0, 56)[index];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => MemoryMarshal.CreateSpan(ref _element0, 56)[index] = value;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FixedBytes56 FromSpan(ReadOnlySpan<byte> source)
     {
@@ -156,14 +116,6 @@ public struct FixedBytes64
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> AsSpan() => MemoryMarshal.CreateReadOnlySpan(ref _element0, 64);
-
-    public byte this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => MemoryMarshal.CreateReadOnlySpan(ref _element0, 64)[index];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => MemoryMarshal.CreateSpan(ref _element0, 64)[index] = value;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FixedBytes64 FromSpan(ReadOnlySpan<byte> source)

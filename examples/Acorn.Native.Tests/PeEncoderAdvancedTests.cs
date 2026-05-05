@@ -139,11 +139,11 @@ public sealed class PeEncoderAdvancedTests
     #region PE Subsystem
 
     [Theory]
-    [InlineData((ushort)1, "原生")]
-    [InlineData((ushort)2, "GUI")]
-    [InlineData((ushort)3, "控制台")]
-    [InlineData((ushort)9, "WinCE")]
-    public void Encode_Subsystem_PreservesValue(ushort subsystem, string name)
+    [InlineData((ushort)1)]
+    [InlineData((ushort)2)]
+    [InlineData((ushort)3)]
+    [InlineData((ushort)9)]
+    public void Encode_Subsystem_PreservesValue(ushort subsystem)
     {
         var data = new PeFileData
         {

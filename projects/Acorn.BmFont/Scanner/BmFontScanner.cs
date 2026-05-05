@@ -38,7 +38,10 @@ public ref struct BmFontScanner
 
         var version = _scanner.Buffer.ReadU8();
 
-        BmFontScanHeader header = new() { Version = version, IsBinary = true };
+        short fontSize = 0;
+        var bold = false;
+        var italic = false;
+        var unicode = false;
 
         while (!_scanner.IsEnd)
         {
@@ -52,18 +55,26 @@ public ref struct BmFontScanner
 
             if (blockType == BmFontConstants.BlockInfo && _scanner.RemainingBytes >= 15)
             {
-                header.FontSize = _scanner.Buffer.ReadI16LE();
+                fontSize = _scanner.Buffer.ReadI16LE();
                 var flags = _scanner.Buffer.ReadU8();
-                header.Bold = (flags & 0x01) != 0;
-                header.Italic = (flags & 0x02) != 0;
-                header.Unicode = (flags & 0x04) != 0;
+                bold = (flags & 0x01) != 0;
+                italic = (flags & 0x02) != 0;
+                unicode = (flags & 0x04) != 0;
                 break;
             }
 
             _scanner.Advance(blockSize);
         }
 
-        return header;
+        return new BmFontScanHeader
+        {
+            Version = version,
+            IsBinary = true,
+            FontSize = fontSize,
+            Bold = bold,
+            Italic = italic,
+            Unicode = unicode
+        };
     }
 
     /// <summary>

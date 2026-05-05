@@ -8,7 +8,7 @@ public class ProtobufMessageData
     /// <summary>
     ///     获取或设置消息名称。
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
     
     /// <summary>
     ///     获取或设置消息字段。
@@ -34,12 +34,12 @@ public class ProtobufFieldData
     /// <summary>
     ///     获取或设置字段类型。
     /// </summary>
-    public string Type { get; set; }
-    
+    public string Type { get; set; } = null!;
+
     /// <summary>
     ///     获取或设置字段名称。
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
     
     /// <summary>
     ///     获取或设置是否为重复字段。

@@ -1,6 +1,22 @@
 namespace Acorn.FlatBuffers.Data;
 
 /// <summary>
+///     FlatBuffers 完整缓冲区数据，包含根表和可选的文件标识符。
+/// </summary>
+public sealed class FlatBufferData
+{
+    /// <summary>
+    ///     根表。
+    /// </summary>
+    public FlatBufferTable RootTable { get; init; } = new();
+
+    /// <summary>
+    ///     文件标识符（可选，4 字节 ASCII）。
+    /// </summary>
+    public string? FileIdentifier { get; init; }
+}
+
+/// <summary>
 ///     FlatBuffers 表数据。
 /// </summary>
 public sealed class FlatBufferTable

@@ -183,11 +183,11 @@ public sealed class MachORoundTripTests
     #region 文件类型往返
 
     [Theory]
-    [InlineData(1u, "MH_OBJECT")]
-    [InlineData(2u, "MH_EXECUTE")]
-    [InlineData(6u, "MH_DYLIB")]
-    [InlineData(8u, "MH_BUNDLE")]
-    public void EncodeDecode_FileType_Roundtrip(uint fileType, string name)
+    [InlineData(1u)]
+    [InlineData(2u)]
+    [InlineData(6u)]
+    [InlineData(8u)]
+    public void EncodeDecode_FileType_Roundtrip(uint fileType)
     {
         var data = CreateMinimalMachO(true, fileType: fileType);
 

@@ -209,17 +209,14 @@ public static class PostgreSQLConstants
     /// </summary>
     public enum TransactionStatus
     {
-        /// <summary>
-        ///     空闲。
-        /// </summary>
         Idle = 'I',
-        /// <summary>
-        ///     在事务中。
-        /// </summary>
         InTransaction = 'T',
-        /// <summary>
-        ///     事务失败。
-        /// </summary>
         FailedTransaction = 'E'
     }
+
+    /// <summary>
+    ///     SSL 请求的协议版本号（80877103 = 0x04D2162F）。
+    ///     客户端在启动阶段发送此特殊版本号来请求 SSL 加密。
+    /// </summary>
+    public const int SslRequestCode = 80877103;
 }

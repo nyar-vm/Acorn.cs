@@ -127,7 +127,7 @@ public ref struct RedisEncoder
 
         if (length > 0)
         {
-            foreach (var element in elements)
+            foreach (var element in elements!)
             {
                 EncodeMessage(element);
             }

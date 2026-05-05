@@ -84,7 +84,7 @@ public sealed class DWARFDecoder
         var addressSize = buffer.ReadU8();
         var segmentSelectorSize = buffer.ReadU8();
 
-        var entries = new List<DWARFEntryData>();
+        var entries = new List<DWARFEntryData>(32);
         var endPosition = buffer.Position + (int)unitLength - 8;
 
         while (buffer.Position < endPosition)
@@ -95,12 +95,12 @@ public sealed class DWARFDecoder
                 break;
             }
 
-            var tag = buffer.ReadLeb128U64();
+            var tag = (uint)buffer.ReadLeb128U64();
             var hasChildren = buffer.ReadU8() != 0;
 
             var attributes = new List<DWARFAttributeData>();
 
-            while (true)
+            while (buffer.Position < endPosition)
             {
                 var attrName = buffer.ReadLeb128U64();
                 var attrForm = buffer.ReadLeb128U64();
@@ -169,7 +169,7 @@ public sealed class DWARFDecoder
         var lineRange = buffer.ReadU8();
         var opcodeBase = buffer.ReadU8();
 
-        var standardOpcodeLengths = new List<byte>();
+        var standardOpcodeLengths = new List<byte>((int)opcodeBase);
         var opcodeLengthCount = (int)opcodeBase - 1;
 
         if (opcodeLengthCount < 0)
@@ -187,7 +187,7 @@ public sealed class DWARFDecoder
             standardOpcodeLengths.Add(buffer.ReadU8());
         }
 
-        var fileNames = new List<string>();
+        var fileNames = new List<string>(4);
 
         while (buffer.Position < endPosition)
         {

@@ -87,10 +87,10 @@ public sealed class ElfEncoderAdvancedTests
     #region ELF 程序头类型
 
     [Theory]
-    [InlineData(1, "PT_LOAD")]
-    [InlineData(2, "PT_DYNAMIC")]
-    [InlineData(6, "PT_PHDR")]
-    public void Encode_ProgramHeaderType_PreservesValue(uint phType, string name)
+    [InlineData(1u)]
+    [InlineData(2u)]
+    [InlineData(6u)]
+    public void Encode_ProgramHeaderType_PreservesValue(uint phType)
     {
         var data = new ELFFileData
         {
@@ -263,7 +263,7 @@ public sealed class ElfEncoderAdvancedTests
     #region 辅助方法
 
     private static ELFHeaderData CreateMinimalElfHeader(
-        bool is64, ushort machine = 0, ushort type = 2,
+        bool is64, ushort machine = 0, ushort type = 2, ulong entryPoint = 0,
         int programHeaderCount = 0, int sectionHeaderCount = 0)
     {
         var headerSize = is64 ? (ushort)64 : (ushort)52;
@@ -278,7 +278,7 @@ public sealed class ElfEncoderAdvancedTests
             Type = type,
             Machine = machine != 0 ? machine : (is64 ? (ushort)62 : (ushort)3),
             ObjectVersion = 1,
-            EntryPoint = 0,
+            EntryPoint = entryPoint,
             ProgramHeaderOffset = (ulong)headerSize,
             SectionHeaderOffset = 0,
             Flags = 0,
@@ -295,7 +295,7 @@ public sealed class ElfEncoderAdvancedTests
     {
         return new ELFFileData
         {
-            Header = CreateMinimalElfHeader(is64, machine, type),
+            Header = CreateMinimalElfHeader(is64, machine, type, entryPoint: entryPoint),
             ProgramHeaders = [],
             SectionHeaders = []
         };

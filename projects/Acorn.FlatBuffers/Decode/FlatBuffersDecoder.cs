@@ -1,3 +1,5 @@
+using System.Buffers.Binary;
+using System.Text;
 using Acorn.Frame;
 using Acorn.FlatBuffers.Data;
 
@@ -44,17 +46,20 @@ public ref struct FlatBuffersDecoder
 
         var vtableOffset = (int)(_buffer.ReadI32LE() + offset);
 
-        var vTableSize = _buffer.ReadU16LEAt(vtableOffset + FlatBuffersConstants.VTableSizeOffset);
-        var objectSize = _buffer.ReadU16LEAt(vtableOffset + FlatBuffersConstants.VTableDataOffset);
+        var vTableSize = BinaryPrimitives.ReadUInt16LittleEndian(_buffer.Data.Slice(vtableOffset + FlatBuffersConstants.VTableSizeOffset));
+        var objectSize = BinaryPrimitives.ReadUInt16LittleEndian(_buffer.Data.Slice(vtableOffset + FlatBuffersConstants.VTableDataOffset));
 
         var fieldCount = (vTableSize - 4) / 2;
         var fields = new List<FlatBufferField>();
 
         for (var i = 0; i < fieldCount; i++)
         {
-            var fieldVTableOffset = _buffer.ReadU16LEAt(vtableOffset + 4 + i * 2);
+            var fieldVTableOffset = BinaryPrimitives.ReadUInt16LittleEndian(_buffer.Data.Slice(vtableOffset + 4 + i * 2));
 
-            if (fieldVTableOffset == 0) continue;
+            if (fieldVTableOffset == 0)
+            {
+                continue;
+            }
 
             fields.Add(new FlatBufferField
             {
@@ -77,7 +82,11 @@ public ref struct FlatBuffersDecoder
     /// </summary>
     public string ReadFileIdentifier()
     {
-        if (_buffer.Length < 8) return string.Empty;
-        return _buffer.ReadStringAt(4, 4);
+        if (_buffer.Length < 8)
+        {
+            return string.Empty;
+        }
+
+        return Encoding.ASCII.GetString(_buffer.Data.Slice(4, 4));
     }
 }

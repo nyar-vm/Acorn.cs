@@ -9,12 +9,12 @@ public sealed class MachOEncoderAdvancedTests
     #region Mach-O 文件类型
 
     [Theory]
-    [InlineData(1u, "MH_OBJECT")]
-    [InlineData(2u, "MH_EXECUTE")]
-    [InlineData(5u, "MH_CORE")]
-    [InlineData(6u, "MH_DYLIB")]
-    [InlineData(8u, "MH_BUNDLE")]
-    public void Encode_FileType_PreservesValue(uint fileType, string name)
+    [InlineData(1u)]
+    [InlineData(2u)]
+    [InlineData(5u)]
+    [InlineData(6u)]
+    [InlineData(8u)]
+    public void Encode_FileType_PreservesValue(uint fileType)
     {
         var data = CreateMinimalMachOData(is64: true, fileType: fileType);
         var encoder = new MachOEncoder();

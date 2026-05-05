@@ -23,6 +23,16 @@
     <ProjectReference Include="..\..\projects\Acorn.Pe\Acorn.PE.csproj" />
     <ProjectReference Include="..\..\projects\Acorn.MachO\Acorn.MachO.csproj" />
     <ProjectReference Include="..\..\projects\Acorn.Nyar\Acorn.Nyar.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Dwarf\DWARF.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Onnx\Acorn.Onnx.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.SafeTensors\Acorn.SafeTensors.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.MySQL\MySQL.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.PostgreSQL\PostgreSQL.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Redis\Acorn.Redis.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.MessagePack\Acorn.MessagePack.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Zip\Acorn.Zip.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.FlatBuffers\Acorn.FlatBuffers.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Coff\Acorn.Coff.csproj" />
   </ItemGroup>
 
 </Project>

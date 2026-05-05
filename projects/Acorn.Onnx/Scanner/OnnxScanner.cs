@@ -77,9 +77,51 @@ public ref struct OnnxScanner
         return stats;
     }
 
-    private static (int NodeCount, int InputCount, int OutputCount, int InitializerCount) ScanGraphAt(int startPos)
+    private (int NodeCount, int InputCount, int OutputCount, int InitializerCount) ScanGraphAt(int startPos)
     {
-        return (0, 0, 0, 0);
+        var nodeCount = 0;
+        var inputCount = 0;
+        var outputCount = 0;
+        var initializerCount = 0;
+
+        var graphLen = (int)ReadVarintAt(startPos, out var lenBytes);
+        var pos = startPos + lenBytes;
+        var endPos = pos + graphLen;
+
+        while (pos < endPos && pos < _scanner.Length)
+        {
+            var tagResult = ReadTagAt(pos, out var tagBytes);
+            pos += tagBytes;
+
+            if (tagResult == 0)
+            {
+                break;
+            }
+
+            var fieldNumber = (int)(tagResult >> 3);
+
+            switch (fieldNumber)
+            {
+                case 1:
+                    nodeCount++;
+                    goto default;
+                case 3:
+                    inputCount++;
+                    goto default;
+                case 4:
+                    outputCount++;
+                    goto default;
+                case 10:
+                    initializerCount++;
+                    goto default;
+                default:
+                    var wireType = (int)(tagResult & 0x7);
+                    pos = SkipFieldAt(pos, wireType);
+                    break;
+            }
+        }
+
+        return (nodeCount, inputCount, outputCount, initializerCount);
     }
 
     private ulong ReadTagAt(int pos, out int bytesRead)

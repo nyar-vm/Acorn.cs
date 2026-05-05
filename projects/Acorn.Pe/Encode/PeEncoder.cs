@@ -363,7 +363,7 @@ public sealed class PeEncoder
 
             foreach (var entry in block.Entries)
             {
-                var encoded = (ushort)(((uint)entry.Type << 12) | (entry.Offset & 0xFFF));
+                var encoded = (ushort)(((uint)entry.Type << 12) | ((uint)entry.Offset & 0xFFF));
                 writer.WriteU16LE(encoded);
             }
         }

@@ -237,4 +237,58 @@ public static class MySQLConstants
         /// </summary>
         TableNotFound = 1146
     }
+
+    /// <summary>
+    ///     MySQL 列类型（MYSQL_TYPE_*），用于 ColumnDefinition41 包。
+    /// </summary>
+    public static class ColumnType
+    {
+        public const byte Decimal = 0x00;
+        public const byte Tiny = 0x01;
+        public const byte Short = 0x02;
+        public const byte Long = 0x03;
+        public const byte Float = 0x04;
+        public const byte Double = 0x05;
+        public const byte Null = 0x06;
+        public const byte Timestamp = 0x07;
+        public const byte LongLong = 0x08;
+        public const byte Int24 = 0x09;
+        public const byte Date = 0x0A;
+        public const byte Time = 0x0B;
+        public const byte DateTime = 0x0C;
+        public const byte Year = 0x0D;
+        public const byte VarChar = 0x0F;
+        public const byte Bit = 0x10;
+        public const byte Json = 0xF5;
+        public const byte NewDecimal = 0xF6;
+        public const byte Enum = 0xF7;
+        public const byte Set = 0xF8;
+        public const byte TinyBlob = 0xF9;
+        public const byte MediumBlob = 0xFA;
+        public const byte LongBlob = 0xFB;
+        public const byte Blob = 0xFC;
+        public const byte VarString = 0xFD;
+        public const byte String = 0xFE;
+        public const byte Geometry = 0xFF;
+    }
+
+    /// <summary>
+    ///     MySQL 列标志，用于 ColumnDefinition41 包。
+    /// </summary>
+    public static class ColumnFlag
+    {
+        public const ushort NotNull = 0x0001;
+        public const ushort PrimaryKey = 0x0002;
+        public const ushort UniqueKey = 0x0004;
+        public const ushort MultipleKey = 0x0008;
+        public const ushort Blob = 0x0010;
+        public const ushort Unsigned = 0x0020;
+        public const ushort ZeroFill = 0x0040;
+        public const ushort Binary = 0x0080;
+        public const ushort Enum = 0x0100;
+        public const ushort AutoIncrement = 0x0200;
+        public const ushort Timestamp = 0x0400;
+        public const ushort Set = 0x0800;
+        public const ushort NoDefaultValue = 0x1000;
+    }
 }
