@@ -1021,3 +1021,19 @@ public sealed class JvmLocalVariableTypeEntry
     public ushort SignatureIndex { get; init; }
     public ushort Index { get; init; }
 }
+
+/// <summary>
+///     原始二进制属性（用于保留未知属性格式的原始数据）
+/// </summary>
+public sealed class JvmRawAttribute : JvmAttributeInfo
+{
+    /// <summary>
+    ///     属性名称（从常量池解析）
+    /// </summary>
+    public string Name { get; init; }
+
+    /// <summary>
+    ///     属性的原始字节数据
+    /// </summary>
+    public byte[] RawData { get; init; }
+}

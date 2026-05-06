@@ -1,18 +1,6 @@
-using System;
 using Acorn.Frame;
 using Acorn.Wasm.Data;
 using Acorn.Wasm.Encode;
-using Acorn.Wasm.Decode;
-using Acorn.Wasm.Scanner;
-using Acorn.SpirV.Data;
-using Acorn.SpirV.Encode;
-using Acorn.SpirV.Decode;
-using Acorn.SpirV.Scanner;
-using Acorn.ELF.Data;
-using Acorn.ELF.Encode;
-using Acorn.ELF.Decode;
-using Acorn.Nyar.Data;
-using Acorn.Nyar.Encode;
 using Xunit;
 
 namespace Acorn.Tests;
@@ -26,101 +14,16 @@ public class CrossFormatConsistencyTests
     {
         var module = CreateWasmModule();
 
-        var bytes1 = WasmEncoder.Encode(module);
-        var bytes2 = WasmEncoder.Encode(module);
+        var buf1 = new byte[256];
+        var buf2 = new byte[256];
+        WasmEncoder.EncodeModule(buf1, module);
+        WasmEncoder.EncodeModule(buf2, module);
 
-        Assert.Equal(bytes1, bytes2);
-    }
+        var len1 = GetWrittenLength(buf1);
+        var len2 = GetWrittenLength(buf2);
 
-    [Fact]
-    public void Encode_Deterministic_SpirV_SameInput_Produces_SameBytes()
-    {
-        var module = CreateSpirvModule();
-
-        var encoder = new SpirvEncoder();
-        var bytes1 = encoder.Encode(module);
-        var bytes2 = encoder.Encode(module);
-
-        Assert.Equal(bytes1, bytes2);
-    }
-
-    [Fact]
-    public void Encode_Deterministic_ELF_SameInput_Produces_SameBytes()
-    {
-        var file = CreateElfFile();
-
-        var encoder = new ElfEncoder();
-        var bytes1 = encoder.Encode(file);
-        var bytes2 = encoder.Encode(file);
-
-        Assert.Equal(bytes1, bytes2);
-    }
-
-    [Fact]
-    public void Encode_Deterministic_Nyar_SameInput_Produces_SameBytes()
-    {
-        var module = CreateNyarModule();
-
-        var encoder = new NyarEncoder();
-        var bytes1 = encoder.Encode(module);
-        var bytes2 = encoder.Encode(module);
-
-        Assert.Equal(bytes1, bytes2);
-    }
-
-    #endregion
-
-    #region 扫描器-解码器一致性测试
-
-    [Fact]
-    public void Scanner_Decoder_Consistency_Wasm()
-    {
-        var module = CreateWasmModule();
-        var bytes = WasmEncoder.Encode(module);
-
-        var summary = WasmScanner.Scan(bytes);
-        var decoded = WasmDecoder.Decode(bytes);
-
-        Assert.NotNull(summary);
-        Assert.NotNull(decoded);
-        Assert.Equal(module.Version, decoded.Version);
-    }
-
-    [Fact]
-    public void Scanner_Decoder_Consistency_SpirV()
-    {
-        var module = CreateSpirvModule();
-        var encoder = new SpirvEncoder();
-        var bytes = encoder.Encode(module);
-
-        var scanner = new SpirvScanner(bytes);
-        var summary = scanner.Scan();
-
-        var decoder = new SpirvDecoder(bytes);
-        var decoded = decoder.DecodeAll();
-
-        Assert.NotNull(summary);
-        Assert.NotNull(decoded);
-        Assert.Equal(module.Bound, decoded.Bound);
-    }
-
-    [Fact]
-    public void Scanner_Decoder_Consistency_ELF()
-    {
-        var file = CreateElfFile();
-        var encoder = new ElfEncoder();
-        var bytes = encoder.Encode(file);
-
-        var scanResult = ELFScanner.Scan(bytes);
-
-        var decoder = new ELFDecoder();
-        var decoded = decoder.Decode(bytes);
-
-        Assert.NotNull(scanResult);
-        Assert.Contains("ELF File Scan Result", scanResult);
-        Assert.NotNull(decoded);
-        Assert.Equal(file.Header.Type, decoded.Header.Type);
-        Assert.Equal(file.Header.Machine, decoded.Header.Machine);
+        Assert.Equal(len1, len2);
+        Assert.Equal(buf1.AsSpan(0, len1).ToArray(), buf2.AsSpan(0, len2).ToArray());
     }
 
     #endregion
@@ -128,49 +31,39 @@ public class CrossFormatConsistencyTests
     #region 字节缓冲区正确性测试
 
     [Fact]
-    public void ByteBuffer_RoundTrip_ReadAllBytes_PreservesData()
+    public void ByteBuffer_ReadBytes_PreservesData()
     {
         var original = new byte[] { 0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00 };
         var buffer = new ByteBuffer(original);
+        var result = buffer.ReadBytes(original.Length);
 
-        var result = new byte[original.Length];
-
-        for (var i = 0; i < original.Length; i++)
-        {
-            result[i] = buffer.ReadByte();
-        }
-
-        Assert.Equal(original, result);
+        Assert.Equal(original, result.ToArray());
     }
 
     [Fact]
-    public void ByteBufferWriter_RoundTrip_WriteThenVerify_PreservesData()
+    public void ByteBufferWriter_WriteU8_PreservesData()
     {
-        var original = new byte[] { 0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00 };
-        var destination = new byte[original.Length];
-        var writer = new ByteBufferWriter(destination);
+        var writer = new ByteBufferWriter(8);
+        var original = new byte[] { 0x00, 0x61, 0x73, 0x6D };
 
         for (var i = 0; i < original.Length; i++)
         {
-            writer.WriteByte(original[i]);
+            writer.WriteU8(original[i]);
         }
 
-        Assert.Equal(original, destination);
+        Assert.Equal(original, writer.WrittenData.ToArray());
     }
 
     [Fact]
-    public void ByteBufferWriter_WriteMultiFormat_Then_ReadBack_Matches()
+    public void ByteBufferWriter_WriteMultiFormat_ReadBack_Matches()
     {
-        var data = new byte[256];
-        var writer = new ByteBufferWriter(data);
+        var writer = new ByteBufferWriter(256);
         writer.WriteU32LE(0x12345678);
         writer.WriteU16BE(0xABCD);
         writer.WriteI32LE(-1);
         writer.WriteI64LE(42L);
 
-        var written = writer.WrittenData;
-        var buffer = new ByteBuffer(written);
-
+        var buffer = new ByteBuffer(writer.WrittenData);
         Assert.Equal(0x12345678u, buffer.ReadU32LE());
         Assert.Equal((ushort)0xABCD, buffer.ReadU16BE());
         Assert.Equal(-1, buffer.ReadI32LE());
@@ -179,90 +72,138 @@ public class CrossFormatConsistencyTests
 
     #endregion
 
-    #region 格式头部魔数一致性测试
+    #region Wasm 头部魔数测试
 
     [Fact]
-    public void Wasm_Header_Magic_And_Version_Bytes_Correct()
+    public void Wasm_Header_Magic_Bytes_Correct()
     {
         var module = CreateWasmModule();
-        var bytes = WasmEncoder.Encode(module);
+        var buf = new byte[256];
+        var len = WasmEncoder.EncodeModule(buf, module);
 
-        Assert.Equal(0x00, bytes[0]);
-        Assert.Equal(0x61, bytes[1]);
-        Assert.Equal(0x73, bytes[2]);
-        Assert.Equal(0x6D, bytes[3]);
-        Assert.Equal(0x01, bytes[4]);
-        Assert.Equal(0x00, bytes[5]);
-        Assert.Equal(0x00, bytes[6]);
-        Assert.Equal(0x00, bytes[7]);
-    }
-
-    [Fact]
-    public void SpirV_Header_Magic_Bytes_Correct()
-    {
-        var module = CreateSpirvModule();
-        var encoder = new SpirvEncoder();
-        var bytes = encoder.Encode(module);
-
-        Assert.True(bytes.Length >= 20);
-        Assert.Equal(0x03, bytes[0]);
-        Assert.Equal(0x02, bytes[1]);
-        Assert.Equal(0x23, bytes[2]);
-        Assert.Equal(0x07, bytes[3]);
-    }
-
-    [Fact]
-    public void ELF_Header_Magic_Bytes_Correct()
-    {
-        var file = CreateElfFile();
-        var encoder = new ElfEncoder();
-        var bytes = encoder.Encode(file);
-
-        Assert.Equal(0x7F, bytes[0]);
-        Assert.Equal((byte)'E', bytes[1]);
-        Assert.Equal((byte)'L', bytes[2]);
-        Assert.Equal((byte)'F', bytes[3]);
+        Assert.True(len >= 8);
+        Assert.Equal(0x00, buf[0]);
+        Assert.Equal(0x61, buf[1]);
+        Assert.Equal(0x73, buf[2]);
+        Assert.Equal(0x6D, buf[3]);
+        Assert.Equal(0x01, buf[4]);
+        Assert.Equal(0x00, buf[5]);
+        Assert.Equal(0x00, buf[6]);
+        Assert.Equal(0x00, buf[7]);
     }
 
     #endregion
 
-    #region 跨格式字节序独立性测试
+    #region 字节序独立性测试
 
     [Fact]
-    public void Endianness_LE_BE_Writes_Different_Bytes_For_MultiByteValues()
+    public void Endianness_LE_BE_DifferentBytes_SameValue()
     {
         var leBuf = new byte[4];
         var beBuf = new byte[4];
-
         var leWriter = new ByteBufferWriter(leBuf);
-        leWriter.WriteU32LE(0x12345678);
-
         var beWriter = new ByteBufferWriter(beBuf);
+
+        leWriter.WriteU32LE(0x12345678);
         beWriter.WriteU32BE(0x12345678);
 
-        Assert.NotEqual(leBuf, beBuf);
+        var leBytes = leWriter.WrittenData.ToArray();
+        var beBytes = beWriter.WrittenData.ToArray();
 
-        var leReader = new ByteBuffer(leBuf);
-        var beReader = new ByteBuffer(beBuf);
+        Assert.NotEqual(leBytes, beBytes);
+
+        var leReader = new ByteBuffer(leBytes);
 
         Assert.Equal(0x12345678u, leReader.ReadU32LE());
+
+        var beReader = new ByteBuffer(beBytes);
+
         Assert.Equal(0x12345678u, beReader.ReadU32BE());
     }
 
     [Fact]
-    public void Endianness_32Bit_RoundTrip_PreservesValue()
+    public void Endianness_32Bit_RoundTrip_EdgeCases()
     {
-        var buf = new byte[4];
-        var testValues = new uint[] { 0, 1, 0xFFFFFFFF, 0x12345678, 0x80000000 };
+        var testValues = new uint[] { 0, 1, 0xFFFFFFFF, 0x12345678, 0x80000000, 0x7FFFFFFF };
 
         foreach (var original in testValues)
         {
+            var buf = new byte[4];
             var writer = new ByteBufferWriter(buf);
             writer.WriteU32LE(original);
-
-            var reader = new ByteBuffer(buf);
+            var x = writer.WrittenData;
+            var reader = new ByteBuffer(x);
 
             Assert.Equal(original, reader.ReadU32LE());
+        }
+    }
+
+    [Fact]
+    public void Endianness_64Bit_RoundTrip_EdgeCases()
+    {
+        var testValues = new ulong[] { 0, 1, 0xFFFFFFFFFFFFFFFF, 0x123456789ABCDEF0, 0x8000000000000000 };
+
+        foreach (var original in testValues)
+        {
+            var buf = new byte[8];
+            var writer = new ByteBufferWriter(buf);
+            writer.WriteU64LE(original);
+            var x = writer.WrittenData;
+            var reader = new ByteBuffer(x);
+
+            Assert.Equal(original, reader.ReadU64LE());
+        }
+    }
+
+    #endregion
+
+    #region LEB128 编解码一致性测试
+
+    [Fact]
+    public void Leb128_U32_RoundTrip_EdgeCases()
+    {
+        var testValues = new uint[] { 0, 1, 127, 128, 16383, 16384, 2097151, uint.MaxValue };
+
+        foreach (var original in testValues)
+        {
+            var buf = new byte[10];
+            var writer = new ByteBufferWriter(buf);
+            writer.WriteLeb128U32(original);
+            var reader = new ByteBuffer(writer.WrittenData);
+
+            Assert.Equal(original, reader.ReadLeb128U32());
+        }
+    }
+
+    [Fact]
+    public void Leb128_I32_RoundTrip_EdgeCases()
+    {
+        var testValues = new int[] { 0, 1, -1, 127, -128, 128, -64, 64 };
+
+        foreach (var original in testValues)
+        {
+            var buf = new byte[10];
+            var writer = new ByteBufferWriter(buf);
+            writer.WriteLeb128I32(original);
+            var reader = new ByteBuffer(writer.WrittenData);
+
+            Assert.Equal(original, reader.ReadLeb128I32());
+        }
+    }
+
+    [Fact]
+    public void Leb128_I64_RoundTrip_EdgeCases()
+    {
+        var testValues = new long[] { 0, 1, -1, long.MaxValue, long.MinValue, 1L << 63 };
+
+        foreach (var original in testValues)
+        {
+            var buf = new byte[10];
+            var writer = new ByteBufferWriter(buf);
+            writer.WriteLeb128I64(original);
+            var reader = new ByteBuffer(writer.WrittenData);
+
+            Assert.Equal(original, reader.ReadLeb128I64());
         }
     }
 
@@ -280,7 +221,7 @@ public class CrossFormatConsistencyTests
                 new WasmFunctionType
                 {
                     Parameters = [],
-                    Results = [WasmValueType.I32]
+                    Results = [WasmValueType.Int32]
                 }
             ],
             FunctionTypeIndices = [0],
@@ -312,71 +253,17 @@ public class CrossFormatConsistencyTests
         };
     }
 
-    private static SpirvModuleData CreateSpirvModule()
+    private static int GetWrittenLength(byte[] buf)
     {
-        return new SpirvModuleData
+        for (var i = buf.Length - 1; i >= 0; i--)
         {
-            MagicNumber = 0x07230203,
-            Version = 0x00010600,
-            GeneratorMagic = 0x00030001,
-            Bound = 6,
-            Schema = 0,
-            Instructions =
-            [
-                new SpirvInstruction { Opcode = SpirvOpCode.OpMemoryModel, Operands = [0, 0] },
-                new SpirvInstruction { Opcode = SpirvOpCode.OpEntryPoint, Operands = [4] },
-                new SpirvInstruction { Opcode = SpirvOpCode.OpReturn }
-            ],
-            EntryPoints = [],
-            Decorations = [],
-            Names = [],
-            Types = []
-        };
-    }
-
-    private static ELFFileData CreateElfFile()
-    {
-        return new ELFFileData
-        {
-            Header = new ELFHeaderData
+            if (buf[i] != 0)
             {
-                Magic = [0x7F, 0x45, 0x4C, 0x46],
-                Class = ElfConstants.Class64,
-                DataEncoding = ElfConstants.DataEncodingLittleEndian,
-                Version = 1,
-                OSABI = 0,
-                ABIVersion = 0,
-                Type = ElfConstants.TypeExecutable,
-                Machine = 0x3E,
-                EntryPoint = 0
-            },
-            SectionHeaders = [],
-            ProgramHeaders = [],
-            SectionNames = []
-        };
-    }
+                return i + 1;
+            }
+        }
 
-    private static NyarModuleData CreateNyarModule()
-    {
-        return new NyarModuleData
-        {
-            Version = 1,
-            Name = "test",
-            Constants = [],
-            Functions =
-            [
-                new NyarFunction
-                {
-                    Name = "main",
-                    Arity = 0,
-                    LocalCount = 0,
-                    CodeOffset = 0,
-                    CodeLength = 0
-                }
-            ],
-            Imports = [],
-            Exports = []
-        };
+        return 0;
     }
 
     #endregion

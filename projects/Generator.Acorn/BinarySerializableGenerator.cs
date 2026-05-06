@@ -1086,12 +1086,18 @@ public class BinarySerializableGenerator : IIncrementalGenerator
     {
         return typeName switch
         {
-            "FixedBytes4" => 4,
-            "FixedBytes8" => 8,
-            "FixedBytes16" => 16,
-            "FixedBytes32" => 32,
-            "FixedBytes56" => 56,
-            "FixedBytes64" => 64,
+            "FixedBytes4" or "Acorn.Codec.FixedBytes4" or "global::Acorn.Codec.FixedBytes4" => 4,
+            "FixedBytes8" or "Acorn.Codec.FixedBytes8" or "global::Acorn.Codec.FixedBytes8" => 8,
+            "FixedBytes16" or "Acorn.Codec.FixedBytes16" or "global::Acorn.Codec.FixedBytes16" => 16,
+            "FixedBytes32" or "Acorn.Codec.FixedBytes32" or "global::Acorn.Codec.FixedBytes32" => 32,
+            "FixedBytes56" or "Acorn.Codec.FixedBytes56" or "global::Acorn.Codec.FixedBytes56" => 56,
+            "FixedBytes64" or "Acorn.Codec.FixedBytes64" or "global::Acorn.Codec.FixedBytes64" => 64,
+            _ when typeName.EndsWith("FixedBytes4") => 4,
+            _ when typeName.EndsWith("FixedBytes8") => 8,
+            _ when typeName.EndsWith("FixedBytes16") => 16,
+            _ when typeName.EndsWith("FixedBytes32") => 32,
+            _ when typeName.EndsWith("FixedBytes56") => 56,
+            _ when typeName.EndsWith("FixedBytes64") => 64,
             _ => 0
         };
     }

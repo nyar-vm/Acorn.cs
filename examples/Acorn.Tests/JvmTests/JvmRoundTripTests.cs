@@ -210,7 +210,7 @@ public class JvmRoundTripTests
         var decoder = new JvmDecoder();
 
         var ex = Assert.ThrowsAny<Exception>(() => decoder.Decode(data));
-        Assert.Contains("Invalid ClassFile magic", ex.Message);
+        Assert.Contains("非法的 ClassFile 魔数", ex.Message);
     }
 
     /// <summary>

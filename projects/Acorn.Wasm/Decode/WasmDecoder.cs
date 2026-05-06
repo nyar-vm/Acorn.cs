@@ -20,7 +20,7 @@ public static class WasmDecoder
     public static WasmModuleData DecodeModule(ReadOnlySpan<byte> data)
     {
         var buffer = new ByteBuffer(data);
-        var version = ReadAndValidateHeader(buffer);
+        var version = ReadAndValidateHeader(ref buffer);
 
         var types = new List<WasmFunctionType>();
         var imports = new List<WasmImport>();
@@ -113,7 +113,7 @@ public static class WasmDecoder
     /// </summary>
     /// <param name="buffer">字节缓冲区。</param>
     /// <returns>Wasm 版本号。</returns>
-    public static uint ReadAndValidateHeader(ByteBuffer buffer)
+    public static uint ReadAndValidateHeader(ref ByteBuffer buffer)
     {
         if (!WasmHeader.TryRead(ref buffer, out var header))
         {

@@ -16,9 +16,13 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\projects\Acorn\Acorn.csproj" />
+        <ProjectReference Include="..\..\projects\Acorn.Wasm\Acorn.Wasm.csproj" />
+        <ProjectReference Include="..\..\projects\Acorn.SpirV\SpirV.csproj" />
+        <ProjectReference Include="..\..\projects\Acorn.Elf\ELF.csproj" />
         <ProjectReference Include="..\..\projects\Acorn.Nyar\Acorn.Nyar.csproj" />
         <ProjectReference Include="..\..\projects\Acorn.Clr\Acorn.Clr.csproj" />
         <ProjectReference Include="..\..\projects\Acorn.Jvm\Acorn.Jvm.csproj" />
+        <ProjectReference Include="..\..\projects\Acorn.Gnosis\Acorn.Gnosis.csproj" />
         <ProjectReference Include="..\..\projects\Acorn.Dwarf\DWARF.csproj" />
     </ItemGroup>
 </Project>

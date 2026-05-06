@@ -10,6 +10,8 @@ namespace Acorn.Wasm.Encode;
 /// <remarks>
 ///     WebAssembly 二进制格式使用小端序和 LEB128 变长整数编码。
 ///     编码器按照 Wasm MVP（版本 1）规范将模块数据写入二进制缓冲区。
+///     注意：BinaryWriter.Write(byte[]) 会写入长度前缀，因此所有字节数组写入
+///     必须使用 WriteRaw 扩展方法以避免多余的长度前缀。
 /// </remarks>
 public static class WasmEncoder
 {
@@ -79,7 +81,7 @@ public static class WasmEncoder
             });
             writer.Write((byte)WasmSectionId.Type);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -118,7 +120,7 @@ public static class WasmEncoder
             });
             writer.Write((byte)WasmSectionId.Import);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -137,7 +139,7 @@ public static class WasmEncoder
             });
             writer.Write((byte)WasmSectionId.Function);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -157,7 +159,7 @@ public static class WasmEncoder
             });
             writer.Write((byte)WasmSectionId.Table);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -176,7 +178,7 @@ public static class WasmEncoder
             });
             writer.Write((byte)WasmSectionId.Memory);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -192,12 +194,12 @@ public static class WasmEncoder
                 {
                     w.Write((byte)global.Type.ValueType);
                     w.Write(global.Type.Mutable ? WasmConstants.GlobalMutable : WasmConstants.GlobalImmutable);
-                    w.Write(global.InitExpression);
+                    w.WriteRaw(global.InitExpression);
                 }
             });
             writer.Write((byte)WasmSectionId.Global);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -218,7 +220,7 @@ public static class WasmEncoder
             });
             writer.Write((byte)WasmSectionId.Export);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -230,7 +232,7 @@ public static class WasmEncoder
             var sectionData = BuildBytes(w => w.WriteLEB128(module.StartFunctionIndex.Value));
             writer.Write((byte)WasmSectionId.Start);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -245,7 +247,7 @@ public static class WasmEncoder
                 foreach (var element in module.Elements)
                 {
                     w.WriteLEB128(element.TableIndex);
-                    w.Write(element.OffsetExpression);
+                    w.WriteRaw(element.OffsetExpression);
                     w.WriteLEB128((uint)element.InitValues.Count);
                     foreach (var value in element.InitValues)
                     {
@@ -255,7 +257,7 @@ public static class WasmEncoder
             });
             writer.Write((byte)WasmSectionId.Element);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -278,15 +280,15 @@ public static class WasmEncoder
                             bw.Write((byte)local.Type);
                         }
 
-                        bw.Write(code.Body);
+                        bw.WriteRaw(code.Body);
                     });
                     w.WriteLEB128((uint)bodyData.Length);
-                    w.Write(bodyData);
+                    w.WriteRaw(bodyData);
                 }
             });
             writer.Write((byte)WasmSectionId.Code);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -301,14 +303,14 @@ public static class WasmEncoder
                 foreach (var data in module.DataSegments)
                 {
                     w.WriteLEB128(data.MemoryIndex);
-                    w.Write(data.OffsetExpression);
+                    w.WriteRaw(data.OffsetExpression);
                     w.WriteLEB128((uint)data.Initializer.Length);
-                    w.Write(data.Initializer);
+                    w.WriteRaw(data.Initializer);
                 }
             });
             writer.Write((byte)WasmSectionId.Data);
             writer.WriteLEB128((uint)sectionData.Length);
-            writer.Write(sectionData);
+            writer.WriteRaw(sectionData);
         }
 
         #endregion
@@ -322,11 +324,11 @@ public static class WasmEncoder
                 var sectionData = BuildBytes(w =>
                 {
                     WriteName(w, custom.Name);
-                    w.Write(custom.Data);
+                    w.WriteRaw(custom.Data);
                 });
                 writer.Write((byte)WasmSectionId.Custom);
                 writer.WriteLEB128((uint)sectionData.Length);
-                writer.Write(sectionData);
+                writer.WriteRaw(sectionData);
             }
         }
 
@@ -349,7 +351,7 @@ public static class WasmEncoder
     {
         var bytes = Encoding.UTF8.GetBytes(name);
         writer.WriteLEB128((uint)bytes.Length);
-        writer.Write(bytes);
+        writer.WriteRaw(bytes);
     }
 
     private static void WriteLimits(BinaryWriter writer, WasmLimits limits)
@@ -483,6 +485,18 @@ public static class WasmEncoder
 
     #region BinaryWriter 扩展方法
 
+    /// <summary>
+    ///     将字节数组原样写入 BinaryWriter，不添加长度前缀。
+    /// </summary>
+    /// <remarks>
+    ///     BinaryWriter.Write(byte[]) 会先写入 7-bit 编码的长度前缀，
+    ///     这在 Wasm 二进制格式中是错误的。此方法直接写入原始字节。
+    /// </remarks>
+    private static void WriteRaw(this BinaryWriter writer, byte[] data)
+    {
+        writer.Write(data, 0, data.Length);
+    }
+
     private static void WriteLE(this BinaryWriter writer, uint value)
     {
         var bytes = BitConverter.GetBytes(value);
@@ -491,7 +505,7 @@ public static class WasmEncoder
             Array.Reverse(bytes);
         }
 
-        writer.Write(bytes);
+        writer.Write(bytes, 0, bytes.Length);
     }
 
     private static void WriteLEB128(this BinaryWriter writer, uint value)
