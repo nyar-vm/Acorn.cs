@@ -119,9 +119,50 @@ public enum SpirvCapability : uint
     SubgroupDispatch = 58,
     NamedBarrier = 59,
     MeshShadingNV = 60,
+    /// <summary>
+    ///     GLSL 样式的按组件插值。
+    /// </summary>
+    FragmentBarycentricKHR = 4484,
+    /// <summary>
+    ///     物理存储缓冲区 64 位地址。
+    /// </summary>
+    PhysicalStorageBufferAddresses = 5347,
+    /// <summary>
+    ///     协同矩阵运算。
+    /// </summary>
+    CooperativeMatrixKHR = 5366,
+    /// <summary>
+    ///     Mesh Shading 扩展。
+    /// </summary>
+    MeshShadingEXT = 5368,
+    SubgroupBallotKHR = 4423,
+    DrawParameters = 4427,
+    SubgroupVoteKHR = 4431,
+    StorageBuffer16BitAccess = 4433,
+    StoragePushConstant16 = 4435,
+    StorageInputOutput16 = 4436,
+    DeviceGroup = 4437,
+    MultiView = 4439,
+    VariablePointersStorageBuffer = 4441,
+    VariablePointers = 4442,
+    FragmentDensityEXT = 4444,
+    ShaderNonUniformEXT = 4446,
+    RuntimeDescriptorArrayEXT = 4447,
     RayTracingKHR = 4479,
     RayQueryKHR = 4472,
-    VulkanMemoryModel = 4434
+    VulkanMemoryModel = 4434,
+    /// <summary>
+    ///     着色器时钟（用于性能测量）。
+    /// </summary>
+    ShaderClockKHR = 5068,
+    /// <summary>
+    ///     片段着色器交错执行。
+    /// </summary>
+    FragmentShaderInterlockEXT = 5363,
+    /// <summary>
+    ///     按片段着色率。
+    /// </summary>
+    FragmentShadingRateKHR = 5408
 }
 
 /// <summary>
@@ -176,7 +217,33 @@ public enum SpirvExecutionMode : uint
     OutputVertices = 26,
     OutputPoints = 27,
     OutputLineStrip = 28,
-    OutputTriangleStrip = 29
+    OutputTriangleStrip = 29,
+    /// <summary>
+    ///     VecTypeHint 整数类型提示。
+    /// </summary>
+    VecTypeHint = 30,
+    /// <summary>
+    ///     连续线输出。
+    /// </summary>
+    ContractionOff = 31,
+    /// <summary>
+    ///     后段深度覆盖。
+    /// </summary>
+    PostDepthCoverage = 4446,
+    DenormPreserve = 4459,
+    DenormFlushToZero = 4460,
+    SignedZeroInfNanPreserve = 4461,
+    RoundingModeRTE = 4462,
+    RoundingModeRTZ = 4463,
+    StencilRefReplacingEXT = 5101,
+    OutputLinesEXT = 5195,
+    OutputPrimitivesEXT = 5196,
+    LocalSizeId = 5197,
+    LocalSizeHintId = 5198,
+    SubgroupUniformControlFlowKHR = 5021,
+    SubgroupSize = 5027,
+    SubgroupsPerWorkgroup = 5028,
+    SubgroupsPerWorkgroupId = 5029
 }
 
 /// <summary>
@@ -241,7 +308,20 @@ public enum SpirvDecoration : uint
     Binding = 33,
     DescriptorSet = 34,
     Offset = 35,
-    SpecId = 41
+    SpecId = 41,
+    NonUniformEXT = 5300,
+    PerVertexKHR = 5285,
+    PerPrimitiveNV = 5271,
+    PerViewNV = 5270,
+    PerTaskNV = 5273,
+    OverrideCoverageNV = 5248,
+    PassthroughNV = 5250,
+    ViewportRelativeNV = 5252,
+    FullyCoveredEXT = 5258,
+    FPFastMathMode = 6085,
+    LinkageAttributes = 6086,
+    UserSemantic = 6082,
+    CounterBuffer = 5634
 }
 
 /// <summary>
@@ -302,7 +382,19 @@ public enum SpirvBuiltIn : uint
     ObjectToWorldKHR = 5330,
     WorldToObjectKHR = 5331,
     HitTKHR = 5332,
-    HitKindKHR = 5333
+    HitKindKHR = 5333,
+    SubgroupEqMaskKHR = 4416,
+    SubgroupGeMaskKHR = 4417,
+    SubgroupGtMaskKHR = 4418,
+    SubgroupLeMaskKHR = 4419,
+    SubgroupLtMaskKHR = 4420,
+    DeviceIndex = 4438,
+    ViewIndex = 4440,
+    FragStencilRefEXT = 5014,
+    FullyCoveredEXT = 5257,
+    PrimitiveShadingRateKHR = 5328,
+    ShadingRateKHR = 5329,
+    BaryCoordNoPerspAMD = 4992
 }
 
 /// <summary>
@@ -553,6 +645,50 @@ public enum SpirvOpCode : ushort
     OpKill = 252,
     OpReturn = 253,
     OpReturnValue = 254,
+    OpImageTexelPointer = 100,
+    OpCopyObject = 83,
+    OpTranspose = 84,
+    OpPtrAccessChain = 66,
+    OpInBoundsPtrAccessChain = 69,
+    OpPtrDiff = 70,
+    OpAll = 196,
+    OpAny = 197,
+    OpIsInf = 207,
+    OpIsNan = 208,
+    OpLessOrGreater = 210,
+    OpOrdered = 211,
+    OpUnordered = 212,
+    OpSignBitSet = 213,
+    OpBitCount = 202,
+    OpBitReverse = 203,
+    OpBitFieldInsert = 209,
+    OpBitFieldSExtract = 214,
+    OpBitFieldUExtract = 215,
+    OpShiftRightLogical = 194,
+    OpMatrixTimesScalar = 149,
+    OpVectorTimesMatrix = 150,
+    OpOuterProduct = 151,
+    OpAtomicLoad = 227,
+    OpAtomicStore = 228,
+    OpAtomicIIncrement = 232,
+    OpAtomicIDecrement = 233,
+    OpAtomicUMin = 236,
+    OpAtomicUMax = 237,
+    OpAtomicAnd = 238,
+    OpAtomicOr = 239,
+    OpAtomicXor = 240,
+    OpAtomicFlagClear = 229,
+    OpAtomicFlagTestAndSet = 230,
+    OpConstantSampler = 5114,
+    OpConstantComposite = 44,
+    OpSpecConstantComposite = 45,
+    OpSpecConstantTrue = 48,
+    OpSpecConstantFalse = 49,
+    OpSizeOf = 321,
+    OpTypeCooperativeMatrixKHR = 5368,
+    OpGroupAsyncCopy = 259,
+    OpGenericCastToPtr = 117,
+    OpPtrCastToGeneric = 118,
     OpTypePipe = 4181,
     OpTypeAccelerationStructureKHR = 5341,
     OpRayQueryInitializeKHR = 5345,

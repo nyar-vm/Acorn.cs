@@ -1,3 +1,5 @@
+using System.Buffers.Binary;
+using System.Text;
 using Acorn.Frame;
 using Acorn.Exr.Data;
 
@@ -96,7 +98,7 @@ public ref struct ExrDecoder
             _position++;
         }
 
-        var str = _buffer.Data[start.._position].ToString() ?? string.Empty;
+        var str = Encoding.ASCII.GetString(_buffer.Data[start.._position]);
 
         if (_position < _buffer.Length)
         {
@@ -125,7 +127,6 @@ public ref struct ExrDecoder
 
             var pixelType = (ExrPixelType)_buffer.ReadI32LE();
             _buffer.Advance(12);
-            _buffer.Advance(4);
 
             channels.Add(new ExrChannel { Name = name, PixelType = pixelType });
         }

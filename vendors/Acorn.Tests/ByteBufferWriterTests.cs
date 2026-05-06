@@ -73,7 +73,7 @@ public class ByteBufferWriterTests
     public void ByteBufferWriter_WriteStringUTF8_Writes()
     {
         var writer = new ByteBufferWriter(1024);
-        writer.WriteStringUTF8("Hello, Acorn!");
+        writer.WriteString("Hello, Acorn!");
         Assert.That(writer.Position, Is.GreaterThan(0));
     }
 

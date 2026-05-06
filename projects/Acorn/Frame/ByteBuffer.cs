@@ -659,12 +659,14 @@ public ref struct ByteBuffer
         {
             _position++;
 
-            if (b < 0x40)
+            var value = b & 0x7F;
+
+            if ((b & 0x40) != 0)
             {
-                return b;
+                value |= ~0x7F;
             }
 
-            return b - 0x100;
+            return value;
         }
 
         int result = 0;
@@ -717,12 +719,14 @@ public ref struct ByteBuffer
         {
             _position++;
 
-            if (b < 0x40)
+            var value = (long)(b & 0x7F);
+
+            if ((b & 0x40) != 0)
             {
-                return b;
+                value |= ~0x7FL;
             }
 
-            return b - 0x100;
+            return value;
         }
 
         long result = 0;

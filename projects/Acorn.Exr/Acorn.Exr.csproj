@@ -7,7 +7,7 @@
     <AssemblyName>Acorn.Exr</AssemblyName>
     <Version>0.0.0</Version>
     <Authors>nyar-vm</Authors>
-    <Description>Acorn Acorn.Exr 格式库，提供 OpenEXR HDR 图像格式的扫描和解码功能</Description>
+    <Description>Acorn Acorn.Exr 格式库，提供 OpenEXR HDR 图像格式的编码、扫描和解码功能</Description>
     <PackageProjectUrl>https://github.com/nyar-vm/Acorn.cs</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nyar-vm/Acorn.cs</RepositoryUrl>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>

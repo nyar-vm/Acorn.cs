@@ -520,7 +520,7 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128I32(int value)
     {
-        if (value >= 0 && value < 0x80)
+        if (value >= 0 && value < 0x40)
         {
             _position = WriteU8Internal(_buffer, _position, (byte)value);
             return;
@@ -553,7 +553,7 @@ public ref struct ByteBufferWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLeb128I64(long value)
     {
-        if (value >= 0 && value < 0x80)
+        if (value >= 0 && value < 0x40)
         {
             _position = WriteU8Internal(_buffer, _position, (byte)value);
             return;

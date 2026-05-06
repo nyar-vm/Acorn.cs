@@ -34,6 +34,13 @@
     <ProjectReference Include="..\..\projects\Acorn.FlatBuffers\Acorn.FlatBuffers.csproj" />
     <ProjectReference Include="..\..\projects\Acorn.Coff\Acorn.Coff.csproj" />
     <ProjectReference Include="..\..\projects\Acorn.BmFont\Acorn.BmFont.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Basis\Acorn.Basis.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Opus\Acorn.Opus.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Flac\Acorn.Flac.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Exr\Acorn.Exr.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Office\Acorn.Office.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Vrm\Acorn.Vrm.csproj" />
+    <ProjectReference Include="..\..\projects\Acorn.Usd\Acorn.Usd.csproj" />
   </ItemGroup>
 
 </Project>

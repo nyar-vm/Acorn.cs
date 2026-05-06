@@ -113,7 +113,7 @@ public ref struct BmFontDecoder
         var spacingV = _buffer.ReadI16LE();
         var lineHeight = _buffer.ReadI16LE();
 
-        var nameLength = blockSize - 15;
+        var nameLength = blockSize - 13;
         var fontName = nameLength > 0 ? _buffer.ReadString(nameLength).TrimEnd('\0') : string.Empty;
 
         return new BmFontInfo
@@ -140,7 +140,7 @@ public ref struct BmFontDecoder
         var pages = _buffer.ReadU16LE();
         var flags = _buffer.ReadU8();
 
-        _buffer.Advance(3);
+        _buffer.Advance(4);
 
         return new BmFontCommon
         {

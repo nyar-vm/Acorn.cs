@@ -1,106 +1,138 @@
+using System.Buffers.Binary;
 using System.Text;
-using Acorn.Frame;
 using Acorn.Office.Data;
 
 namespace Acorn.Office.Encode;
 
 /// <summary>
-///     XLS 文件编码器，将 C# 数据结构编码为 Microsoft Excel 二进制格式（.xls）。
+///     XLS 编码器，将 <see cref="ExcelWorkbookData" /> 编码为 XLS 二进制格式。
 /// </summary>
 /// <remarks>
-///     XLS 是 Microsoft Excel 97-2003 使用的二进制文件格式，基于 OLE2 复合文档结构（BIFF8 格式）。
-///     编码器生成符合 BIFF8 规范的二进制数据。
+///     XLS BIFF 记录格式：RecordType(U16LE,2) + RecordLength(U16LE,2) + Data(N)。
 /// </remarks>
 public sealed class XlsEncoder
 {
     /// <summary>
-    ///     将 Excel 工作簿数据编码为 XLS 二进制格式。
+    ///     将 Excel 工作簿数据编码为 XLS 二进制。
     /// </summary>
     /// <param name="data">Excel 工作簿数据。</param>
     /// <returns>XLS 二进制数据。</returns>
     public byte[] Encode(ExcelWorkbookData data)
     {
-        var writer = new ByteBufferWriter(256);
+        var records = new List<byte[]>();
 
-        WriteBOF(ref writer, OfficeConstants.XlsRecordType.BofTypeWorkbook);
-        WriteWriteAccess(ref writer);
-        WriteCodePage(ref writer);
-        WriteDSF(ref writer);
+        // BOF 记录
+        records.Add(BuildBof());
 
+        // BoundSheet 记录
         foreach (var sheet in data.Sheets)
         {
-            WriteBoundSheet(ref writer, sheet);
+            records.Add(BuildBoundSheet(sheet));
         }
 
-        WriteEOF(ref writer);
+        // EOF 记录
+        records.Add(BuildEof());
 
-        return writer.ToArray();
-    }
+        var totalSize = records.Sum(r => r.Length);
+        var buffer = new byte[totalSize];
+        var pos = 0;
 
-    #region 私有编码方法
-
-    private static void WriteBOF(ref ByteBufferWriter writer, ushort biffType)
-    {
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.Bof8);
-        writer.WriteU16LE(16);
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.BiffVersion);
-        writer.WriteU16LE(biffType);
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.BuildYear);
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.BuildIdentifier);
-        writer.WriteU32LE(0x00000000);
-        writer.WriteU32LE(0x00000000);
-    }
-
-    private static void WriteWriteAccess(ref ByteBufferWriter writer)
-    {
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.WriteAccess);
-        writer.WriteU16LE(112);
-
-        var userName = Encoding.ASCII.GetBytes("Acorn.Xls");
-        writer.Write(userName);
-
-        var padding = 112 - userName.Length;
-
-        for (var i = 0; i < padding; i++)
+        foreach (var record in records)
         {
-            writer.WriteU8((byte)' ');
+            record.CopyTo(buffer.AsSpan(pos));
+            pos += record.Length;
         }
+
+        return buffer;
     }
 
-    private static void WriteCodePage(ref ByteBufferWriter writer)
+    /// <summary>
+    ///     构建 BOF 记录。
+    /// </summary>
+    private static byte[] BuildBof()
     {
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.CodePage);
-        writer.WriteU16LE(2);
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.CodePageUtf16LE);
+        // RecordType(2) + RecordLength(2) + data(16) = 20 bytes
+        var record = new byte[20];
+        var pos = 0;
+
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(pos), OfficeConstants.XlsRecordType.BofWorkbook);
+        pos += 2;
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(pos), 16);
+        pos += 2;
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(pos), 0x0600); // BIFF8
+        pos += 2;
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(pos), 0x0005); // Workbook type
+        pos += 2;
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(pos), 0x09CD); // Build year
+        pos += 2;
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(pos), 0x07C9); // Build identifier
+        pos += 2;
+        BinaryPrimitives.WriteUInt32LittleEndian(record.AsSpan(pos), 0x0600); // Required ver
+        pos += 4;
+        BinaryPrimitives.WriteUInt32LittleEndian(record.AsSpan(pos), 0x0000); // Flags
+
+        return record;
     }
 
-    private static void WriteDSF(ref ByteBufferWriter writer)
+    /// <summary>
+    ///     构建 BoundSheet 记录。
+    /// </summary>
+    private static byte[] BuildBoundSheet(ExcelSheetData sheet)
     {
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.Dsf);
-        writer.WriteU16LE(2);
-        writer.WriteU16LE(0x0000);
+        var name = sheet.Name;
+        var isAscii = name.All(c => c <= 127);
+
+        int nameLen;
+        byte[] encodedName;
+
+        if (isAscii)
+        {
+            encodedName = Encoding.ASCII.GetBytes(name);
+            nameLen = Math.Min(encodedName.Length, 31);
+        }
+        else
+        {
+            encodedName = Encoding.Unicode.GetBytes(name);
+            nameLen = Math.Min(name.Length, 31);
+        }
+
+        var byteLen = isAscii ? nameLen : nameLen * 2;
+        var flags = isAscii ? (byte)0 : (byte)0x01;
+
+        // RecordType(2) + RecordLength(2) + lbPlyPos(4) + hsState(1) + dt(1) + nameLen(1) + flags(1) + name(byteLen)
+        var dataSize = 8 + byteLen;
+        var record = new byte[4 + dataSize];
+        var pos = 0;
+
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(pos), OfficeConstants.XlsRecordType.BoundSheet);
+        pos += 2;
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(pos), (ushort)dataSize);
+        pos += 2;
+        BinaryPrimitives.WriteUInt32LittleEndian(record.AsSpan(pos), 0x00000000); // lbPlyPos
+        pos += 4;
+        record[pos++] = OfficeConstants.XlsRecordType.SheetStateVisible; // hsState
+        record[pos++] = 0; // dt = worksheet
+        record[pos++] = (byte)nameLen; // name length (char count for unicode)
+        record[pos++] = flags;
+
+        for (var i = 0; i < byteLen; i++)
+        {
+            record[pos++] = encodedName[i];
+        }
+
+        return record;
     }
 
-    private static void WriteBoundSheet(ref ByteBufferWriter writer, ExcelSheetData sheet)
+    /// <summary>
+    ///     构建 EOF 记录。
+    /// </summary>
+    private static byte[] BuildEof()
     {
-        var nameBytes = Encoding.Unicode.GetBytes(sheet.Name);
-        var recordLength = 4 + 1 + 1 + 1 + 1 + nameBytes.Length;
+        var record = new byte[4];
 
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.BoundSheet);
-        writer.WriteU16LE((ushort)recordLength);
-        writer.WriteU32LE(0);
-        writer.WriteU8(0);
-        writer.WriteU8(0);
-        writer.WriteU8((byte)sheet.Name.Length);
-        writer.WriteU8(OfficeConstants.XlsRecordType.SheetStateVisible);
-        writer.Write(nameBytes);
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(0), OfficeConstants.XlsRecordType.Eof);
+        BinaryPrimitives.WriteUInt16LittleEndian(record.AsSpan(2), 0);
+
+        return record;
     }
-
-    private static void WriteEOF(ref ByteBufferWriter writer)
-    {
-        writer.WriteU16LE(OfficeConstants.XlsRecordType.Eof);
-        writer.WriteU16LE(0);
-    }
-
-    #endregion
 }

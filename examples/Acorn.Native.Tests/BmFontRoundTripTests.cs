@@ -325,8 +325,7 @@ public sealed class BmFontRoundTripTests
         var encoder = new BmFontEncoder();
         var bytes = encoder.Encode(original);
 
-        var decoder = new BmFontDecoder();
-        var result = decoder.Decode(bytes);
+        var result = new BmFontDecoder(bytes).Decode();
 
         Assert.Equal(3, result.Chars.Count);
         Assert.Equal(BmFontChannel.Outline, result.Chars[0].Channel);

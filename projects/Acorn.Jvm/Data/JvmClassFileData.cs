@@ -89,7 +89,10 @@ public enum JvmConstantKind : byte
     NameAndType = 12,
     MethodHandle = 15,
     MethodType = 16,
-    InvokeDynamic = 18
+    Dynamic = 17,
+    InvokeDynamic = 18,
+    Module = 19,
+    Package = 20
 }
 
 /// <summary>
@@ -597,4 +600,424 @@ public enum JvmOpcode : byte
     ///     实现相关指令 2
     /// </summary>
     Impdep2 = 255
+}
+
+/// <summary>
+///     JVM 类/字段/方法访问标志
+/// </summary>
+[Flags]
+public enum JvmAccessFlags : ushort
+{
+    Public = 0x0001,
+    Private = 0x0002,
+    Protected = 0x0004,
+    Static = 0x0008,
+    Final = 0x0010,
+    Super = 0x0020,
+    Synchronized = 0x0020,
+    Volatile = 0x0040,
+    Bridge = 0x0040,
+    Transient = 0x0080,
+    Varargs = 0x0080,
+    Native = 0x0100,
+    Interface = 0x0200,
+    Abstract = 0x0400,
+    Strict = 0x0800,
+    Synthetic = 0x1000,
+    Annotation = 0x2000,
+    Enum = 0x4000,
+    Module = 0x8000
+}
+
+/// <summary>
+///     CONSTANT_Dynamic 常量（JVM 11+）
+/// </summary>
+public sealed class JvmConstantDynamic : JvmConstant
+{
+    public override JvmConstantKind Kind => JvmConstantKind.Dynamic;
+    public ushort BootstrapMethodAttrIndex { get; init; }
+    public ushort NameAndTypeIndex { get; init; }
+}
+
+/// <summary>
+///     CONSTANT_Module 常量（JVM 9+）
+/// </summary>
+public sealed class JvmConstantModule : JvmConstant
+{
+    public override JvmConstantKind Kind => JvmConstantKind.Module;
+    public ushort NameIndex { get; init; }
+}
+
+/// <summary>
+///     CONSTANT_Package 常量（JVM 9+）
+/// </summary>
+public sealed class JvmConstantPackage : JvmConstant
+{
+    public override JvmConstantKind Kind => JvmConstantKind.Package;
+    public ushort NameIndex { get; init; }
+}
+
+/// <summary>
+///     方法句柄引用类型
+/// </summary>
+public enum JvmMethodHandleKind : byte
+{
+    GetField = 1,
+    GetStatic = 2,
+    PutField = 3,
+    PutStatic = 4,
+    InvokeVirtual = 5,
+    InvokeStatic = 6,
+    InvokeSpecial = 7,
+    NewInvokeSpecial = 8,
+    InvokeInterface = 9
+}
+
+/// <summary>
+///     StackMapTable 属性（字节码验证必需）
+/// </summary>
+public sealed class JvmStackMapTableAttribute : JvmAttributeInfo
+{
+    public ushort NumberOfEntries { get; init; }
+    public IReadOnlyList<JvmStackMapFrame> Entries { get; init; }
+}
+
+/// <summary>
+///     StackMapFrame 基类
+/// </summary>
+public abstract class JvmStackMapFrame
+{
+    /// <summary>
+    ///     帧类型（0-255）
+    /// </summary>
+    public byte FrameType { get; init; }
+}
+
+/// <summary>
+///     same_frame（frame_type 0-63）
+/// </summary>
+public sealed class JvmSameFrame : JvmStackMapFrame { }
+
+/// <summary>
+///     same_locals_1_stack_item_frame（frame_type 64-127）
+/// </summary>
+public sealed class JvmSameLocals1StackItemFrame : JvmStackMapFrame
+{
+    public IReadOnlyList<JvmVerificationTypeInfo> Stack { get; init; }
+}
+
+/// <summary>
+///     chop_frame（frame_type 248-250）
+/// </summary>
+public sealed class JvmChopFrame : JvmStackMapFrame
+{
+    public ushort OffsetDelta { get; init; }
+}
+
+/// <summary>
+///     same_frame_extended（frame_type 251）
+/// </summary>
+public sealed class JvmSameFrameExtended : JvmStackMapFrame
+{
+    public ushort OffsetDelta { get; init; }
+}
+
+/// <summary>
+///     append_frame（frame_type 252-254）
+/// </summary>
+public sealed class JvmAppendFrame : JvmStackMapFrame
+{
+    public ushort OffsetDelta { get; init; }
+    public IReadOnlyList<JvmVerificationTypeInfo> Locals { get; init; }
+}
+
+/// <summary>
+///     full_frame（frame_type 255）
+/// </summary>
+public sealed class JvmFullFrame : JvmStackMapFrame
+{
+    public ushort OffsetDelta { get; init; }
+    public ushort NumberOfLocals { get; init; }
+    public IReadOnlyList<JvmVerificationTypeInfo> Locals { get; init; }
+    public ushort NumberOfStackItems { get; init; }
+    public IReadOnlyList<JvmVerificationTypeInfo> Stack { get; init; }
+}
+
+/// <summary>
+///     校验类型信息
+/// </summary>
+public sealed class JvmVerificationTypeInfo
+{
+    public byte Tag { get; init; }
+    public ushort? CpoolIndex { get; init; }
+    public ushort? Offset { get; init; }
+}
+
+/// <summary>
+///     异常属性
+/// </summary>
+public sealed class JvmExceptionsAttribute : JvmAttributeInfo
+{
+    public ushort NumberOfExceptions { get; init; }
+    public IReadOnlyList<ushort> ExceptionIndexTable { get; init; }
+}
+
+/// <summary>
+///     签名属性（泛型签名）
+/// </summary>
+public sealed class JvmSignatureAttribute : JvmAttributeInfo
+{
+    public ushort SignatureIndex { get; init; }
+}
+
+/// <summary>
+///     合成属性（编译器生成标记）
+/// </summary>
+public sealed class JvmSyntheticAttribute : JvmAttributeInfo { }
+
+/// <summary>
+///     废弃属性
+/// </summary>
+public sealed class JvmDeprecatedAttribute : JvmAttributeInfo { }
+
+/// <summary>
+///     外围方法属性
+/// </summary>
+public sealed class JvmEnclosingMethodAttribute : JvmAttributeInfo
+{
+    public ushort ClassIndex { get; init; }
+    public ushort MethodIndex { get; init; }
+}
+
+/// <summary>
+///     源文件调试扩展属性
+/// </summary>
+public sealed class JvmSourceDebugExtensionAttribute : JvmAttributeInfo
+{
+    public byte[] DebugExtension { get; init; }
+}
+
+/// <summary>
+///     方法参数属性
+/// </summary>
+public sealed class JvmMethodParametersAttribute : JvmAttributeInfo
+{
+    public byte ParameterCount { get; init; }
+    public IReadOnlyList<JvmMethodParameterInfo> Parameters { get; init; }
+}
+
+/// <summary>
+///     方法参数信息
+/// </summary>
+public sealed class JvmMethodParameterInfo
+{
+    public ushort NameIndex { get; init; }
+    public ushort AccessFlags { get; init; }
+}
+
+/// <summary>
+///     模块属性（JVM 9+）
+/// </summary>
+public sealed class JvmModuleAttribute : JvmAttributeInfo
+{
+    public ushort ModuleNameIndex { get; init; }
+    public ushort ModuleFlags { get; init; }
+    public ushort ModuleVersionIndex { get; init; }
+    public IReadOnlyList<JvmModuleRequire> Requires { get; init; }
+    public IReadOnlyList<JvmModuleExport> Exports { get; init; }
+    public IReadOnlyList<JvmModuleOpen> Opens { get; init; }
+    public IReadOnlyList<ushort> UsesIndex { get; init; }
+    public IReadOnlyList<JvmModuleProvide> Provides { get; init; }
+}
+
+/// <summary>
+///     模块 requires 项
+/// </summary>
+public sealed class JvmModuleRequire
+{
+    public ushort RequiresIndex { get; init; }
+    public ushort RequiresFlags { get; init; }
+    public ushort? RequiresVersionIndex { get; init; }
+}
+
+/// <summary>
+///     模块 exports 项
+/// </summary>
+public sealed class JvmModuleExport
+{
+    public ushort ExportsIndex { get; init; }
+    public ushort ExportsFlags { get; init; }
+    public IReadOnlyList<ushort> ExportsToIndex { get; init; }
+}
+
+/// <summary>
+///     模块 opens 项
+/// </summary>
+public sealed class JvmModuleOpen
+{
+    public ushort OpensIndex { get; init; }
+    public ushort OpensFlags { get; init; }
+    public IReadOnlyList<ushort> OpensToIndex { get; init; }
+}
+
+/// <summary>
+///     模块 provides 项
+/// </summary>
+public sealed class JvmModuleProvide
+{
+    public ushort ProvidesIndex { get; init; }
+    public IReadOnlyList<ushort> ProvidesWithIndex { get; init; }
+}
+
+/// <summary>
+///     巢主属性（JVM 11+）
+/// </summary>
+public sealed class JvmNestHostAttribute : JvmAttributeInfo
+{
+    public ushort HostClassIndex { get; init; }
+}
+
+/// <summary>
+///     巢成员属性（JVM 11+）
+/// </summary>
+public sealed class JvmNestMembersAttribute : JvmAttributeInfo
+{
+    public ushort NumberOfClasses { get; init; }
+    public IReadOnlyList<ushort> ClassIndexes { get; init; }
+}
+
+/// <summary>
+///     记录属性（JVM 16+）
+/// </summary>
+public sealed class JvmRecordAttribute : JvmAttributeInfo
+{
+    public ushort ComponentsCount { get; init; }
+    public IReadOnlyList<JvmRecordComponentInfo> Components { get; init; }
+}
+
+/// <summary>
+///     记录组件信息
+/// </summary>
+public sealed class JvmRecordComponentInfo
+{
+    public ushort NameIndex { get; init; }
+    public ushort DescriptorIndex { get; init; }
+    public IReadOnlyList<JvmAttributeInfo> Attributes { get; init; }
+}
+
+/// <summary>
+///     允许的子类属性（JVM 17+）
+/// </summary>
+public sealed class JvmPermittedSubclassesAttribute : JvmAttributeInfo
+{
+    public ushort NumberOfClasses { get; init; }
+    public IReadOnlyList<ushort> ClassIndexes { get; init; }
+}
+
+/// <summary>
+///     运行时可见注解属性
+/// </summary>
+public sealed class JvmRuntimeVisibleAnnotationsAttribute : JvmAttributeInfo
+{
+    public ushort NumAnnotations { get; init; }
+    public IReadOnlyList<JvmAnnotation> Annotations { get; init; }
+}
+
+/// <summary>
+///     运行时不可见注解属性
+/// </summary>
+public sealed class JvmRuntimeInvisibleAnnotationsAttribute : JvmAttributeInfo
+{
+    public ushort NumAnnotations { get; init; }
+    public IReadOnlyList<JvmAnnotation> Annotations { get; init; }
+}
+
+/// <summary>
+///     运行时可见参数注解属性
+/// </summary>
+public sealed class JvmRuntimeVisibleParameterAnnotationsAttribute : JvmAttributeInfo
+{
+    public byte NumParameters { get; init; }
+    public IReadOnlyList<JvmParameterAnnotations> ParameterAnnotations { get; init; }
+}
+
+/// <summary>
+///     运行时不可见参数注解属性
+/// </summary>
+public sealed class JvmRuntimeInvisibleParameterAnnotationsAttribute : JvmAttributeInfo
+{
+    public byte NumParameters { get; init; }
+    public IReadOnlyList<JvmParameterAnnotations> ParameterAnnotations { get; init; }
+}
+
+/// <summary>
+///     参数注解列表
+/// </summary>
+public sealed class JvmParameterAnnotations
+{
+    public ushort NumAnnotations { get; init; }
+    public IReadOnlyList<JvmAnnotation> Annotations { get; init; }
+}
+
+/// <summary>
+///     Java 注解
+/// </summary>
+public sealed class JvmAnnotation
+{
+    public ushort TypeIndex { get; init; }
+    public ushort NumElementValuePairs { get; init; }
+    public IReadOnlyList<JvmElementValuePair> ElementValuePairs { get; init; }
+}
+
+/// <summary>
+///     注解元素-值对
+/// </summary>
+public sealed class JvmElementValuePair
+{
+    public ushort ElementNameIndex { get; init; }
+    public JvmElementValue Value { get; init; }
+}
+
+/// <summary>
+///     注解元素值
+/// </summary>
+public sealed class JvmElementValue
+{
+    public byte Tag { get; init; }
+    public ushort? ConstValueIndex { get; init; }
+    public ushort? TypeNameIndex { get; init; }
+    public ushort? ClassInfoIndex { get; init; }
+    public JvmAnnotation? AnnotationValue { get; init; }
+    public ushort? ArrayNumValues { get; init; }
+    public IReadOnlyList<JvmElementValue>? ArrayValues { get; init; }
+    public ushort? EnumConstNameIndex { get; init; }
+}
+
+/// <summary>
+///     注解默认值属性
+/// </summary>
+public sealed class JvmAnnotationDefaultAttribute : JvmAttributeInfo
+{
+    public JvmElementValue DefaultValue { get; init; }
+}
+
+/// <summary>
+///     局部变量类型表属性（泛型方法调试信息）
+/// </summary>
+public sealed class JvmLocalVariableTypeTableAttribute : JvmAttributeInfo
+{
+    public ushort LocalVariableTypeTableLength { get; init; }
+    public IReadOnlyList<JvmLocalVariableTypeEntry> LocalVariableTypeTable { get; init; }
+}
+
+/// <summary>
+///     局部变量类型表项
+/// </summary>
+public sealed class JvmLocalVariableTypeEntry
+{
+    public ushort StartPc { get; init; }
+    public ushort Length { get; init; }
+    public ushort NameIndex { get; init; }
+    public ushort SignatureIndex { get; init; }
+    public ushort Index { get; init; }
 }

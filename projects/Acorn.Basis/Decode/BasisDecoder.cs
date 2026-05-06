@@ -43,7 +43,6 @@ public ref struct BasisDecoder
     private BasisFileData DecodeKtx2()
     {
         _buffer.ConsumeMagic(BasisConstants.Ktx2Magic);
-        _buffer.Advance(12);
 
         var vkFormat = _buffer.ReadU32LE();
         var typeSize = _buffer.ReadU32LE();
@@ -53,7 +52,7 @@ public ref struct BasisDecoder
         var layerCount = _buffer.ReadU32LE();
         var faceCount = _buffer.ReadU32LE();
         var levelCount = _buffer.ReadU32LE();
-        _buffer.Advance(24);
+        _buffer.Advance(36);
 
         return new BasisFileData
         {

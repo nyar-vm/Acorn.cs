@@ -420,6 +420,14 @@ public class BinarySerializableGenerator : IIncrementalGenerator
             #endregion
         }
 
+        sb.AppendLine();
+
+        #region ICodec<T> 编解码器
+
+        GenerateCodecStruct(sb, info);
+
+        #endregion
+
         sb.AppendLine("}");
 
         return sb.ToString();
@@ -1025,6 +1033,35 @@ public class BinarySerializableGenerator : IIncrementalGenerator
 
         sb.AppendLine("            default:");
         sb.AppendLine("                throw new InvalidOperationException(\"未匹配到任何代数联合分支\");");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+    }
+
+    #endregion
+
+    #region ICodec<T> 编解码器生成
+
+    private static void GenerateCodecStruct(StringBuilder sb, StructSerializationInfo info)
+    {
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine($"    ///     {info.Name} 的 ICodec&lt;{info.Name}&gt; 编解码器实现。");
+        sb.AppendLine("    ///     基于 Span 提供零分配编解码能力。");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine($"    public readonly struct Codec : global::Acorn.Codec.ICodec<{info.Name}>");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        public int GetSize({info.Name} value) => value.GetSize();");
+        sb.AppendLine();
+        sb.AppendLine($"        public void Encode({info.Name} value, global::System.Span<byte> destination)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var writer = new global::Acorn.Frame.ByteBufferWriter(destination);");
+        sb.AppendLine("            value.WriteTo(ref writer);");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine($"        public {info.Name} Decode(global::System.ReadOnlySpan<byte> source)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var buffer = new global::Acorn.Frame.ByteBuffer(source);");
+        sb.AppendLine($"            {info.Name}.TryRead(ref buffer, out var value);");
+        sb.AppendLine("            return value;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
     }

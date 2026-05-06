@@ -24,6 +24,15 @@
         <ProjectReference Include="..\..\projects\Acorn.Wasm\Acorn.Wasm.csproj"/>
         <ProjectReference Include="..\..\projects\Acorn.SpirV\SpirV.csproj"/>
         <ProjectReference Include="..\..\projects\Acorn.Jvm\Acorn.Jvm.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.Gnosis\Acorn.Gnosis.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.Elf\ELF.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.Pe\Acorn.PE.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.MachO\Acorn.MachO.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.Llvm\LLVM.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.Dxil\Acorn.Dxil.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.MySQL\MySQL.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.PostgreSQL\PostgreSQL.csproj"/>
+        <ProjectReference Include="..\..\projects\Acorn.Redis\Acorn.Redis.csproj"/>
     </ItemGroup>
 
 </Project>

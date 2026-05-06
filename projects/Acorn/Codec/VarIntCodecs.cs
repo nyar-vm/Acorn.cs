@@ -287,30 +287,4 @@ public readonly struct ZigZagLeb128Int64 : ICodec<long>
 
 #endregion
 
-#region 向后兼容的别名
 
-/// <summary>
-///     ZigZagInt32 的别名，等同于 ZigZagLeb128Int32。
-///     已过时，请使用 ZigZagLeb128Int32。
-/// </summary>
-[Obsolete("请使用 ZigZagLeb128Int32，此别名将在此后版本中移除。")]
-public readonly struct ZigZagInt32 : ICodec<int>
-{
-    public int GetSize(int value) => default(ZigZagLeb128Int32).GetSize(value);
-    public void Encode(int value, Span<byte> destination) => default(ZigZagLeb128Int32).Encode(value, destination);
-    public int Decode(ReadOnlySpan<byte> source) => default(ZigZagLeb128Int32).Decode(source);
-}
-
-/// <summary>
-///     ZigZagInt64 的别名，等同于 ZigZagLeb128Int64。
-///     已过时，请使用 ZigZagLeb128Int64。
-/// </summary>
-[Obsolete("请使用 ZigZagLeb128Int64，此别名将在此后版本中移除。")]
-public readonly struct ZigZagInt64 : ICodec<long>
-{
-    public int GetSize(long value) => default(ZigZagLeb128Int64).GetSize(value);
-    public void Encode(long value, Span<byte> destination) => default(ZigZagLeb128Int64).Encode(value, destination);
-    public long Decode(ReadOnlySpan<byte> source) => default(ZigZagLeb128Int64).Decode(source);
-}
-
-#endregion

@@ -76,7 +76,7 @@ public sealed class BmFontEncoder
     private static byte[] EncodeInfoBlock(BmFontInfo info)
     {
         var nameBytes = Encoding.UTF8.GetBytes(info.FontName);
-        var dataSize = 15 + nameBytes.Length + 1; // 15 字节固定头 + 名称 + null
+        var dataSize = 13 + nameBytes.Length + 1; // 13 字节固定头 + 名称 + null
         var block = new byte[5 + dataSize]; // 类型(1) + 大小(4) + 数据
         var pos = 0;
 
@@ -115,8 +115,6 @@ public sealed class BmFontEncoder
         pos += 2;
         BinaryPrimitives.WriteInt16LittleEndian(block.AsSpan(pos), info.LineHeight);
         pos += 2;
-
-        pos += 2; // 额外填充
 
         nameBytes.CopyTo(block.AsSpan(pos));
         pos += nameBytes.Length;

@@ -72,6 +72,11 @@ public sealed class WasmModuleData
     public IReadOnlyList<WasmData> DataSegments { get; init; } = [];
 
     /// <summary>
+    ///     标签段，包含异常处理标签定义（Exception Handling 提案）。
+    /// </summary>
+    public IReadOnlyList<WasmTag> Tags { get; init; } = [];
+
+    /// <summary>
     ///     自定义段列表。
     /// </summary>
     public IReadOnlyList<WasmCustomSection> CustomSections { get; init; } = [];
@@ -150,7 +155,12 @@ public enum WasmValueType : byte
     /// <summary>
     ///     空外部引用。
     /// </summary>
-    NullExternRef = 0x67
+    NullExternRef = 0x67,
+
+    /// <summary>
+    ///     128 位 SIMD 向量。
+    /// </summary>
+    V128 = 0x7B
 }
 
 /// <summary>
@@ -278,6 +288,11 @@ public sealed class WasmImportDescriptor
     ///     全局类型（当 Kind 为 Global 时有效）。
     /// </summary>
     public WasmGlobalType? GlobalType { get; init; }
+
+    /// <summary>
+    ///     标签类型（当 Kind 为 Tag 时有效）。
+    /// </summary>
+    public WasmTagType? TagType { get; init; }
 }
 
 /// <summary>
@@ -303,7 +318,12 @@ public enum WasmExternalKind : byte
     /// <summary>
     ///     全局变量。
     /// </summary>
-    Global = 0x03
+    Global = 0x03,
+
+    /// <summary>
+    ///     异常标签（Exception Handling 提案）。
+    /// </summary>
+    Tag = 0x04
 }
 
 /// <summary>
@@ -458,4 +478,57 @@ public sealed class WasmCustomSection
     ///     段数据。
     /// </summary>
     public byte[] Data { get; init; } = [];
+}
+
+/// <summary>
+///     Wasm 异常标签定义（Exception Handling 提案）。
+/// </summary>
+public sealed class WasmTag
+{
+    /// <summary>
+    ///     标签属性（0x00 表示异常标签）。
+    /// </summary>
+    public byte Attribute { get; init; }
+
+    /// <summary>
+    ///     标签的函数类型索引（定义抛出的参数类型）。
+    /// </summary>
+    public uint TypeIndex { get; init; }
+}
+
+/// <summary>
+///     Wasm 异常标签类型，仅包含函数类型索引。
+/// </summary>
+public sealed class WasmTagType
+{
+    /// <summary>
+    ///     标签对应的函数类型索引，定义异常抛出的参数类型。
+    /// </summary>
+    public uint FunctionTypeIndex { get; init; }
+}
+
+/// <summary>
+///     try_table 指令中 catch 子句的种类（Exception Handling 提案）。
+/// </summary>
+public enum WasmCatchKind : byte
+{
+    /// <summary>
+    ///     按标签索引捕获异常，不提取异常引用。
+    /// </summary>
+    Catch = 0x00,
+
+    /// <summary>
+    ///     按标签索引捕获异常，并将异常引用压入栈。
+    /// </summary>
+    CatchRef = 0x01,
+
+    /// <summary>
+    ///     捕获所有异常，不提取异常引用。
+    /// </summary>
+    CatchAll = 0x02,
+
+    /// <summary>
+    ///     捕获所有异常，并将异常引用压入栈。
+    /// </summary>
+    CatchAllRef = 0x03
 }
