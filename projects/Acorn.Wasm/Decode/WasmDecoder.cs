@@ -482,8 +482,27 @@ public static class WasmDecoder
 
     private static WasmElement ReadElement(ByteBuffer buffer)
     {
-        var tableIndex = buffer.ReadLeb128U32();
-        var offsetExpression = ReadInitExpression(buffer);
+        var flags = buffer.ReadLeb128U32();
+        uint tableIndex = 0;
+        byte[]? offsetExpression = null;
+
+        switch (flags)
+        {
+            case 0:
+                tableIndex = 0;
+                offsetExpression = ReadInitExpression(buffer);
+                break;
+            case 1:
+                offsetExpression = null;
+                break;
+            case 2:
+                tableIndex = buffer.ReadLeb128U32();
+                offsetExpression = ReadInitExpression(buffer);
+                break;
+            default:
+                throw new InvalidDataException($"不支持的元素段标志：{flags}");
+        }
+
         var count = buffer.ReadLeb128U32();
         var initValues = new List<uint>((int)count);
 
@@ -495,7 +514,7 @@ public static class WasmDecoder
         return new WasmElement
         {
             TableIndex = tableIndex,
-            OffsetExpression = offsetExpression,
+            OffsetExpression = offsetExpression ?? [],
             InitValues = initValues
         };
     }
@@ -527,15 +546,34 @@ public static class WasmDecoder
 
     private static WasmData ReadDataSegment(ByteBuffer buffer)
     {
-        var memoryIndex = buffer.ReadLeb128U32();
-        var offsetExpression = ReadInitExpression(buffer);
+        var flags = buffer.ReadLeb128U32();
+        uint memoryIndex = 0;
+        byte[]? offsetExpression = null;
+
+        switch (flags)
+        {
+            case 0:
+                memoryIndex = 0;
+                offsetExpression = ReadInitExpression(buffer);
+                break;
+            case 1:
+                offsetExpression = null;
+                break;
+            case 2:
+                memoryIndex = buffer.ReadLeb128U32();
+                offsetExpression = ReadInitExpression(buffer);
+                break;
+            default:
+                throw new InvalidDataException($"不支持的数据段标志：{flags}");
+        }
+
         var dataSize = buffer.ReadLeb128U32();
         var initializer = buffer.ReadBytes((int)dataSize).ToArray();
 
         return new WasmData
         {
             MemoryIndex = memoryIndex,
-            OffsetExpression = offsetExpression,
+            OffsetExpression = offsetExpression ?? [],
             Initializer = initializer
         };
     }

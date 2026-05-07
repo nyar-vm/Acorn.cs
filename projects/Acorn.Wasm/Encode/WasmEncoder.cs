@@ -246,7 +246,16 @@ public static class WasmEncoder
                 w.WriteLEB128((uint)module.Elements.Count);
                 foreach (var element in module.Elements)
                 {
-                    w.WriteLEB128(element.TableIndex);
+                    if (element.TableIndex == 0)
+                    {
+                        w.WriteLEB128(0u);
+                    }
+                    else
+                    {
+                        w.WriteLEB128(2u);
+                        w.WriteLEB128(element.TableIndex);
+                    }
+
                     w.WriteRaw(element.OffsetExpression);
                     w.WriteLEB128((uint)element.InitValues.Count);
                     foreach (var value in element.InitValues)
@@ -302,7 +311,16 @@ public static class WasmEncoder
                 w.WriteLEB128((uint)module.DataSegments.Count);
                 foreach (var data in module.DataSegments)
                 {
-                    w.WriteLEB128(data.MemoryIndex);
+                    if (data.MemoryIndex == 0)
+                    {
+                        w.WriteLEB128(0u);
+                    }
+                    else
+                    {
+                        w.WriteLEB128(2u);
+                        w.WriteLEB128(data.MemoryIndex);
+                    }
+
                     w.WriteRaw(data.OffsetExpression);
                     w.WriteLEB128((uint)data.Initializer.Length);
                     w.WriteRaw(data.Initializer);

@@ -161,7 +161,12 @@ public enum WasmSectionId : byte
     /// <summary>
     ///     数据段。
     /// </summary>
-    Data = 11
+    Data = 11,
+
+    /// <summary>
+    ///     数据计数段（WebAssembly 2.0+）。
+    /// </summary>
+    DataCount = 12
 }
 
 /// <summary>

@@ -185,11 +185,30 @@ public class WasmRoundTripTests
     {
         var original = new WasmModuleData
         {
-            DataSegments = [new WasmData { MemoryIndex = 0, Initializer = [0xDE, 0xAD, 0xBE, 0xEF] }]
+            Memories = [new WasmMemory { Type = new WasmMemoryType { Limits = new WasmLimits { Minimum = 1 } } }],
+            DataSegments = [new WasmData
+            {
+                MemoryIndex = 0,
+                OffsetExpression = [0x41, 0x00, 0x0B],
+                Initializer = [0xDE, 0xAD, 0xBE, 0xEF]
+            }]
         };
 
         var bytes = WasmEncoder.EncodeModule(original);
-        var decoded = WasmDecoder.DecodeModule(bytes);
+        Console.WriteLine($"Encoded bytes ({bytes.Length}): {string.Join(' ', bytes.Select(b => $"{b:X2}"))}");
+
+        try
+        {
+            var decoded = WasmDecoder.DecodeModule(bytes);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Decode failed: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+            throw;
+        }
+
+        var decoded2 = WasmDecoder.DecodeModule(bytes);
 
         Assert.Single(decoded.DataSegments);
         Assert.Equal((uint)0, decoded.DataSegments[0].MemoryIndex);
