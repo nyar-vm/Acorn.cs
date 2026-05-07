@@ -104,6 +104,19 @@ public static class WasmInstructionEncoder
                 writer.WriteLeb128U32(globalIdx.Index);
                 break;
 
+            case WasmTagIndexImm tagIdx:
+                writer.WriteLeb128U32(tagIdx.Index);
+                break;
+
+            case WasmV128Imm v128:
+                if (v128.Value.Length != 16)
+                {
+                    throw new ArgumentException("V128 立即数必须为 16 字节", nameof(operand));
+                }
+
+                writer.Write(v128.Value);
+                break;
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(operand), operand.GetType().Name, "未知的立即数类型");
         }

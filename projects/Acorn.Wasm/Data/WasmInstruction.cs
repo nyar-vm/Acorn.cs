@@ -76,3 +76,14 @@ public sealed record WasmLocalIndexImm(uint Index) : WasmImmediate;
 ///     全局变量索引立即数（用于 global.get/set）。
 /// </summary>
 public sealed record WasmGlobalIndexImm(uint Index) : WasmImmediate;
+
+/// <summary>
+///     标签索引立即数（用于 throw 指令，EH 提案）。
+/// </summary>
+public sealed record WasmTagIndexImm(uint Index) : WasmImmediate;
+
+/// <summary>
+///     128 位向量常量立即数（用于 v128.const 指令，SIMD 提案）。
+///     包含 16 字节的原始向量数据。
+/// </summary>
+public sealed record WasmV128Imm(byte[] Value) : WasmImmediate;
