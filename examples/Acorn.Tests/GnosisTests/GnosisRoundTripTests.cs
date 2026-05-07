@@ -69,7 +69,7 @@ public class GnosisRoundTripTests
         Assert.Equal(GnosisConstantTag.Int, decoded.Constants[1].Tag);
         Assert.Equal(42L, decoded.Constants[1].Value);
         Assert.Equal(GnosisConstantTag.Float, decoded.Constants[2].Tag);
-        Assert.InRange((double)decoded.Constants[2].Value!, 3.13, 3.15);
+        Assert.InRange(Convert.ToDouble(decoded.Constants[2].Value), 3.13, 3.15);
     }
 
     [Fact]

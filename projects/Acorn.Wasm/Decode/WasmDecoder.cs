@@ -44,40 +44,40 @@ public static class WasmDecoder
             switch (sectionId)
             {
                 case 0:
-                    customSections.Add(ReadCustomSection(buffer, sectionSize));
+                    customSections.Add(ReadCustomSection(ref buffer, sectionSize));
                     break;
                 case 1:
-                    types = ReadTypeSection(buffer);
+                    types = ReadTypeSection(ref buffer);
                     break;
                 case 2:
-                    imports = ReadImportSection(buffer);
+                    imports = ReadImportSection(ref buffer);
                     break;
                 case 3:
-                    functionTypeIndices = ReadFunctionSection(buffer);
+                    functionTypeIndices = ReadFunctionSection(ref buffer);
                     break;
                 case 4:
-                    tables = ReadTableSection(buffer);
+                    tables = ReadTableSection(ref buffer);
                     break;
                 case 5:
-                    memories = ReadMemorySection(buffer);
+                    memories = ReadMemorySection(ref buffer);
                     break;
                 case 6:
-                    globals = ReadGlobalSection(buffer);
+                    globals = ReadGlobalSection(ref buffer);
                     break;
                 case 7:
-                    exports = ReadExportSection(buffer);
+                    exports = ReadExportSection(ref buffer);
                     break;
                 case 8:
-                    startFunctionIndex = ReadStartSection(buffer);
+                    startFunctionIndex = ReadStartSection(ref buffer);
                     break;
                 case 9:
-                    elements = ReadElementSection(buffer);
+                    elements = ReadElementSection(ref buffer);
                     break;
                 case 10:
-                    codes = ReadCodeSection(buffer);
+                    codes = ReadCodeSection(ref buffer);
                     break;
                 case 11:
-                    dataSegments = ReadDataSection(buffer);
+                    dataSegments = ReadDataSection(ref buffer);
                     break;
                 default:
                     buffer.Position = sectionEnd;
@@ -135,7 +135,7 @@ public static class WasmDecoder
 
     #region 段读取方法
 
-    private static WasmCustomSection ReadCustomSection(ByteBuffer buffer, uint sectionSize)
+    private static WasmCustomSection ReadCustomSection(ref ByteBuffer buffer, uint sectionSize)
     {
         var posBeforeName = buffer.Position;
         var name = buffer.ReadLeb128String();
@@ -150,33 +150,33 @@ public static class WasmDecoder
         };
     }
 
-    private static List<WasmFunctionType> ReadTypeSection(ByteBuffer buffer)
+    private static List<WasmFunctionType> ReadTypeSection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var types = new List<WasmFunctionType>((int)count);
 
         for (var i = 0; i < count; i++)
         {
-            types.Add(ReadFunctionType(buffer));
+            types.Add(ReadFunctionType(ref buffer));
         }
 
         return types;
     }
 
-    private static List<WasmImport> ReadImportSection(ByteBuffer buffer)
+    private static List<WasmImport> ReadImportSection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var imports = new List<WasmImport>((int)count);
 
         for (var i = 0; i < count; i++)
         {
-            imports.Add(ReadImport(buffer));
+            imports.Add(ReadImport(ref buffer));
         }
 
         return imports;
     }
 
-    private static List<uint> ReadFunctionSection(ByteBuffer buffer)
+    private static List<uint> ReadFunctionSection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var indices = new List<uint>((int)count);
@@ -189,97 +189,97 @@ public static class WasmDecoder
         return indices;
     }
 
-    private static List<WasmTable> ReadTableSection(ByteBuffer buffer)
+    private static List<WasmTable> ReadTableSection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var tables = new List<WasmTable>((int)count);
 
         for (var i = 0; i < count; i++)
         {
-            tables.Add(ReadTable(buffer));
+            tables.Add(ReadTable(ref buffer));
         }
 
         return tables;
     }
 
-    private static List<WasmMemory> ReadMemorySection(ByteBuffer buffer)
+    private static List<WasmMemory> ReadMemorySection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var memories = new List<WasmMemory>((int)count);
 
         for (var i = 0; i < count; i++)
         {
-            memories.Add(ReadMemory(buffer));
+            memories.Add(ReadMemory(ref buffer));
         }
 
         return memories;
     }
 
-    private static List<WasmGlobal> ReadGlobalSection(ByteBuffer buffer)
+    private static List<WasmGlobal> ReadGlobalSection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var globals = new List<WasmGlobal>((int)count);
 
         for (var i = 0; i < count; i++)
         {
-            globals.Add(ReadGlobal(buffer));
+            globals.Add(ReadGlobal(ref buffer));
         }
 
         return globals;
     }
 
-    private static List<WasmExport> ReadExportSection(ByteBuffer buffer)
+    private static List<WasmExport> ReadExportSection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var exports = new List<WasmExport>((int)count);
 
         for (var i = 0; i < count; i++)
         {
-            exports.Add(ReadExport(buffer));
+            exports.Add(ReadExport(ref buffer));
         }
 
         return exports;
     }
 
-    private static uint ReadStartSection(ByteBuffer buffer)
+    private static uint ReadStartSection(ref ByteBuffer buffer)
     {
         return buffer.ReadLeb128U32();
     }
 
-    private static List<WasmElement> ReadElementSection(ByteBuffer buffer)
+    private static List<WasmElement> ReadElementSection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var elements = new List<WasmElement>((int)count);
 
         for (var i = 0; i < count; i++)
         {
-            elements.Add(ReadElement(buffer));
+            elements.Add(ReadElement(ref buffer));
         }
 
         return elements;
     }
 
-    private static List<WasmCode> ReadCodeSection(ByteBuffer buffer)
+    private static List<WasmCode> ReadCodeSection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var codes = new List<WasmCode>((int)count);
 
         for (var i = 0; i < count; i++)
         {
-            codes.Add(ReadCode(buffer));
+            codes.Add(ReadCode(ref buffer));
         }
 
         return codes;
     }
 
-    private static List<WasmData> ReadDataSection(ByteBuffer buffer)
+    private static List<WasmData> ReadDataSection(ref ByteBuffer buffer)
     {
         var count = buffer.ReadLeb128U32();
         var dataSegments = new List<WasmData>((int)count);
 
         for (var i = 0; i < count; i++)
         {
-            dataSegments.Add(ReadDataSegment(buffer));
+            dataSegments.Add(ReadDataSegment(ref buffer));
         }
 
         return dataSegments;
@@ -289,7 +289,7 @@ public static class WasmDecoder
 
     #region 类型读取方法
 
-    private static WasmFunctionType ReadFunctionType(ByteBuffer buffer)
+    private static WasmFunctionType ReadFunctionType(ref ByteBuffer buffer)
     {
         var form = buffer.ReadU8();
 
@@ -303,7 +303,7 @@ public static class WasmDecoder
 
         for (var i = 0; i < paramCount; i++)
         {
-            parameters.Add(ReadValueType(buffer));
+            parameters.Add(ReadValueType(ref buffer));
         }
 
         var resultCount = buffer.ReadLeb128U32();
@@ -311,7 +311,7 @@ public static class WasmDecoder
 
         for (var i = 0; i < resultCount; i++)
         {
-            results.Add(ReadValueType(buffer));
+            results.Add(ReadValueType(ref buffer));
         }
 
         return new WasmFunctionType
@@ -321,7 +321,7 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmValueType ReadValueType(ByteBuffer buffer)
+    private static WasmValueType ReadValueType(ref ByteBuffer buffer)
     {
         var code = buffer.ReadU8();
 
@@ -337,7 +337,7 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmLimits ReadLimits(ByteBuffer buffer)
+    private static WasmLimits ReadLimits(ref ByteBuffer buffer)
     {
         var flags = buffer.ReadU8();
         var minimum = buffer.ReadLeb128U32();
@@ -355,10 +355,10 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmTableType ReadTableType(ByteBuffer buffer)
+    private static WasmTableType ReadTableType(ref ByteBuffer buffer)
     {
-        var elementType = ReadValueType(buffer);
-        var limits = ReadLimits(buffer);
+        var elementType = ReadValueType(ref buffer);
+        var limits = ReadLimits(ref buffer);
 
         return new WasmTableType
         {
@@ -367,9 +367,9 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmMemoryType ReadMemoryType(ByteBuffer buffer)
+    private static WasmMemoryType ReadMemoryType(ref ByteBuffer buffer)
     {
-        var limits = ReadLimits(buffer);
+        var limits = ReadLimits(ref buffer);
 
         return new WasmMemoryType
         {
@@ -377,9 +377,9 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmGlobalType ReadGlobalType(ByteBuffer buffer)
+    private static WasmGlobalType ReadGlobalType(ref ByteBuffer buffer)
     {
-        var valueType = ReadValueType(buffer);
+        var valueType = ReadValueType(ref buffer);
         var mutable = buffer.ReadU8() == WasmConstants.GlobalMutable;
 
         return new WasmGlobalType
@@ -389,11 +389,11 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmImport ReadImport(ByteBuffer buffer)
+    private static WasmImport ReadImport(ref ByteBuffer buffer)
     {
         var module = buffer.ReadLeb128String();
         var field = buffer.ReadLeb128String();
-        var descriptor = ReadImportDescriptor(buffer);
+        var descriptor = ReadImportDescriptor(ref buffer);
 
         return new WasmImport
         {
@@ -403,7 +403,7 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmImportDescriptor ReadImportDescriptor(ByteBuffer buffer)
+    private static WasmImportDescriptor ReadImportDescriptor(ref ByteBuffer buffer)
     {
         var kind = (WasmExternalKind)buffer.ReadU8();
 
@@ -419,45 +419,45 @@ public static class WasmDecoder
                 return new WasmImportDescriptor
                 {
                     Kind = kind,
-                    TableType = ReadTableType(buffer)
+                    TableType = ReadTableType(ref buffer)
                 };
             case WasmExternalKind.Memory:
                 return new WasmImportDescriptor
                 {
                     Kind = kind,
-                    MemoryType = ReadMemoryType(buffer)
+                    MemoryType = ReadMemoryType(ref buffer)
                 };
             case WasmExternalKind.Global:
                 return new WasmImportDescriptor
                 {
                     Kind = kind,
-                    GlobalType = ReadGlobalType(buffer)
+                    GlobalType = ReadGlobalType(ref buffer)
                 };
             default:
                 throw new InvalidDataException($"未知的导入种类：{kind}");
         }
     }
 
-    private static WasmTable ReadTable(ByteBuffer buffer)
+    private static WasmTable ReadTable(ref ByteBuffer buffer)
     {
         return new WasmTable
         {
-            Type = ReadTableType(buffer)
+            Type = ReadTableType(ref buffer)
         };
     }
 
-    private static WasmMemory ReadMemory(ByteBuffer buffer)
+    private static WasmMemory ReadMemory(ref ByteBuffer buffer)
     {
         return new WasmMemory
         {
-            Type = ReadMemoryType(buffer)
+            Type = ReadMemoryType(ref buffer)
         };
     }
 
-    private static WasmGlobal ReadGlobal(ByteBuffer buffer)
+    private static WasmGlobal ReadGlobal(ref ByteBuffer buffer)
     {
-        var type = ReadGlobalType(buffer);
-        var initExpression = ReadInitExpression(buffer);
+        var type = ReadGlobalType(ref buffer);
+        var initExpression = ReadInitExpression(ref buffer);
 
         return new WasmGlobal
         {
@@ -466,7 +466,7 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmExport ReadExport(ByteBuffer buffer)
+    private static WasmExport ReadExport(ref ByteBuffer buffer)
     {
         var name = buffer.ReadLeb128String();
         var kind = (WasmExternalKind)buffer.ReadU8();
@@ -480,7 +480,7 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmElement ReadElement(ByteBuffer buffer)
+    private static WasmElement ReadElement(ref ByteBuffer buffer)
     {
         var flags = buffer.ReadLeb128U32();
         uint tableIndex = 0;
@@ -490,14 +490,14 @@ public static class WasmDecoder
         {
             case 0:
                 tableIndex = 0;
-                offsetExpression = ReadInitExpression(buffer);
+                offsetExpression = ReadInitExpression(ref buffer);
                 break;
             case 1:
                 offsetExpression = null;
                 break;
             case 2:
                 tableIndex = buffer.ReadLeb128U32();
-                offsetExpression = ReadInitExpression(buffer);
+                offsetExpression = ReadInitExpression(ref buffer);
                 break;
             default:
                 throw new InvalidDataException($"不支持的元素段标志：{flags}");
@@ -519,7 +519,7 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmCode ReadCode(ByteBuffer buffer)
+    private static WasmCode ReadCode(ref ByteBuffer buffer)
     {
         var bodySize = buffer.ReadLeb128U32();
         var bodyStart = buffer.Position;
@@ -530,7 +530,7 @@ public static class WasmDecoder
         for (var i = 0; i < localCount; i++)
         {
             var count = buffer.ReadLeb128U32();
-            var type = ReadValueType(buffer);
+            var type = ReadValueType(ref buffer);
             locals.Add(new WasmLocal { Count = count, Type = type });
         }
 
@@ -544,7 +544,7 @@ public static class WasmDecoder
         };
     }
 
-    private static WasmData ReadDataSegment(ByteBuffer buffer)
+    private static WasmData ReadDataSegment(ref ByteBuffer buffer)
     {
         var flags = buffer.ReadLeb128U32();
         uint memoryIndex = 0;
@@ -554,14 +554,14 @@ public static class WasmDecoder
         {
             case 0:
                 memoryIndex = 0;
-                offsetExpression = ReadInitExpression(buffer);
+                offsetExpression = ReadInitExpression(ref buffer);
                 break;
             case 1:
                 offsetExpression = null;
                 break;
             case 2:
                 memoryIndex = buffer.ReadLeb128U32();
-                offsetExpression = ReadInitExpression(buffer);
+                offsetExpression = ReadInitExpression(ref buffer);
                 break;
             default:
                 throw new InvalidDataException($"不支持的数据段标志：{flags}");
@@ -582,9 +582,8 @@ public static class WasmDecoder
 
     #region 辅助方法
 
-    private static byte[] ReadInitExpression(ByteBuffer buffer)
+    private static byte[] ReadInitExpression(ref ByteBuffer buffer)
     {
-        Span<byte> temp = stackalloc byte[16];
         using var ms = new MemoryStream();
 
         while (true)
@@ -601,15 +600,15 @@ public static class WasmDecoder
             {
                 case WasmInitOpCode.I32Const:
                     var i32Value = buffer.ReadLeb128I32();
-                    var i32Writer = new ByteBufferWriter(temp);
+                    var i32Writer = new ByteBufferWriter(16);
                     i32Writer.WriteLeb128I32(i32Value);
-                    ms.Write(temp.Slice(0, i32Writer.Position).ToArray());
+                    ms.Write(i32Writer.WrittenData.ToArray());
                     break;
                 case WasmInitOpCode.I64Const:
-                    var i64Value = buffer.ReadLeb128I32();
-                    var i64Writer = new ByteBufferWriter(temp);
-                    i64Writer.WriteLeb128I32(i64Value);
-                    ms.Write(temp.Slice(0, i64Writer.Position).ToArray());
+                    var i64Value = buffer.ReadLeb128I64();
+                    var i64Writer = new ByteBufferWriter(16);
+                    i64Writer.WriteLeb128I64(i64Value);
+                    ms.Write(i64Writer.WrittenData.ToArray());
                     break;
                 case WasmInitOpCode.F32Const:
                     var f32Bytes = buffer.ReadBytes(4).ToArray();
@@ -621,9 +620,9 @@ public static class WasmDecoder
                     break;
                 case WasmInitOpCode.GlobalGet:
                     var globalIdx = buffer.ReadLeb128U32();
-                    var globalIdxWriter = new ByteBufferWriter(temp);
+                    var globalIdxWriter = new ByteBufferWriter(16);
                     globalIdxWriter.WriteLeb128U32(globalIdx);
-                    ms.Write(temp.Slice(0, globalIdxWriter.Position).ToArray());
+                    ms.Write(globalIdxWriter.WrittenData.ToArray());
                     break;
                 default:
                     throw new InvalidDataException($"初始化表达式中不支持的操作码：0x{opcode:X2}");

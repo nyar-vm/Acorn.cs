@@ -88,11 +88,11 @@ public sealed class GnosisEncoder
                     break;
 
                 case GnosisConstantTag.Int:
-                    writer.WriteI32LE(constant.Value is int i ? i : 0);
+                    writer.WriteI64LE(constant.Value is long l ? l : (constant.Value is int i ? i : 0));
                     break;
 
                 case GnosisConstantTag.Float:
-                    writer.WriteF32LE(constant.Value is float f ? f : 0.0f);
+                    writer.WriteF64LE(constant.Value is double d ? d : (constant.Value is float f ? f : 0.0));
                     break;
             }
         }

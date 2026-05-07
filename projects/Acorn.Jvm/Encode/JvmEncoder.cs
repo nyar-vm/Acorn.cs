@@ -45,7 +45,16 @@ public sealed class JvmEncoder
 
     private static void WriteConstantPool(ref ByteBufferWriter writer, IReadOnlyList<JvmConstant> constantPool)
     {
-        writer.WriteU16BE((ushort)(constantPool.Count + 1));
+        var count = constantPool.Count + 1;
+        foreach (var constant in constantPool)
+        {
+            if (constant.Kind is JvmConstantKind.Long or JvmConstantKind.Double)
+            {
+                count++;
+            }
+        }
+
+        writer.WriteU16BE((ushort)count);
 
         foreach (var constant in constantPool)
         {
@@ -105,9 +114,19 @@ public sealed class JvmEncoder
             case JvmConstantMethodType mt:
                 writer.WriteU16BE(mt.DescriptorIndex);
                 break;
+            case JvmConstantDynamic dyn:
+                writer.WriteU16BE(dyn.BootstrapMethodAttrIndex);
+                writer.WriteU16BE(dyn.NameAndTypeIndex);
+                break;
             case JvmConstantInvokeDynamic id:
                 writer.WriteU16BE(id.BootstrapMethodAttrIndex);
                 writer.WriteU16BE(id.NameAndTypeIndex);
+                break;
+            case JvmConstantModule mod:
+                writer.WriteU16BE(mod.NameIndex);
+                break;
+            case JvmConstantPackage pkg:
+                writer.WriteU16BE(pkg.NameIndex);
                 break;
         }
     }
@@ -222,11 +241,77 @@ public sealed class JvmEncoder
             case JvmLocalVariableTableAttribute lvt:
                 WriteLocalVariableTableAttribute(ref writer, lvt);
                 break;
+            case JvmLocalVariableTypeTableAttribute lvtt:
+                WriteLocalVariableTypeTableAttribute(ref writer, lvtt);
+                break;
             case JvmInnerClassesAttribute ic:
                 WriteInnerClassesAttribute(ref writer, ic);
                 break;
             case JvmBootstrapMethodsAttribute bm:
                 WriteBootstrapMethodsAttribute(ref writer, bm);
+                break;
+            case JvmSignatureAttribute sig:
+                writer.WriteU32BE(2);
+                writer.WriteU16BE(sig.SignatureIndex);
+                break;
+            case JvmSyntheticAttribute:
+                writer.WriteU32BE(0);
+                break;
+            case JvmDeprecatedAttribute:
+                writer.WriteU32BE(0);
+                break;
+            case JvmEnclosingMethodAttribute em:
+                writer.WriteU32BE(4);
+                writer.WriteU16BE(em.ClassIndex);
+                writer.WriteU16BE(em.MethodIndex);
+                break;
+            case JvmSourceDebugExtensionAttribute sde:
+                writer.WriteU32BE((uint)sde.DebugExtension.Length);
+                writer.Write(sde.DebugExtension);
+                break;
+            case JvmMethodParametersAttribute mp:
+                WriteMethodParametersAttribute(ref writer, mp);
+                break;
+            case JvmStackMapTableAttribute smt:
+                WriteStackMapTableAttribute(ref writer, smt);
+                break;
+            case JvmNestHostAttribute nh:
+                writer.WriteU32BE(2);
+                writer.WriteU16BE(nh.HostClassIndex);
+                break;
+            case JvmNestMembersAttribute nm:
+                WriteNestMembersAttribute(ref writer, nm);
+                break;
+            case JvmRecordAttribute rec:
+                WriteRecordAttribute(ref writer, rec);
+                break;
+            case JvmPermittedSubclassesAttribute ps:
+                WritePermittedSubclassesAttribute(ref writer, ps);
+                break;
+            case JvmRuntimeVisibleAnnotationsAttribute rva:
+                WriteRuntimeVisibleAnnotationsAttribute(ref writer, rva);
+                break;
+            case JvmRuntimeInvisibleAnnotationsAttribute ria:
+                WriteRuntimeInvisibleAnnotationsAttribute(ref writer, ria);
+                break;
+            case JvmRuntimeVisibleParameterAnnotationsAttribute rvpa:
+                WriteRuntimeVisibleParameterAnnotationsAttribute(ref writer, rvpa);
+                break;
+            case JvmRuntimeInvisibleParameterAnnotationsAttribute ripa:
+                WriteRuntimeInvisibleParameterAnnotationsAttribute(ref writer, ripa);
+                break;
+            case JvmAnnotationDefaultAttribute ad:
+                WriteAnnotationDefaultAttribute(ref writer, ad);
+                break;
+            case JvmExceptionsAttribute exc:
+                WriteExceptionsAttribute(ref writer, exc);
+                break;
+            case JvmModuleAttribute mod:
+                WriteModuleAttribute(ref writer, mod);
+                break;
+            case JvmRawAttribute raw:
+                writer.WriteU32BE((uint)raw.RawData.Length);
+                writer.Write(raw.RawData);
                 break;
             default:
                 writer.WriteU32BE(attribute.AttributeLength);
@@ -289,6 +374,22 @@ public sealed class JvmEncoder
         }
     }
 
+    private static void WriteLocalVariableTypeTableAttribute(ref ByteBufferWriter writer, JvmLocalVariableTypeTableAttribute lvtt)
+    {
+        var attrSize = 2 + lvtt.LocalVariableTypeTable.Count * 10;
+        writer.WriteU32BE((uint)attrSize);
+        writer.WriteU16BE((ushort)lvtt.LocalVariableTypeTable.Count);
+
+        foreach (var entry in lvtt.LocalVariableTypeTable)
+        {
+            writer.WriteU16BE(entry.StartPc);
+            writer.WriteU16BE(entry.Length);
+            writer.WriteU16BE(entry.NameIndex);
+            writer.WriteU16BE(entry.SignatureIndex);
+            writer.WriteU16BE(entry.Index);
+        }
+    }
+
     private static void WriteInnerClassesAttribute(ref ByteBufferWriter writer, JvmInnerClassesAttribute ic)
     {
         var attrSize = 2 + ic.Classes.Count * 8;
@@ -325,6 +426,352 @@ public sealed class JvmEncoder
             {
                 writer.WriteU16BE(arg);
             }
+        }
+    }
+
+    private static void WriteMethodParametersAttribute(ref ByteBufferWriter writer, JvmMethodParametersAttribute mp)
+    {
+        var attrSize = 1 + mp.Parameters.Count * 4;
+        writer.WriteU32BE((uint)attrSize);
+        writer.WriteU8(mp.ParameterCount);
+
+        foreach (var param in mp.Parameters)
+        {
+            writer.WriteU16BE(param.NameIndex);
+            writer.WriteU16BE(param.AccessFlags);
+        }
+    }
+
+    private static void WriteStackMapTableAttribute(ref ByteBufferWriter writer, JvmStackMapTableAttribute smt)
+    {
+        var attrWriter = new ByteBufferWriter(256);
+        attrWriter.WriteU16BE(smt.NumberOfEntries);
+
+        foreach (var frame in smt.Entries)
+        {
+            WriteStackMapFrame(ref attrWriter, frame);
+        }
+
+        var attrBytes = attrWriter.ToArray();
+        writer.WriteU32BE((uint)attrBytes.Length);
+        writer.Write(attrBytes);
+    }
+
+    private static void WriteStackMapFrame(ref ByteBufferWriter writer, JvmStackMapFrame frame)
+    {
+        writer.WriteU8(frame.FrameType);
+
+        switch (frame)
+        {
+            case JvmSameFrame:
+                break;
+            case JvmSameLocals1StackItemFrame slsif:
+                WriteVerificationTypeInfoList(ref writer, slsif.Stack);
+                break;
+            case JvmChopFrame cf:
+                writer.WriteU16BE(cf.OffsetDelta);
+                break;
+            case JvmSameFrameExtended sfe:
+                writer.WriteU16BE(sfe.OffsetDelta);
+                break;
+            case JvmAppendFrame af:
+                writer.WriteU16BE(af.OffsetDelta);
+                WriteVerificationTypeInfoList(ref writer, af.Locals);
+                break;
+            case JvmFullFrame ff:
+                writer.WriteU16BE(ff.OffsetDelta);
+                writer.WriteU16BE(ff.NumberOfLocals);
+                WriteVerificationTypeInfoList(ref writer, ff.Locals);
+                writer.WriteU16BE(ff.NumberOfStackItems);
+                WriteVerificationTypeInfoList(ref writer, ff.Stack);
+                break;
+        }
+    }
+
+    private static void WriteVerificationTypeInfoList(ref ByteBufferWriter writer, IReadOnlyList<JvmVerificationTypeInfo> items)
+    {
+        foreach (var item in items)
+        {
+            writer.WriteU8(item.Tag);
+            if (item.Tag == 7 && item.CpoolIndex.HasValue)
+            {
+                writer.WriteU16BE(item.CpoolIndex.Value);
+            }
+            else if (item.Tag == 8 && item.Offset.HasValue)
+            {
+                writer.WriteU16BE(item.Offset.Value);
+            }
+        }
+    }
+
+    private static void WriteNestMembersAttribute(ref ByteBufferWriter writer, JvmNestMembersAttribute nm)
+    {
+        var attrSize = 2 + nm.ClassIndexes.Count * 2;
+        writer.WriteU32BE((uint)attrSize);
+        writer.WriteU16BE(nm.NumberOfClasses);
+
+        foreach (var idx in nm.ClassIndexes)
+        {
+            writer.WriteU16BE(idx);
+        }
+    }
+
+    private static void WritePermittedSubclassesAttribute(ref ByteBufferWriter writer, JvmPermittedSubclassesAttribute ps)
+    {
+        var attrSize = 2 + ps.ClassIndexes.Count * 2;
+        writer.WriteU32BE((uint)attrSize);
+        writer.WriteU16BE(ps.NumberOfClasses);
+
+        foreach (var idx in ps.ClassIndexes)
+        {
+            writer.WriteU16BE(idx);
+        }
+    }
+
+    private static void WriteRecordAttribute(ref ByteBufferWriter writer, JvmRecordAttribute rec)
+    {
+        var attrWriter = new ByteBufferWriter(256);
+        attrWriter.WriteU16BE(rec.ComponentsCount);
+
+        foreach (var component in rec.Components)
+        {
+            attrWriter.WriteU16BE(component.NameIndex);
+            attrWriter.WriteU16BE(component.DescriptorIndex);
+            WriteAttributes(ref attrWriter, component.Attributes);
+        }
+
+        var attrBytes = attrWriter.ToArray();
+        writer.WriteU32BE((uint)attrBytes.Length);
+        writer.Write(attrBytes);
+    }
+
+    private static void WriteRuntimeVisibleAnnotationsAttribute(ref ByteBufferWriter writer, JvmRuntimeVisibleAnnotationsAttribute rva)
+    {
+        var attrWriter = new ByteBufferWriter(256);
+        attrWriter.WriteU16BE(rva.NumAnnotations);
+
+        foreach (var annotation in rva.Annotations)
+        {
+            WriteAnnotation(ref attrWriter, annotation);
+        }
+
+        var attrBytes = attrWriter.ToArray();
+        writer.WriteU32BE((uint)attrBytes.Length);
+        writer.Write(attrBytes);
+    }
+
+    private static void WriteRuntimeInvisibleAnnotationsAttribute(ref ByteBufferWriter writer, JvmRuntimeInvisibleAnnotationsAttribute ria)
+    {
+        var attrWriter = new ByteBufferWriter(256);
+        attrWriter.WriteU16BE(ria.NumAnnotations);
+
+        foreach (var annotation in ria.Annotations)
+        {
+            WriteAnnotation(ref attrWriter, annotation);
+        }
+
+        var attrBytes = attrWriter.ToArray();
+        writer.WriteU32BE((uint)attrBytes.Length);
+        writer.Write(attrBytes);
+    }
+
+    private static void WriteRuntimeVisibleParameterAnnotationsAttribute(ref ByteBufferWriter writer, JvmRuntimeVisibleParameterAnnotationsAttribute rvpa)
+    {
+        var attrWriter = new ByteBufferWriter(256);
+        attrWriter.WriteU8(rvpa.NumParameters);
+
+        foreach (var pa in rvpa.ParameterAnnotations)
+        {
+            attrWriter.WriteU16BE(pa.NumAnnotations);
+
+            foreach (var annotation in pa.Annotations)
+            {
+                WriteAnnotation(ref attrWriter, annotation);
+            }
+        }
+
+        var attrBytes = attrWriter.ToArray();
+        writer.WriteU32BE((uint)attrBytes.Length);
+        writer.Write(attrBytes);
+    }
+
+    private static void WriteRuntimeInvisibleParameterAnnotationsAttribute(ref ByteBufferWriter writer, JvmRuntimeInvisibleParameterAnnotationsAttribute ripa)
+    {
+        var attrWriter = new ByteBufferWriter(256);
+        attrWriter.WriteU8(ripa.NumParameters);
+
+        foreach (var pa in ripa.ParameterAnnotations)
+        {
+            attrWriter.WriteU16BE(pa.NumAnnotations);
+
+            foreach (var annotation in pa.Annotations)
+            {
+                WriteAnnotation(ref attrWriter, annotation);
+            }
+        }
+
+        var attrBytes = attrWriter.ToArray();
+        writer.WriteU32BE((uint)attrBytes.Length);
+        writer.Write(attrBytes);
+    }
+
+    private static void WriteAnnotationDefaultAttribute(ref ByteBufferWriter writer, JvmAnnotationDefaultAttribute ad)
+    {
+        var attrWriter = new ByteBufferWriter(64);
+        WriteElementValue(ref attrWriter, ad.DefaultValue);
+        var attrBytes = attrWriter.ToArray();
+        writer.WriteU32BE((uint)attrBytes.Length);
+        writer.Write(attrBytes);
+    }
+
+    private static void WriteExceptionsAttribute(ref ByteBufferWriter writer, JvmExceptionsAttribute exc)
+    {
+        var attrSize = 2 + exc.ExceptionIndexTable.Count * 2;
+        writer.WriteU32BE((uint)attrSize);
+        writer.WriteU16BE(exc.NumberOfExceptions);
+
+        foreach (var idx in exc.ExceptionIndexTable)
+        {
+            writer.WriteU16BE(idx);
+        }
+    }
+
+    private static void WriteModuleAttribute(ref ByteBufferWriter writer, JvmModuleAttribute mod)
+    {
+        var attrWriter = new ByteBufferWriter(256);
+        attrWriter.WriteU16BE(mod.ModuleNameIndex);
+        attrWriter.WriteU16BE(mod.ModuleFlags);
+        attrWriter.WriteU16BE(mod.ModuleVersionIndex);
+
+        attrWriter.WriteU16BE((ushort)mod.Requires.Count);
+        foreach (var req in mod.Requires)
+        {
+            attrWriter.WriteU16BE(req.RequiresIndex);
+            attrWriter.WriteU16BE(req.RequiresFlags);
+            attrWriter.WriteU16BE(req.RequiresVersionIndex ?? 0);
+        }
+
+        attrWriter.WriteU16BE((ushort)mod.Exports.Count);
+        foreach (var exp in mod.Exports)
+        {
+            attrWriter.WriteU16BE(exp.ExportsIndex);
+            attrWriter.WriteU16BE(exp.ExportsFlags);
+            attrWriter.WriteU16BE((ushort)exp.ExportsToIndex.Count);
+            foreach (var idx in exp.ExportsToIndex)
+            {
+                attrWriter.WriteU16BE(idx);
+            }
+        }
+
+        attrWriter.WriteU16BE((ushort)mod.Opens.Count);
+        foreach (var open in mod.Opens)
+        {
+            attrWriter.WriteU16BE(open.OpensIndex);
+            attrWriter.WriteU16BE(open.OpensFlags);
+            attrWriter.WriteU16BE((ushort)open.OpensToIndex.Count);
+            foreach (var idx in open.OpensToIndex)
+            {
+                attrWriter.WriteU16BE(idx);
+            }
+        }
+
+        attrWriter.WriteU16BE((ushort)mod.UsesIndex.Count);
+        foreach (var idx in mod.UsesIndex)
+        {
+            attrWriter.WriteU16BE(idx);
+        }
+
+        attrWriter.WriteU16BE((ushort)mod.Provides.Count);
+        foreach (var prov in mod.Provides)
+        {
+            attrWriter.WriteU16BE(prov.ProvidesIndex);
+            attrWriter.WriteU16BE((ushort)prov.ProvidesWithIndex.Count);
+            foreach (var idx in prov.ProvidesWithIndex)
+            {
+                attrWriter.WriteU16BE(idx);
+            }
+        }
+
+        var attrBytes = attrWriter.ToArray();
+        writer.WriteU32BE((uint)attrBytes.Length);
+        writer.Write(attrBytes);
+    }
+
+    private static void WriteAnnotation(ref ByteBufferWriter writer, JvmAnnotation annotation)
+    {
+        writer.WriteU16BE(annotation.TypeIndex);
+        writer.WriteU16BE(annotation.NumElementValuePairs);
+
+        foreach (var pair in annotation.ElementValuePairs)
+        {
+            writer.WriteU16BE(pair.ElementNameIndex);
+            WriteElementValue(ref writer, pair.Value);
+        }
+    }
+
+    private static void WriteElementValue(ref ByteBufferWriter writer, JvmElementValue ev)
+    {
+        writer.WriteU8(ev.Tag);
+
+        var tag = (char)ev.Tag;
+        switch (tag)
+        {
+            case 'B':
+            case 'C':
+            case 'D':
+            case 'F':
+            case 'I':
+            case 'J':
+            case 'S':
+            case 'Z':
+            case 's':
+                if (ev.ConstValueIndex.HasValue)
+                {
+                    writer.WriteU16BE(ev.ConstValueIndex.Value);
+                }
+
+                break;
+            case 'e':
+                if (ev.TypeNameIndex.HasValue)
+                {
+                    writer.WriteU16BE(ev.TypeNameIndex.Value);
+                }
+
+                if (ev.EnumConstNameIndex.HasValue)
+                {
+                    writer.WriteU16BE(ev.EnumConstNameIndex.Value);
+                }
+
+                break;
+            case 'c':
+                if (ev.ClassInfoIndex.HasValue)
+                {
+                    writer.WriteU16BE(ev.ClassInfoIndex.Value);
+                }
+
+                break;
+            case '@':
+                if (ev.AnnotationValue is not null)
+                {
+                    WriteAnnotation(ref writer, ev.AnnotationValue);
+                }
+
+                break;
+            case '[':
+                if (ev.ArrayNumValues.HasValue)
+                {
+                    writer.WriteU16BE(ev.ArrayNumValues.Value);
+                }
+
+                if (ev.ArrayValues is not null)
+                {
+                    foreach (var val in ev.ArrayValues)
+                    {
+                        WriteElementValue(ref writer, val);
+                    }
+                }
+
+                break;
         }
     }
 
@@ -381,7 +828,10 @@ public sealed class JvmEncoder
             JvmConstantNameAndType => 5,
             JvmConstantMethodHandle => 4,
             JvmConstantMethodType => 3,
+            JvmConstantDynamic => 5,
             JvmConstantInvokeDynamic => 5,
+            JvmConstantModule => 3,
+            JvmConstantPackage => 3,
             _ => 3
         };
     }

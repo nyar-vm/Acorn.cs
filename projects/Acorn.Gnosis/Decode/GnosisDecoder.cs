@@ -121,8 +121,8 @@ public ref struct GnosisDecoder
             object? value = (GnosisConstantTag)tag switch
             {
                 GnosisConstantTag.String => _buffer.ReadLeb128String(),
-                GnosisConstantTag.Int => _buffer.ReadI32LE(),
-                GnosisConstantTag.Float => _buffer.ReadF32LE(),
+                GnosisConstantTag.Int => _buffer.ReadI64LE(),
+                GnosisConstantTag.Float => _buffer.ReadF64LE(),
                 _ => null
             };
 

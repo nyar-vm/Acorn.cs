@@ -136,7 +136,11 @@ public class WasmRoundTripTests
     {
         var original = new WasmModuleData
         {
-            Globals = [new WasmGlobal { Type = new WasmGlobalType { ValueType = WasmValueType.Int32, Mutable = true } }]
+            Globals = [new WasmGlobal
+            {
+                Type = new WasmGlobalType { ValueType = WasmValueType.Int32, Mutable = true },
+                InitExpression = [0x41, 0x2A, 0x0B]
+            }]
         };
 
         var bytes = WasmEncoder.EncodeModule(original);
@@ -145,6 +149,7 @@ public class WasmRoundTripTests
         Assert.Single(decoded.Globals);
         Assert.Equal(WasmValueType.Int32, decoded.Globals[0].Type.ValueType);
         Assert.True(decoded.Globals[0].Type.Mutable);
+        Assert.Equal(new byte[] { 0x41, 0x2A, 0x0B }, decoded.Globals[0].InitExpression);
     }
 
     [Fact]
@@ -195,20 +200,7 @@ public class WasmRoundTripTests
         };
 
         var bytes = WasmEncoder.EncodeModule(original);
-        Console.WriteLine($"Encoded bytes ({bytes.Length}): {string.Join(' ', bytes.Select(b => $"{b:X2}"))}");
-
-        try
-        {
-            var decoded = WasmDecoder.DecodeModule(bytes);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Decode failed: {ex.Message}");
-            Console.WriteLine($"StackTrace: {ex.StackTrace}");
-            throw;
-        }
-
-        var decoded2 = WasmDecoder.DecodeModule(bytes);
+        var decoded = WasmDecoder.DecodeModule(bytes);
 
         Assert.Single(decoded.DataSegments);
         Assert.Equal((uint)0, decoded.DataSegments[0].MemoryIndex);

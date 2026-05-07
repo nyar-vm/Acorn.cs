@@ -27,9 +27,22 @@ public ref struct ByteBufferWriter
     private Endianness _endianness;
 
     /// <summary>
-    ///     初始化 <see cref="ByteBufferWriter" /> 结构的新实例。
+    ///     初始化 <see cref="ByteBufferWriter" /> 结构的新实例，直接使用传入的缓冲区。
     /// </summary>
-    /// <param name="buffer">要写入的目标字节缓冲区。</param>
+    /// <param name="buffer">要写入的目标字节缓冲区（直接引用，不复制）。</param>
+    /// <param name="endianness">字节序，默认为小端序。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ByteBufferWriter(byte[] buffer, Endianness endianness = Endianness.LittleEndian)
+    {
+        _buffer = buffer;
+        _position = 0;
+        _endianness = endianness;
+    }
+
+    /// <summary>
+    ///     初始化 <see cref="ByteBufferWriter" /> 结构的新实例，复制传入的缓冲区。
+    /// </summary>
+    /// <param name="buffer">要写入的目标字节缓冲区（会被复制）。</param>
     /// <param name="endianness">字节序，默认为小端序。</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ByteBufferWriter(Span<byte> buffer, Endianness endianness = Endianness.LittleEndian)

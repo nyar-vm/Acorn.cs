@@ -93,6 +93,7 @@ public ref struct JvmScanner
                 case JvmConstantKind.InterfaceMethodref:
                 case JvmConstantKind.NameAndType:
                 case JvmConstantKind.InvokeDynamic:
+                case JvmConstantKind.Dynamic:
                     if (_scanner.Buffer.Remaining >= 4)
                     {
                         _scanner.Buffer.Position += 4;
@@ -113,6 +114,8 @@ public ref struct JvmScanner
                 case JvmConstantKind.Class:
                 case JvmConstantKind.String:
                 case JvmConstantKind.MethodType:
+                case JvmConstantKind.Module:
+                case JvmConstantKind.Package:
                     if (_scanner.Buffer.Remaining >= 2)
                     {
                         _scanner.Buffer.Position += 2;
@@ -325,6 +328,36 @@ public ref struct JvmScanner
                     if (_scanner.Buffer.Remaining >= 4)
                     {
                         _scanner.Buffer.Position += 4;
+                    }
+
+                    break;
+
+                case JvmConstantKind.Dynamic:
+                    stats.DynamicConstantCount++;
+
+                    if (_scanner.Buffer.Remaining >= 4)
+                    {
+                        _scanner.Buffer.Position += 4;
+                    }
+
+                    break;
+
+                case JvmConstantKind.Module:
+                    stats.ModuleConstantCount++;
+
+                    if (_scanner.Buffer.Remaining >= 2)
+                    {
+                        _scanner.Buffer.Position += 2;
+                    }
+
+                    break;
+
+                case JvmConstantKind.Package:
+                    stats.PackageConstantCount++;
+
+                    if (_scanner.Buffer.Remaining >= 2)
+                    {
+                        _scanner.Buffer.Position += 2;
                     }
 
                     break;
@@ -722,6 +755,21 @@ public sealed class JvmStatistics
     ///     动态调用常量数量。
     /// </summary>
     public int InvokeDynamicConstantCount { get; set; }
+
+    /// <summary>
+    ///     动态常量数量。
+    /// </summary>
+    public int DynamicConstantCount { get; set; }
+
+    /// <summary>
+    ///     模块常量数量。
+    /// </summary>
+    public int ModuleConstantCount { get; set; }
+
+    /// <summary>
+    ///     包常量数量。
+    /// </summary>
+    public int PackageConstantCount { get; set; }
 
     /// <summary>
     ///     类访问标志。
