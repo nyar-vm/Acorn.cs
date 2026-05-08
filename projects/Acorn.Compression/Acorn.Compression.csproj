@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Acorn.Compression</RootNamespace>
+    <AssemblyName>Acorn.Compression</AssemblyName>
+    <Version>1.0.0</Version>
+    <Authors>nyar-vm</Authors>
+    <Description>Acorn 压缩编解码器——纯 C# 实现的 LZ4 和 Zstandard 压缩算法</Description>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Acorn\Acorn.csproj" />
+  </ItemGroup>
+
+</Project>

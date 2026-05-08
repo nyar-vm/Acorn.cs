@@ -245,7 +245,7 @@ public sealed class VorbisEncoder
         written[24] = (byte)((crc >> 16) & 0xFF);
         written[25] = (byte)((crc >> 24) & 0xFF);
 
-        writer.Write(written);
+        writer.Write(written.ToArray());
     }
 
     private static void WriteU64LE(ref ByteBufferWriter writer, ulong value)

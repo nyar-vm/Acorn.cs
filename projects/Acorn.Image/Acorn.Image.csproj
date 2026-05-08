@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Acorn.Image</RootNamespace>
+    <AssemblyName>Acorn.Image</AssemblyName>
+    <Version>1.0.0</Version>
+    <Authors>nyar-vm</Authors>
+    <Description>Acorn 图像编解码器——纯 C# 实现的统一图像加载、保存和处理</Description>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Acorn\Acorn.csproj" />
+    <ProjectReference Include="..\Acorn.Png\Acorn.Png.csproj" />
+    <ProjectReference Include="..\Acorn.Bmp\Acorn.Bmp.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -175,6 +175,9 @@ public enum WasmOpcode : ushort
 
     #region 比较指令
 
+    /// <summary>32 位整数等于零比较。</summary>
+    I32Eqz = 0x45,
+
     /// <summary>32 位整数相等比较。</summary>
     I32Eq = 0x46,
 
@@ -204,6 +207,9 @@ public enum WasmOpcode : ushort
 
     /// <summary>32 位无符号整数大于等于比较。</summary>
     I32GeU = 0x4F,
+
+    /// <summary>64 位整数等于零比较。</summary>
+    I64Eqz = 0x50,
 
     /// <summary>64 位整数相等比较。</summary>
     I64Eq = 0x51,
