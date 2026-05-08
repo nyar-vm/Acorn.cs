@@ -1,4 +1,5 @@
 using System.Text;
+using Acorn;
 using Acorn.Pe.Data;
 using Acorn.Pe.Decode;
 
@@ -7,8 +8,16 @@ namespace Acorn.Pe.Scanner;
 /// <summary>
 ///     PE 文件扫描器，提供对 Windows 可执行文件的快速结构扫描。
 /// </summary>
-public class PeScanner
+public class PeScanner : IDetector
 {
+    /// <inheritdoc />
+    public bool Detect(ReadOnlySpan<byte> header)
+    {
+        return header.Length >= 2
+            && header[0] == PeConstants.DosMagicBytes[0]
+            && header[1] == PeConstants.DosMagicBytes[1];
+    }
+
     /// <summary>
     ///     扫描 PE 文件，提取结构信息。
     /// </summary>

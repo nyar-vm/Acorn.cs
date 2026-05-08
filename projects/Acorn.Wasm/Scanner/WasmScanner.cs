@@ -1,4 +1,5 @@
 using System.Text;
+using Acorn;
 using Acorn.Frame;
 using Acorn.Wasm.Data;
 
@@ -7,8 +8,17 @@ namespace Acorn.Wasm.Scanner;
 /// <summary>
 ///     WebAssembly 二进制格式扫描器，基于 <see cref="SpanScanner" /> 提供对 WASM 模块的快速元信息扫描。
 /// </summary>
-public ref struct WasmScanner : IWasmScanner
+public ref struct WasmScanner : IWasmScanner, IDetector
 {
+    /// <inheritdoc />
+    public bool Detect(ReadOnlySpan<byte> header)
+    {
+        return header.Length >= 4
+            && header[0] == WasmConstants.MagicNumber[0]
+            && header[1] == WasmConstants.MagicNumber[1]
+            && header[2] == WasmConstants.MagicNumber[2]
+            && header[3] == WasmConstants.MagicNumber[3];
+    }
     private SpanScanner _scanner;
 
     /// <summary>

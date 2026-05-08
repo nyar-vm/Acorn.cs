@@ -1,4 +1,5 @@
 using System.Text;
+using Acorn;
 using Acorn.ELF.Data;
 using Acorn.ELF.Decode;
 
@@ -7,8 +8,18 @@ namespace Acorn.ELF.Scanner;
 /// <summary>
 ///     ELF 文件扫描器，提供对 Linux 可执行文件的快速结构扫描。
 /// </summary>
-public class ELFScanner
+public class ELFScanner : IDetector
 {
+    /// <inheritdoc />
+    public bool Detect(ReadOnlySpan<byte> header)
+    {
+        return header.Length >= 4
+            && header[0] == ElfConstants.Magic[0]
+            && header[1] == ElfConstants.Magic[1]
+            && header[2] == ElfConstants.Magic[2]
+            && header[3] == ElfConstants.Magic[3];
+    }
+
     /// <summary>
     ///     扫描 ELF 文件，提取结构信息。
     /// </summary>
