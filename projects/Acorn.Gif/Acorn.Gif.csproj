@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Acorn.Gif</RootNamespace>
+    <AssemblyName>Acorn.Gif</AssemblyName>
+    <Version>1.0.0</Version>
+    <Authors>nyar-vm</Authors>
+    <Description>Acorn GIF 格式库——纯 C# 实现的 GIF 图像编解码和帧扫描</Description>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Acorn\Acorn.csproj" />
+  </ItemGroup>
+
+</Project>

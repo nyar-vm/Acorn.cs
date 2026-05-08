@@ -1,9 +1,9 @@
-using Acorn.Image.Data;
+using Acorn.Jpeg.Data;
 
-namespace Acorn.Image.Decode;
+namespace Acorn.Jpeg.Decode;
 
 /// <summary>
-///     JPEG Baseline DCT 解码器——纯 C# 实现，无第三方依赖
+///     JPEG Baseline DCT 解码器——纯 C# 实现，无第三方依赖。
 /// </summary>
 /// <remarks>
 ///     实现了 JPEG Baseline (SOF0) 解码，支持 YCbCr 4:4:4/4:2:0/4:2:2 采样、
@@ -27,9 +27,9 @@ public ref struct JpegDecoder
     private int[] _dcPredictors;
 
     /// <summary>
-    ///     初始化 JPEG 解码器
+    ///     初始化 <see cref="JpegDecoder" /> 结构的新实例。
     /// </summary>
-    /// <param name="data">JPEG 二进制数据</param>
+    /// <param name="data">JPEG 二进制数据。</param>
     public JpegDecoder(ReadOnlySpan<byte> data)
     {
         _data = data;
@@ -44,9 +44,10 @@ public ref struct JpegDecoder
     }
 
     /// <summary>
-    ///     解码 JPEG 图像为 RGBA 像素数据
+    ///     解码 JPEG 图像为像素数据。
     /// </summary>
-    public RgbaImage Decode()
+    /// <returns>JPEG 图像数据。</returns>
+    public JpegImageData Decode()
     {
         ParseMarkers();
 
@@ -105,7 +106,8 @@ public ref struct JpegDecoder
             }
         }
 
-        var rgbaData = new byte[_width * _height * 4];
+        var pixelData = new byte[_width * _height * 4];
+        var colorSpace = componentCount == 1 ? JpegColorSpace.Grayscale : JpegColorSpace.YCbCr;
 
         if (componentCount == 1)
         {
@@ -116,10 +118,10 @@ public ref struct JpegDecoder
                     var srcIdx = y * mcuWidth * _maxH * 8 + x;
                     var gray = (byte)channelData[0][srcIdx];
                     var dstIdx = (y * _width + x) * 4;
-                    rgbaData[dstIdx] = gray;
-                    rgbaData[dstIdx + 1] = gray;
-                    rgbaData[dstIdx + 2] = gray;
-                    rgbaData[dstIdx + 3] = 255;
+                    pixelData[dstIdx] = gray;
+                    pixelData[dstIdx + 1] = gray;
+                    pixelData[dstIdx + 2] = gray;
+                    pixelData[dstIdx + 3] = 255;
                 }
             }
         }
@@ -148,15 +150,40 @@ public ref struct JpegDecoder
                     var b = yVal + 1.772f * cbVal;
 
                     var dstIdx = (y * _width + x) * 4;
-                    rgbaData[dstIdx] = (byte)Math.Clamp(r, 0, 255);
-                    rgbaData[dstIdx + 1] = (byte)Math.Clamp(g, 0, 255);
-                    rgbaData[dstIdx + 2] = (byte)Math.Clamp(b, 0, 255);
-                    rgbaData[dstIdx + 3] = 255;
+                    pixelData[dstIdx] = (byte)Math.Clamp(r, 0, 255);
+                    pixelData[dstIdx + 1] = (byte)Math.Clamp(g, 0, 255);
+                    pixelData[dstIdx + 2] = (byte)Math.Clamp(b, 0, 255);
+                    pixelData[dstIdx + 3] = 255;
                 }
             }
         }
 
-        return new RgbaImage { Width = _width, Height = _height, RgbaData = rgbaData };
+        var componentInfos = new JpegComponentInfo[componentCount];
+
+        for (var i = 0; i < componentCount; i++)
+        {
+            var comp = _components[i];
+            componentInfos[i] = new JpegComponentInfo
+            {
+                Id = comp.Id,
+                H = comp.H,
+                V = comp.V,
+                QuantTableId = comp.QuantTableId,
+                DcTableId = comp.DcTableId,
+                AcTableId = comp.AcTableId
+            };
+        }
+
+        return new JpegImageData
+        {
+            Width = _width,
+            Height = _height,
+            Precision = _precision,
+            ColorSpace = colorSpace,
+            Components = componentInfos,
+            PixelData = pixelData,
+            IsProgressive = false
+        };
     }
 
     #region 标记解析
@@ -244,11 +271,8 @@ public ref struct JpegDecoder
             {
                 for (var i = 0; i < 64; i++)
                 {
-                    var hi = _data[_position];
-                    var lo = _data[_position + 1];
                     _position += 2;
-                    var value16 = (hi << 8) | lo;
-                    _quantTables[tableId][i] = (byte)Math.Clamp(value16, 1, 255);
+                    _quantTables[tableId][i] = _data[_position - 2];
                 }
             }
         }
@@ -524,26 +548,75 @@ public ref struct JpegDecoder
 
 internal sealed class JpegHuffmanTable
 {
+    /// <summary>
+    ///     Huffman 树根节点。
+    /// </summary>
     public JpegHuffmanNode Root { get; }
+
+    /// <summary>
+    ///     初始化 <see cref="JpegHuffmanTable" /> 类的新实例。
+    /// </summary>
+    /// <param name="root">Huffman 树根节点。</param>
     public JpegHuffmanTable(JpegHuffmanNode root) => Root = root;
 }
 
 internal sealed class JpegHuffmanNode
 {
+    /// <summary>
+    ///     符号值，-1 表示非叶节点。
+    /// </summary>
     public int Symbol = -1;
+
+    /// <summary>
+    ///     0 分支子节点。
+    /// </summary>
     public JpegHuffmanNode? Zero;
+
+    /// <summary>
+    ///     1 分支子节点。
+    /// </summary>
     public JpegHuffmanNode? One;
 }
 
 internal sealed class JpegComponent
 {
+    /// <summary>
+    ///     分量标识符。
+    /// </summary>
     public int Id;
+
+    /// <summary>
+    ///     水平采样因子。
+    /// </summary>
     public int H;
+
+    /// <summary>
+    ///     垂直采样因子。
+    /// </summary>
     public int V;
+
+    /// <summary>
+    ///     量化表标识符。
+    /// </summary>
     public int QuantTableId;
+
+    /// <summary>
+    ///     直流 Huffman 表标识符。
+    /// </summary>
     public int DcTableId;
+
+    /// <summary>
+    ///     交流 Huffman 表标识符。
+    /// </summary>
     public int AcTableId;
 
+    /// <summary>
+    ///     初始化 <see cref="JpegComponent" /> 类的新实例。
+    /// </summary>
+    /// <param name="id">分量标识符。</param>
+    /// <param name="h">水平采样因子。</param>
+    /// <param name="v">垂直采样因子。</param>
+    /// <param name="qtId">量化表标识符。</param>
     public JpegComponent(int id, int h, int v, int qtId)
     {
         Id = id; H = h; V = v; QuantTableId = qtId;
@@ -556,6 +629,11 @@ internal ref struct JpegBitReader
     private int _bytePos;
     private int _bitPos;
 
+    /// <summary>
+    ///     初始化 <see cref="JpegBitReader" /> 结构的新实例。
+    /// </summary>
+    /// <param name="data">JPEG 扫描数据。</param>
+    /// <param name="startPos">起始字节位置。</param>
     public JpegBitReader(ReadOnlySpan<byte> data, int startPos)
     {
         _data = data;
@@ -563,6 +641,10 @@ internal ref struct JpegBitReader
         _bitPos = 0;
     }
 
+    /// <summary>
+    ///     读取单个比特。
+    /// </summary>
+    /// <returns>比特值（0 或 1）。</returns>
     public int ReadBit()
     {
         if (_bytePos >= _data.Length) return 0;
@@ -587,6 +669,11 @@ internal ref struct JpegBitReader
         return bit;
     }
 
+    /// <summary>
+    ///     读取指定数量的比特。
+    /// </summary>
+    /// <param name="count">要读取的比特数。</param>
+    /// <returns>读取的整数值。</returns>
     public int ReadBits(int count)
     {
         var value = 0;

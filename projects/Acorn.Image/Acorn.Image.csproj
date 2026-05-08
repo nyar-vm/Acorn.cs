@@ -16,6 +16,12 @@
     <ProjectReference Include="..\Acorn\Acorn.csproj" />
     <ProjectReference Include="..\Acorn.Png\Acorn.Png.csproj" />
     <ProjectReference Include="..\Acorn.Bmp\Acorn.Bmp.csproj" />
+    <ProjectReference Include="..\Acorn.Jpeg\Acorn.Jpeg.csproj" />
+    <ProjectReference Include="..\Acorn.Tga\Acorn.Tga.csproj" />
+    <ProjectReference Include="..\Acorn.Dds\Acorn.Dds.csproj" />
+    <ProjectReference Include="..\Acorn.Exr\Acorn.Exr.csproj" />
+    <ProjectReference Include="..\Acorn.Psd\Acorn.Psd.csproj" />
+    <ProjectReference Include="..\Acorn.Gif\Acorn.Gif.csproj" />
   </ItemGroup>
 
 </Project>

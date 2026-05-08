@@ -37,11 +37,11 @@ public sealed class RgbaImage
     /// <returns>RGBA 像素值（R,G,B,A 各一字节）</returns>
     public (byte R, byte G, byte B, byte A) GetPixel(int x, int y)
     {
-        var offset = (y * Width + x) * 4;
-        if (offset < 0 || offset + 3 >= RgbaData.Length)
+        if (x < 0 || x >= Width || y < 0 || y >= Height)
         {
-            return (0, 0, 0, 0);
+            throw new ArgumentOutOfRangeException(nameof(x), $"像素坐标越界：({x}, {y})，图像尺寸 {Width}x{Height}");
         }
+        var offset = (y * Width + x) * 4;
         return (RgbaData[offset], RgbaData[offset + 1], RgbaData[offset + 2], RgbaData[offset + 3]);
     }
 
@@ -56,14 +56,15 @@ public sealed class RgbaImage
     /// <param name="a">Alpha 分量</param>
     public void SetPixel(int x, int y, byte r, byte g, byte b, byte a)
     {
-        var offset = (y * Width + x) * 4;
-        if (offset >= 0 && offset + 3 < RgbaData.Length)
+        if (x < 0 || x >= Width || y < 0 || y >= Height)
         {
-            RgbaData[offset] = r;
-            RgbaData[offset + 1] = g;
-            RgbaData[offset + 2] = b;
-            RgbaData[offset + 3] = a;
+            throw new ArgumentOutOfRangeException(nameof(x), $"像素坐标越界：({x}, {y})，图像尺寸 {Width}x{Height}");
         }
+        var offset = (y * Width + x) * 4;
+        RgbaData[offset] = r;
+        RgbaData[offset + 1] = g;
+        RgbaData[offset + 2] = b;
+        RgbaData[offset + 3] = a;
     }
 }
 
