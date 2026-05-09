@@ -10,7 +10,7 @@ namespace Acorn.Gif.Decode;
 ///     全局/局部调色板、LZW 解压、隔行扫描、透明色、
 ///     图形控制扩展、Netscape 循环扩展。
 /// </remarks>
-public sealed class GifDecoder
+public ref struct GifDecoder
 {
     private ReadOnlySpan<byte> _data;
     private int _position;

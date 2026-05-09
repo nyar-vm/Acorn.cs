@@ -75,14 +75,42 @@ public enum ImageFormat
 {
     /// <summary>未知格式</summary>
     Unknown,
+
     /// <summary>PNG 格式</summary>
     Png,
+
     /// <summary>BMP 格式</summary>
     Bmp,
+
     /// <summary>JPEG 格式</summary>
     Jpeg,
+
     /// <summary>TGA 格式</summary>
-    Tga
+    Tga,
+
+    /// <summary>DDS 纹理格式</summary>
+    Dds,
+
+    /// <summary>OpenEXR 高动态范围格式</summary>
+    Exr,
+
+    /// <summary>Adobe Photoshop 格式</summary>
+    Psd,
+
+    /// <summary>GIF 动画格式</summary>
+    Gif,
+
+    /// <summary>WebP 格式</summary>
+    WebP,
+
+    /// <summary>ICO 图标格式</summary>
+    Ico,
+
+    /// <summary>QOI 快速无损格式</summary>
+    Qoi,
+
+    /// <summary>KTX2 纹理压缩格式</summary>
+    Ktx2
 }
 
 /// <summary>
