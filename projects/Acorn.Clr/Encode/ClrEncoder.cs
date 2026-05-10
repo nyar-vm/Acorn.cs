@@ -52,7 +52,8 @@ public sealed class ClrEncoder
             return tinyWriter.ToArray();
         }
 
-        var headerFlags = (ushort)(ClrConstants.MethodHeaderFatFlag | 0x0300);
+        // Fat 方法头的 Size 位位于高 4 bit（以 DWORD 计），3 表示 12 字节头。
+        var headerFlags = (ushort)(ClrConstants.MethodHeaderFatFlag | 0x3000);
 
         if (hasEh)
         {
@@ -313,6 +314,8 @@ public sealed class ClrEncoder
         private readonly ClrModuleData _module;
         private Dictionary<string, uint> _stringIndices = [];
         private List<uint> _methodRvas = [];
+        private readonly List<byte[]> _methodSignatures = [];
+        private readonly Dictionary<byte[], uint> _signatureBlobIndexMap = new(ByteArrayComparer.Instance);
 
         public PeBuilder(ClrModuleData module)
         {
@@ -326,24 +329,35 @@ public sealed class ClrEncoder
             var guidHeap = BuildGuidHeap();
             var userStringHeap = BuildUserStringHeap();
 
-            var textSectionRva = 0x200;
+            // `.text` 的虚拟地址必须与 SectionAlignment 对齐。
+            // OptionalHeader 中 SectionAlignment 固定为 0x2000，因此 RVA 不能使用 0x200。
+            var textSectionRva = 0x2000;
             var ilSectionBytes = BuildILSection(textSectionRva);
 
             var tableStream = BuildTableStream();
             var metadataBytes = BuildMetadata(stringHeap, blobHeap, guidHeap, userStringHeap, tableStream);
 
             var textSectionData = new ByteBufferWriter(0x2000);
-            var clrDirectoryOffset = 0x80;
-            var metadataOffset = clrDirectoryOffset + ClrConstants.ClrDirectorySize;
 
             textSectionData.Write(ilSectionBytes);
-
+            var clrDirectoryOffset = AlignUp(textSectionData.Position, 4u);
             while (textSectionData.Position < clrDirectoryOffset)
             {
                 textSectionData.WriteU8(0);
             }
 
-            WriteClrDirectory(ref textSectionData, (uint)(metadataOffset + textSectionRva), (uint)metadataBytes.Length);
+            var metadataOffset = AlignUp(clrDirectoryOffset + ClrConstants.ClrDirectorySize, 4u);
+
+            var directoryFlags = _module.ClrDirectory.Flags != 0
+                ? _module.ClrDirectory.Flags
+                : (uint)ClrDirectoryFlags.ILOnly;
+            var entryPoint = _module.ClrDirectory.EntryPoint;
+            WriteClrDirectory(
+                ref textSectionData,
+                (uint)(metadataOffset + textSectionRva),
+                (uint)metadataBytes.Length,
+                directoryFlags,
+                entryPoint);
 
             textSectionData.Write(metadataBytes);
 
@@ -365,6 +379,17 @@ public sealed class ClrEncoder
             writer.Write(textSectionData.ToArray());
 
             return writer.ToArray();
+        }
+
+        private static uint AlignUp(uint value, uint alignment)
+        {
+            if (alignment == 0)
+            {
+                return value;
+            }
+
+            var remainder = value % alignment;
+            return remainder == 0 ? value : value + (alignment - remainder);
         }
 
         private byte[] BuildMetadata(byte[] stringHeap, byte[] blobHeap, byte[] guidHeap, byte[] userStringHeap, byte[] tableStream)
@@ -508,7 +533,32 @@ public sealed class ClrEncoder
 
         private byte[] BuildBlobHeap()
         {
-            return [0];
+            _methodSignatures.Clear();
+            _methodSignatures.AddRange(_module.Methods.Select(m => m.Signature.Length == 0 ? [0x00, 0x00, 0x01] : m.Signature));
+
+            foreach (var type in _module.Types)
+            {
+                _methodSignatures.AddRange(type.Methods.Select(m => m.Signature.Length == 0 ? [0x00, 0x00, 0x01] : m.Signature));
+            }
+
+            var writer = new ByteBufferWriter(256);
+            writer.WriteU8(0);
+            _signatureBlobIndexMap.Clear();
+
+            foreach (var signature in _methodSignatures)
+            {
+                if (_signatureBlobIndexMap.ContainsKey(signature))
+                {
+                    continue;
+                }
+
+                var index = (uint)writer.Position;
+                WriteCompressedUnsigned(ref writer, (uint)signature.Length);
+                writer.Write(signature);
+                _signatureBlobIndexMap[signature] = index;
+            }
+
+            return writer.ToArray();
         }
 
         private byte[] BuildGuidHeap()
@@ -611,7 +661,8 @@ public sealed class ClrEncoder
             writer.WriteU8(heapSizes);
             writer.WriteU8(0);
             writer.WriteU64LE(validTables);
-            writer.WriteU64LE(validTables);
+            // Sorted bitmask 仅在确实满足对应表排序约束时设置；这里保守写 0，避免声明错误排序。
+            writer.WriteU64LE(0);
 
             foreach (var rc in rowCounts)
             {
@@ -660,7 +711,7 @@ public sealed class ClrEncoder
                 writer.WriteU16LE(0);
                 writer.WriteU16LE((ushort)method.Flags);
                 WriteIndex(ref writer, GetStringIndex(method.Name), stringIndexSize);
-                WriteIndex(ref writer, 0, blobIndexSize);
+                WriteIndex(ref writer, GetMethodSignatureIndex(method), blobIndexSize);
                 WriteIndex(ref writer, 1, paramTableIndexSize);
             }
 
@@ -674,12 +725,75 @@ public sealed class ClrEncoder
                     writer.WriteU16LE(0);
                     writer.WriteU16LE((ushort)method.Flags);
                     WriteIndex(ref writer, GetStringIndex(method.Name), stringIndexSize);
-                    WriteIndex(ref writer, 0, blobIndexSize);
+                    WriteIndex(ref writer, GetMethodSignatureIndex(method), blobIndexSize);
                     WriteIndex(ref writer, 1, paramTableIndexSize);
                 }
             }
 
             return writer.ToArray();
+        }
+
+        private uint GetMethodSignatureIndex(ClrMethodDef method)
+        {
+            var signature = method.Signature.Length == 0 ? [0x00, 0x00, 0x01] : method.Signature;
+            if (_signatureBlobIndexMap.TryGetValue(signature, out var index))
+            {
+                return index;
+            }
+
+            return 0;
+        }
+
+        private static void WriteCompressedUnsigned(ref ByteBufferWriter writer, uint value)
+        {
+            if (value <= 0x7F)
+            {
+                writer.WriteU8((byte)value);
+                return;
+            }
+
+            if (value <= 0x3FFF)
+            {
+                writer.WriteU8((byte)((value >> 8) | 0x80));
+                writer.WriteU8((byte)(value & 0xFF));
+                return;
+            }
+
+            writer.WriteU8((byte)((value >> 24) | 0xC0));
+            writer.WriteU8((byte)((value >> 16) & 0xFF));
+            writer.WriteU8((byte)((value >> 8) & 0xFF));
+            writer.WriteU8((byte)(value & 0xFF));
+        }
+
+        private sealed class ByteArrayComparer : IEqualityComparer<byte[]>
+        {
+            public static readonly ByteArrayComparer Instance = new();
+
+            public bool Equals(byte[]? x, byte[]? y)
+            {
+                if (ReferenceEquals(x, y))
+                {
+                    return true;
+                }
+
+                if (x is null || y is null || x.Length != y.Length)
+                {
+                    return false;
+                }
+
+                return x.AsSpan().SequenceEqual(y);
+            }
+
+            public int GetHashCode(byte[] obj)
+            {
+                var hash = new HashCode();
+                foreach (var b in obj)
+                {
+                    hash.Add(b);
+                }
+
+                return hash.ToHashCode();
+            }
         }
 
         private static void WriteIndex(ref ByteBufferWriter writer, uint value, int size)
@@ -777,9 +891,10 @@ public sealed class ClrEncoder
             writer.WriteU32LE(textSectionSize);
             writer.WriteU32LE(0x2000);
             writer.WriteU32LE(0);
-            writer.WriteU32LE(textSectionRva + 0x2000);
+            // ILOnly 程序集由 CLR Header 的 EntryPoint token 决定入口，不写原生 RVA 入口。
+            writer.WriteU32LE(0);
             writer.WriteU32LE(textSectionRva);
-            writer.WriteU32LE(textSectionRva + 0x1000);
+            writer.WriteU32LE(0);
             writer.WriteU32LE(0x00400000);
             writer.WriteU32LE(0x2000);
             writer.WriteU32LE(0x200);
@@ -814,15 +929,20 @@ public sealed class ClrEncoder
             writer.WriteU32LE(0);
         }
 
-        private static void WriteClrDirectory(ref ByteBufferWriter writer, uint metadataRva, uint metadataSize)
+        private static void WriteClrDirectory(
+            ref ByteBufferWriter writer,
+            uint metadataRva,
+            uint metadataSize,
+            uint flags,
+            uint entryPoint)
         {
             writer.WriteU32LE(ClrConstants.ClrDirectorySize);
             writer.WriteU16LE(2);
             writer.WriteU16LE(5);
             writer.WriteU32LE(metadataRva);
             writer.WriteU32LE(metadataSize);
-            writer.WriteU32LE((uint)ClrDirectoryFlags.ILOnly);
-            writer.WriteU32LE(0);
+            writer.WriteU32LE(flags);
+            writer.WriteU32LE(entryPoint);
             writer.WriteU32LE(0);
             writer.WriteU32LE(0);
             writer.WriteU32LE(0);

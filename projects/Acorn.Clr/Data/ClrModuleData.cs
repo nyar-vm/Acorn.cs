@@ -839,6 +839,11 @@ public sealed class ClrMethodDef
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
+    ///     方法签名（不含 Blob 压缩长度前缀），例如 `00 00 08` 表示 `int32 ()`。
+    /// </summary>
+    public byte[] Signature { get; init; } = [];
+
+    /// <summary>
     ///     访问标志。
     /// </summary>
     public ClrMethodAttributes Flags { get; init; }
