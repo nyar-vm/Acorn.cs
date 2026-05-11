@@ -58,6 +58,47 @@ public sealed class ClrModuleData
     ///     版本号。
     /// </summary>
     public string Version { get; init; } = string.Empty;
+
+    /// <summary>
+    ///     外部方法引用列表（用于 call 指令的 MemberRef 元数据）。
+    /// </summary>
+    public IReadOnlyList<ClrExternalMethodRef> ExternalMethodRefs { get; init; } = [];
+}
+
+/// <summary>
+///     外部方法引用，描述需要生成 MemberRef 和对应 TypeRef、AssemblyRef 的外部方法。
+/// </summary>
+public sealed record ClrExternalMethodRef
+{
+    /// <summary>
+    ///     程序集名称（如 <c>System.Console</c>）。
+    /// </summary>
+    public string AssemblyName { get; init; } = string.Empty;
+
+    /// <summary>
+    ///     类型全名含命名空间（如 <c>System.Console</c>）。
+    /// </summary>
+    public string TypeFullName { get; init; } = string.Empty;
+
+    /// <summary>
+    ///     类型所在命名空间（如 <c>System</c>）。
+    /// </summary>
+    public string TypeNamespace { get; init; } = string.Empty;
+
+    /// <summary>
+    ///     类型短名（如 <c>Console</c>）。
+    /// </summary>
+    public string TypeName { get; init; } = string.Empty;
+
+    /// <summary>
+    ///     方法名（如 <c>Write</c>）。
+    /// </summary>
+    public string MethodName { get; init; } = string.Empty;
+
+    /// <summary>
+    ///     方法签名 Blob（如 <c>[0x00, 0x01, 0x01, 0x0E]</c> 表示 void(string)）。
+    /// </summary>
+    public byte[] MethodSignature { get; init; } = [];
 }
 
 /// <summary>

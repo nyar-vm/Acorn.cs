@@ -1,5 +1,10 @@
 using Acorn.Clr.Data;
 using Acorn.Frame;
+using System.IO;
+using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace Acorn.Clr.Encode;
@@ -14,8 +19,7 @@ public sealed class ClrEncoder
     /// </summary>
     public byte[] Encode(ClrModuleData module)
     {
-        var peBuilder = new PeBuilder(module);
-        return peBuilder.Build();
+        return ManagedPeBuilderAdapter.Build(module);
     }
 
     /// <summary>
@@ -304,6 +308,204 @@ public sealed class ClrEncoder
 
     #endregion
 
+    #region ManagedPE 生成
+
+    /// <summary>
+    ///     基于 BCL 的 ManagedPEBuilder 生成可执行 CLR 程序集，避免手写 PE 细节差异。
+    /// </summary>
+    private static class ManagedPeBuilderAdapter
+    {
+        public static byte[] Build(ClrModuleData module)
+        {
+            var metadata = new MetadataBuilder();
+            var ilBuilder = new BlobBuilder();
+            var methodBodyEncoder = new MethodBodyStreamEncoder(ilBuilder);
+
+            var moduleFileName = string.IsNullOrWhiteSpace(module.ModuleName) ? "Module.exe" : module.ModuleName;
+            var assemblyName = Path.GetFileNameWithoutExtension(moduleFileName);
+            if (string.IsNullOrWhiteSpace(assemblyName))
+            {
+                assemblyName = "Module";
+            }
+
+            var mvid = ResolveMvid(module);
+            metadata.AddModule(
+                0,
+                metadata.GetOrAddString(moduleFileName),
+                metadata.GetOrAddGuid(mvid),
+                default,
+                default);
+
+            metadata.AddAssembly(
+                name: metadata.GetOrAddString(assemblyName),
+                version: ParseAssemblyVersion(module.Version),
+                culture: default,
+                publicKey: default,
+                flags: default,
+                hashAlgorithm: AssemblyHashAlgorithm.Sha1);
+
+            var externalMemberRefTokenMap = EmitExternalRefs(metadata, module.ExternalMethodRefs);
+
+            var methods = module.Types.SelectMany(t => t.Methods).ToList();
+            var firstParameterHandle = MetadataTokens.ParameterHandle(1);
+            foreach (var method in methods)
+            {
+                var methodBody = EncodeInstructions(method.Instructions);
+                var codeBuilder = new BlobBuilder();
+                codeBuilder.WriteBytes(methodBody);
+                var instructionEncoder = new InstructionEncoder(codeBuilder);
+                var bodyOffset = methodBodyEncoder.AddMethodBody(
+                    instructionEncoder,
+                    method.MaxStack,
+                    default,
+                    default);
+
+                var signature = method.Signature.Length == 0 ? [0x00, 0x00, 0x01] : method.Signature;
+                metadata.AddMethodDefinition(
+                    attributes: (MethodAttributes)method.Flags,
+                    implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+                    name: metadata.GetOrAddString(method.Name),
+                    signature: metadata.GetOrAddBlob(signature),
+                    bodyOffset: bodyOffset,
+                    parameterList: firstParameterHandle);
+            }
+
+            var firstFieldHandle = MetadataTokens.FieldDefinitionHandle(1);
+            var methodStart = 1;
+            foreach (var type in module.Types)
+            {
+                metadata.AddTypeDefinition(
+                    attributes: (TypeAttributes)type.Flags,
+                    @namespace: metadata.GetOrAddString(type.Namespace ?? string.Empty),
+                    name: metadata.GetOrAddString(type.Name),
+                    baseType: default,
+                    fieldList: firstFieldHandle,
+                    methodList: MetadataTokens.MethodDefinitionHandle(methodStart));
+
+                methodStart += type.Methods.Count;
+            }
+
+            var entryPointHandle = ResolveEntryPointHandle(module, methods, externalMemberRefTokenMap);
+
+            var peBuilder = new ManagedPEBuilder(
+                new PEHeaderBuilder(
+                    imageCharacteristics: entryPointHandle.IsNil ? Characteristics.Dll : Characteristics.ExecutableImage,
+                    subsystem: Subsystem.WindowsCui,
+                    dllCharacteristics: DllCharacteristics.DynamicBase | DllCharacteristics.NxCompatible | DllCharacteristics.NoSeh | DllCharacteristics.TerminalServerAware),
+                new MetadataRootBuilder(metadata),
+                ilBuilder,
+                mappedFieldData: null,
+                managedResources: null,
+                strongNameSignatureSize: 0,
+                entryPoint: entryPointHandle,
+                flags: CorFlags.ILOnly,
+                deterministicIdProvider: null);
+
+            var peBlob = new BlobBuilder();
+            peBuilder.Serialize(peBlob);
+            return peBlob.ToArray();
+        }
+
+        private static Guid ResolveMvid(ClrModuleData module)
+        {
+            var raw = module.Metadata.GuidHeap.Data;
+            if (raw.Length >= 16)
+            {
+                return new Guid(raw.AsSpan(0, 16));
+            }
+
+            return Guid.NewGuid();
+        }
+
+        private static Version ParseAssemblyVersion(string? version)
+        {
+            return Version.TryParse(version, out var parsed)
+                ? new Version(
+                    Math.Max(0, parsed.Major),
+                    Math.Max(0, parsed.Minor),
+                    Math.Max(0, parsed.Build),
+                    Math.Max(0, parsed.Revision))
+                : new Version(1, 0, 0, 0);
+        }
+
+        /// <summary>
+        ///     为所有外部方法引用生成 AssemblyRef → TypeRef → MemberRef 元数据条目。
+        ///     返回 MemberRef token 值到 MemberReferenceHandle 的映射，用于入口点解析。
+        /// </summary>
+        private static Dictionary<uint, MemberReferenceHandle> EmitExternalRefs(
+            MetadataBuilder metadata,
+            IReadOnlyList<ClrExternalMethodRef> externalRefs)
+        {
+            var memberRefTokenMap = new Dictionary<uint, MemberReferenceHandle>();
+            var assemblyRefHandles = new Dictionary<string, AssemblyReferenceHandle>(StringComparer.Ordinal);
+            var typeRefHandles = new Dictionary<(string, string, string), TypeReferenceHandle>();
+
+            foreach (var extRef in externalRefs)
+            {
+                if (!assemblyRefHandles.TryGetValue(extRef.AssemblyName, out var assemblyRefHandle))
+                {
+                    assemblyRefHandle = metadata.AddAssemblyReference(
+                        name: metadata.GetOrAddString(extRef.AssemblyName),
+                        version: new Version(0, 0, 0, 0),
+                        culture: default,
+                        publicKeyOrToken: default,
+                        flags: default,
+                        hashValue: default);
+                    assemblyRefHandles[extRef.AssemblyName] = assemblyRefHandle;
+                }
+
+                var typeKey = (extRef.AssemblyName, extRef.TypeNamespace, extRef.TypeName);
+                if (!typeRefHandles.TryGetValue(typeKey, out var typeRefHandle))
+                {
+                    typeRefHandle = metadata.AddTypeReference(
+                        resolutionScope: assemblyRefHandle,
+                        @namespace: metadata.GetOrAddString(extRef.TypeNamespace),
+                        name: metadata.GetOrAddString(extRef.TypeName));
+                    typeRefHandles[typeKey] = typeRefHandle;
+                }
+
+                var signature = extRef.MethodSignature.Length == 0 ? (new byte[] { 0x00, 0x00, 0x01 }) : extRef.MethodSignature;
+                var memberRefHandle = metadata.AddMemberReference(
+                    parent: typeRefHandle,
+                    name: metadata.GetOrAddString(extRef.MethodName),
+                    signature: metadata.GetOrAddBlob(signature));
+
+                var token = (uint)MetadataTokens.GetToken(memberRefHandle);
+                memberRefTokenMap[token] = memberRefHandle;
+            }
+
+            return memberRefTokenMap;
+        }
+
+        /// <summary>
+        ///     从 EntryPoint 令牌解析入口点 MethodDefinitionHandle（或 MemberReferenceHandle）。
+        ///     令牌高字节标识表类型：0x06 = MethodDef，0x0A = MemberRef。
+        /// </summary>
+        private static MethodDefinitionHandle ResolveEntryPointHandle(
+            ClrModuleData module,
+            List<ClrMethodDef> methods,
+            IReadOnlyDictionary<uint, MemberReferenceHandle> memberRefTokenMap)
+        {
+            var entryPoint = module.ClrDirectory.EntryPoint;
+            if (entryPoint == 0)
+            {
+                return default;
+            }
+
+            var tableType = entryPoint >> 24;
+            var rowNumber = (int)(entryPoint & 0x00FFFFFF);
+
+            if (tableType == 0x06 && rowNumber > 0 && rowNumber <= methods.Count)
+            {
+                return MetadataTokens.MethodDefinitionHandle(rowNumber);
+            }
+
+            return default;
+        }
+    }
+
+    #endregion
+
     #region PE 构建器
 
     /// <summary>
@@ -340,8 +542,8 @@ public sealed class ClrEncoder
             var textSectionData = new ByteBufferWriter(0x2000);
 
             textSectionData.Write(ilSectionBytes);
-            var clrDirectoryOffset = AlignUp(textSectionData.Position, 4u);
-            while (textSectionData.Position < clrDirectoryOffset)
+            var clrDirectoryOffset = AlignUp((uint)textSectionData.Position, 4u);
+            while ((uint)textSectionData.Position < clrDirectoryOffset)
             {
                 textSectionData.WriteU8(0);
             }
@@ -377,6 +579,11 @@ public sealed class ClrEncoder
             }
 
             writer.Write(textSectionData.ToArray());
+
+            while (writer.Position < peHeaderSize + (int)textSectionSize)
+            {
+                writer.WriteU8(0);
+            }
 
             return writer.ToArray();
         }
@@ -486,6 +693,7 @@ public sealed class ClrEncoder
             }
 
             AddString(_module.ModuleName);
+            AddString(GetAssemblySimpleName());
 
             foreach (var type in _module.Types)
             {
@@ -495,6 +703,11 @@ public sealed class ClrEncoder
                 foreach (var field in type.Fields)
                 {
                     AddString(field.Name);
+                }
+
+                foreach (var method in type.Methods)
+                {
+                    AddString(method.Name);
                 }
             }
 
@@ -570,7 +783,7 @@ public sealed class ClrEncoder
                 return guid;
             }
 
-            return new byte[16];
+            return Guid.NewGuid().ToByteArray();
         }
 
         private byte[] BuildUserStringHeap()
@@ -595,10 +808,13 @@ public sealed class ClrEncoder
             var typeDefRowCount = (uint)_module.Types.Count;
             var methodDefRowCount = (uint)allMethods.Count;
             var fieldRowCount = (uint)allFields.Count;
+            var paramRowCount = 0u;
+            var assemblyRowCount = 1u;
 
             var validTables = 0UL;
             validTables |= 1UL << (int)ClrTableKind.Module;
             validTables |= 1UL << (int)ClrTableKind.TypeDef;
+            validTables |= 1UL << (int)ClrTableKind.Assembly;
 
             if (fieldRowCount > 0)
             {
@@ -608,6 +824,7 @@ public sealed class ClrEncoder
             if (methodDefRowCount > 0)
             {
                 validTables |= 1UL << (int)ClrTableKind.MethodDef;
+                validTables |= 1UL << (int)ClrTableKind.Param;
             }
 
             var heapSizes = (byte)0;
@@ -637,6 +854,16 @@ public sealed class ClrEncoder
                 rowCounts.Add(methodDefRowCount);
             }
 
+            if ((validTables & (1UL << (int)ClrTableKind.Param)) != 0)
+            {
+                rowCounts.Add(paramRowCount);
+            }
+
+            if ((validTables & (1UL << (int)ClrTableKind.Assembly)) != 0)
+            {
+                rowCounts.Add(assemblyRowCount);
+            }
+
             var typeDefOrRefIndexSize = 2;
             var fieldTableIndexSize = fieldRowCount <= 0xFFFF ? 2 : 4;
             var methodDefTableIndexSize = methodDefRowCount <= 0xFFFF ? 2 : 4;
@@ -646,11 +873,13 @@ public sealed class ClrEncoder
             var typeDefRowSize = 4 + stringIndexSize * 2 + typeDefOrRefIndexSize + fieldTableIndexSize + methodDefTableIndexSize;
             var fieldRowSize = 2 + stringIndexSize + blobIndexSize;
             var methodDefRowSize = 4 + 2 + 2 + stringIndexSize + blobIndexSize + paramTableIndexSize;
+            var assemblyRowSize = 4 + 2 + 2 + 2 + 2 + 4 + blobIndexSize + stringIndexSize + stringIndexSize;
 
             var totalRowSize = moduleRowCount * (uint)moduleRowSize
                                + typeDefRowCount * (uint)typeDefRowSize
                                + fieldRowCount * (uint)fieldRowSize
-                               + methodDefRowCount * (uint)methodDefRowSize;
+                               + methodDefRowCount * (uint)methodDefRowSize
+                               + assemblyRowCount * (uint)assemblyRowSize;
 
             var headerSize = 24 + rowCounts.Count * 4;
             var writer = new ByteBufferWriter(headerSize + (int)totalRowSize);
@@ -730,7 +959,43 @@ public sealed class ClrEncoder
                 }
             }
 
+            var (majorVersion, minorVersion, buildNumber, revisionNumber) = ParseVersion(_module.Version);
+            writer.WriteU32LE(0x00008004);
+            writer.WriteU16LE(majorVersion);
+            writer.WriteU16LE(minorVersion);
+            writer.WriteU16LE(buildNumber);
+            writer.WriteU16LE(revisionNumber);
+            writer.WriteU32LE(0);
+            WriteIndex(ref writer, 0, blobIndexSize);
+            WriteIndex(ref writer, GetStringIndex(GetAssemblySimpleName()), stringIndexSize);
+            WriteIndex(ref writer, 0, stringIndexSize);
+
             return writer.ToArray();
+        }
+
+        private string GetAssemblySimpleName()
+        {
+            if (string.IsNullOrWhiteSpace(_module.ModuleName))
+            {
+                return "Module";
+            }
+
+            return Path.GetFileNameWithoutExtension(_module.ModuleName);
+        }
+
+        private static (ushort Major, ushort Minor, ushort Build, ushort Revision) ParseVersion(string? version)
+        {
+            if (Version.TryParse(version, out var parsed))
+            {
+                return (
+                    (ushort)Math.Clamp(parsed.Major, 0, ushort.MaxValue),
+                    (ushort)Math.Clamp(parsed.Minor, 0, ushort.MaxValue),
+                    (ushort)Math.Clamp(parsed.Build < 0 ? 0 : parsed.Build, 0, ushort.MaxValue),
+                    (ushort)Math.Clamp(parsed.Revision < 0 ? 0 : parsed.Revision, 0, ushort.MaxValue)
+                );
+            }
+
+            return (1, 0, 0, 0);
         }
 
         private uint GetMethodSignatureIndex(ClrMethodDef method)
@@ -880,7 +1145,7 @@ public sealed class ClrEncoder
             writer.WriteU32LE(0);
             writer.WriteU32LE(0);
             writer.WriteU16LE(0x00E0);
-            writer.WriteU16LE(0x0102);
+            writer.WriteU16LE(0x0022);
         }
 
         private static void WriteOptionalHeader(ref ByteBufferWriter writer, uint textSectionRva, uint textSectionSize, uint clrRva, uint clrSize)
@@ -889,12 +1154,12 @@ public sealed class ClrEncoder
             writer.WriteU8(8);
             writer.WriteU8(0);
             writer.WriteU32LE(textSectionSize);
-            writer.WriteU32LE(0x2000);
+            writer.WriteU32LE(0);
             writer.WriteU32LE(0);
             // ILOnly 程序集由 CLR Header 的 EntryPoint token 决定入口，不写原生 RVA 入口。
             writer.WriteU32LE(0);
             writer.WriteU32LE(textSectionRva);
-            writer.WriteU32LE(0);
+            writer.WriteU32LE(textSectionRva);
             writer.WriteU32LE(0x00400000);
             writer.WriteU32LE(0x2000);
             writer.WriteU32LE(0x200);
